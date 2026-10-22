@@ -1,0 +1,47 @@
+# Unity generated data
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Bb]uild/
+/[Bb]uilds/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+# IDE and local tooling
+/.vs/
+/.vscode/
+/.idea/
+/.serena/
+/.codex/
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.opendb
+*.VC.db
+
+# Original course materials stay local and untouched.
+/lecture/
+
+# Credentials, signing and local verification artifacts
+.env
+.env.*
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.ulf
+*.apk
+*.aab
+*.unitypackage
+/artifacts/
+/Assets/StreamingAssets/aa/
+/Assets/AddressableAssetsData/*/*.bin*
+sysinfo.txt
+crashlytics-build.properties

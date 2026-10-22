@@ -1,0 +1,34 @@
+{
+  "name": "com.unity.template.ar-mobile",
+  "displayName": "AR Mobile",
+  "version": "2.1.2",
+  "type": "template",
+  "host": "hub",
+  "unity": "6000.0",
+  "unityRelease": "23f1",
+  "description": "This template was developed for users new to AR development and is pre-configured with all of the necessary packages and settings for both Android and iOS development with AR Foundation. The template is immediately build ready: simply connect a properly configured mobile device then select Build and Run from the file menu. The sample scene contains coaching guides on what gestures to use to interact with the scene and a creation menu with a list of spawnable objects.",
+  "dependencies": {
+    "com.unity.feature.development": "1.0.2",
+    "com.unity.inputsystem": "1.15.0",
+    "com.unity.learn.iet-framework": "4.0.4",
+    "com.unity.mobile.android-logcat": "1.4.6",
+    "com.unity.render-pipelines.universal": "17.0.3",
+    "com.unity.timeline": "1.8.9",
+    "com.unity.xr.arcore": "6.3.1",
+    "com.unity.xr.arfoundation": "6.3.1",
+    "com.unity.xr.arkit": "6.3.1",
+    "com.unity.xr.interaction.toolkit": "3.3.0",
+    "com.unity.xr.management": "4.5.3"
+  },
+  "_upm": {
+    "changelog": "### Changed\n- Updated copyright date"
+  },
+  "upmCi": {
+    "footprint": "50b30d593fe796bab1823becab98185dfd15d244"
+  },
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/com.unity.template.ar-mobile.git",
+    "type": "git",
+    "revision": "0636732a5a048532733254fba6a4bfd82e820f15"
+  }
+}
