@@ -120,6 +120,16 @@ namespace MidtermAR.Tests
         }
 
         [Test]
+        public void BarcodeCameraPrefersDetailedCpuFramesWithinBoundedMemory()
+        {
+            Assert.That(CameraResolutionPolicy.Score(1920, 1080, 30), Is.GreaterThan(CameraResolutionPolicy.Score(640, 480, 60)));
+            Assert.That(CameraResolutionPolicy.Score(1280, 720, 30), Is.GreaterThan(CameraResolutionPolicy.Score(640, 480, 30)));
+            Assert.That(CameraResolutionPolicy.Score(1920, 1080, 30), Is.GreaterThan(CameraResolutionPolicy.Score(1920, 1080, 60)));
+            Assert.That(CameraResolutionPolicy.Score(3840, 2160, 30), Is.Zero);
+            Assert.That(CameraResolutionPolicy.Score(0, 1080, 30), Is.Zero);
+        }
+
+        [Test]
         public void BarcodeNeedsThreeConsecutiveMatchingCameraFrames()
         {
             var confirmation = new BarcodeConfirmation();

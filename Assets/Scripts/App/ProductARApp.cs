@@ -19,6 +19,9 @@ namespace MidtermAR
 
         private void Awake()
         {
+#if DEVELOPMENT_BUILD && !UNITY_EDITOR
+            Debug.developerConsoleEnabled = false;
+#endif
             try
             {
                 var catalog = new ProductCatalog(catalogJson.text);

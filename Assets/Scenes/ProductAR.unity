@@ -2083,7 +2083,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MidtermAR::MidtermAR.ARBarcodeScanner
   cameraManager: {fileID: 211957271}
   interval: 0.35
-  longestEdge: 960
+  longestEdge: 1920
   timeoutSeconds: 15
 --- !u!114 &1070861241
 MonoBehaviour:

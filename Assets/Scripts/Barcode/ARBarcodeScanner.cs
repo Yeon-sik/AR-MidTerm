@@ -11,7 +11,7 @@ namespace MidtermAR
     {
         [SerializeField] private ARCameraManager cameraManager;
         [SerializeField, Range(0.2f, 1f)] private float interval = 0.35f;
-        [SerializeField, Range(320, 1600)] private int longestEdge = 960;
+        [SerializeField, Range(640, 1920)] private int longestEdge = 1920;
         [SerializeField] private float timeoutSeconds = 15f;
 
         public event Action<BarcodeReadResult> Decoded;
@@ -33,8 +33,17 @@ namespace MidtermAR
         private float pendingCapturedAt;
         private bool conversionErrorLogged;
         private float lastFrameTime = float.NegativeInfinity;
+        private bool configurationAttempted;
+        private Vector2Int lastImageSize;
+        private int scanFrames;
+        private string diagnosticDirectory;
+        private double lastImageTimestamp = double.NegativeInfinity;
 
-        private void OnEnable() { cameraManager.frameReceived += OnCameraFrame; }
+        private void OnEnable()
+        {
+            diagnosticDirectory = System.IO.Path.Combine(Application.persistentDataPath, "barcode-diagnostics");
+            cameraManager.frameReceived += OnCameraFrame;
+        }
         private void OnDisable()
         {
             cameraManager.frameReceived -= OnCameraFrame;
@@ -48,7 +57,7 @@ namespace MidtermAR
             IsScanning = value;
             generation++;
             confirmation.Reset();
-            if (value) { scanStarted = Time.unscaledTime; nextCapture = scanStarted; }
+            if (value) { scanStarted = Time.unscaledTime; nextCapture = scanStarted; scanFrames = 0; }
         }
 
         private void Update()
@@ -85,11 +94,14 @@ namespace MidtermAR
         private void OnCameraFrame(ARCameraFrameEventArgs args)
         {
             lastFrameTime = Time.unscaledTime;
+            if (!configurationAttempted && ConfigureCamera()) return;
             if (!IsScanning || pending != null || Time.unscaledTime < nextCapture || !ARReadiness.CanReadCameraInState(ARSession.state)) return;
             nextCapture = Time.unscaledTime + interval;
             if (!cameraManager.TryAcquireLatestCpuImage(out var image)) return;
             try
             {
+                if (image.timestamp <= lastImageTimestamp) return;
+                lastImageTimestamp = image.timestamp;
                 var scale = Mathf.Min(1f, (float)longestEdge / Mathf.Max(image.width, image.height));
                 var width = Mathf.Max(1, Mathf.RoundToInt(image.width * scale));
                 var height = Mathf.Max(1, Mathf.RoundToInt(image.height * scale));
@@ -115,8 +127,30 @@ namespace MidtermAR
                 pendingCapturedAt = Time.unscaledTime;
                 var pixels = workerPixels;
                 var rgba = format == TextureFormat.RGBA32;
-                pending = Task.Run(() => decoder.Decode(pixels, width, height, rgba));
-                if (ConvertedFrames == 1) Debug.Log($"[ProductAR] CPU image conversion available: {width}x{height}, {format}");
+                var sampleSlot = ++scanFrames;
+                var scanGeneration = generation;
+                var sourceTimestamp = image.timestamp;
+                pending = Task.Run(() =>
+                {
+                    var timer = System.Diagnostics.Stopwatch.StartNew();
+                    var result = decoder.Decode(pixels, width, height, rgba);
+                    timer.Stop();
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+                    if (!rgba && sampleSlot <= 8)
+                    {
+                        try { BarcodeFrameDiagnostics.Save(diagnosticDirectory, sampleSlot, scanGeneration, sourceTimestamp, pixels, width, height, result?.Text, timer.Elapsed.TotalMilliseconds); }
+                        catch (Exception error) { Debug.LogWarning("[ProductAR] Diagnostic frame save: " + error.Message); }
+                    }
+                    if (sampleSlot <= 8 || sampleSlot % 10 == 0)
+                        Debug.Log($"[ProductAR] Decode attempt {sampleSlot}: {width}x{height}, {timer.Elapsed.TotalMilliseconds:F1}ms, result={result?.Text ?? "none"}");
+#endif
+                    return result;
+                });
+                if (lastImageSize != new Vector2Int(image.width, image.height))
+                {
+                    lastImageSize = new Vector2Int(image.width, image.height);
+                    Debug.Log($"[ProductAR] CPU image source {image.width}x{image.height}; decoder {width}x{height}, {format}; autofocus={cameraManager.autoFocusEnabled}");
+                }
             }
             catch (Exception error)
             {
@@ -124,6 +158,35 @@ namespace MidtermAR
                 conversionErrorLogged = true;
             }
             finally { image.Dispose(); }
+        }
+
+        private bool ConfigureCamera()
+        {
+            configurationAttempted = true;
+            try
+            {
+                cameraManager.autoFocusRequested = true;
+                using (var configurations = cameraManager.GetConfigurations(Allocator.Temp))
+                {
+                    var bestIndex = -1;
+                    var bestScore = 0;
+                    for (var i = 0; i < configurations.Length; i++)
+                    {
+                        var c = configurations[i];
+                        Debug.Log($"[ProductAR] Supported CPU camera configuration: {c.width}x{c.height}, fps={c.framerate}");
+                        var score = CameraResolutionPolicy.Score(c.width, c.height, c.framerate);
+                        if (score > bestScore) { bestScore = score; bestIndex = i; }
+                    }
+                    if (bestIndex >= 0 && cameraManager.currentConfiguration != configurations[bestIndex])
+                    {
+                        cameraManager.currentConfiguration = configurations[bestIndex];
+                        Debug.Log("[ProductAR] Requested barcode camera configuration: " + configurations[bestIndex]);
+                        return true;
+                    }
+                }
+            }
+            catch (Exception error) { Debug.LogWarning("[ProductAR] Camera configuration fallback: " + error.Message); }
+            return false;
         }
     }
 }
