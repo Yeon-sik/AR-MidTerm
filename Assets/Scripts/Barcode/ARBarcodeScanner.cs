@@ -19,8 +19,10 @@ namespace MidtermAR
         public bool IsScanning { get; private set; }
         public int ConvertedFrames { get; private set; }
         public bool HasCameraFrame => Time.unscaledTime - lastFrameTime < 2.5f;
+        public int ConfirmationCount => confirmation.Count;
 
         private readonly BarcodeDecoder decoder = new BarcodeDecoder();
+        private readonly BarcodeConfirmation confirmation = new BarcodeConfirmation();
         private NativeArray<byte> conversionBuffer;
         private byte[] workerPixels;
         private Task<BarcodeReadResult> pending;
@@ -28,6 +30,7 @@ namespace MidtermAR
         private float scanStarted;
         private int generation;
         private int pendingGeneration;
+        private float pendingCapturedAt;
         private bool conversionErrorLogged;
         private float lastFrameTime = float.NegativeInfinity;
 
@@ -44,6 +47,7 @@ namespace MidtermAR
             if (IsScanning == value) return;
             IsScanning = value;
             generation++;
+            confirmation.Reset();
             if (value) { scanStarted = Time.unscaledTime; nextCapture = scanStarted; }
         }
 
@@ -55,9 +59,21 @@ namespace MidtermAR
                 var validGeneration = pendingGeneration == generation;
                 pending = null;
                 if (finished.IsFaulted)
+                {
+                    confirmation.Reset();
                     Debug.LogWarning("[ProductAR] Barcode worker failed: " + finished.Exception?.GetBaseException().Message);
-                else if (!finished.IsCanceled && IsScanning && validGeneration && finished.Result != null)
-                    Decoded?.Invoke(finished.Result);
+                }
+                else if (!finished.IsCanceled && IsScanning && validGeneration)
+                {
+                    var confirmed = confirmation.Observe(finished.Result, pendingCapturedAt);
+                    if (confirmation.Count == 1)
+                        Debug.Log("[ProductAR] Unconfirmed barcode candidate: " + confirmation.Candidate);
+                    if (confirmed)
+                    {
+                        Debug.Log("[ProductAR] Barcode confirmed across " + confirmation.Count + " camera frames: " + confirmation.Candidate);
+                        Decoded?.Invoke(new BarcodeReadResult(confirmation.Candidate, "EAN_13"));
+                    }
+                }
             }
             if (IsScanning && Time.unscaledTime - scanStarted >= timeoutSeconds)
             {
@@ -96,6 +112,7 @@ namespace MidtermAR
                 conversionBuffer.CopyTo(workerPixels);
                 ConvertedFrames++;
                 pendingGeneration = generation;
+                pendingCapturedAt = Time.unscaledTime;
                 var pixels = workerPixels;
                 var rgba = format == TextureFormat.RGBA32;
                 pending = Task.Run(() => decoder.Decode(pixels, width, height, rgba));

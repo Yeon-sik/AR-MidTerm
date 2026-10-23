@@ -102,7 +102,7 @@ namespace MidtermAR
             placement.AllowPlacement = ready && workflow.CanPlace;
             var summary = workflow.Selected == null ? "시연 상품 · 더단백 크런치바 초코 40g" : workflow.Selected.brand + " · " + workflow.Selected.specification + "\n" + workflow.Selected.name;
             var title = "바코드를 비춰주세요";
-            var message = "바코드 전체와 양쪽 여백이 보이게 맞춰주세요.\n제품을 움직이지 않고 잠시 기다려주세요.";
+            var message = "바코드 전체와 양쪽 여백이 보이게 맞춰주세요.\n같은 번호가 3회 확인될 때까지 유지해 주세요.";
             var action = "다시 스캔";
             var error = false;
             if (workflow.Phase == ProductPhase.DataUnavailable)
@@ -115,7 +115,7 @@ namespace MidtermAR
                 error = readiness.PermissionBlocked;
             }
             else if (workflow.Phase == ProductPhase.UnknownBarcode)
-            { title = "시연 데이터에 없는 상품입니다"; message = "등록된 상품정보가 없습니다.\n다른 상품의 바코드를 스캔해 주세요."; error = true; }
+            { title = "시연 데이터에 없는 상품입니다"; message = "읽은 번호: " + workflow.LastBarcode + "\n포장에 적힌 번호와 비교한 뒤 다시 스캔해 주세요."; error = true; }
             else if (workflow.Phase == ProductPhase.ScanFailed)
             { title = "바코드를 읽지 못했습니다"; message = "반사와 초점을 확인하고\n바코드 전체가 보이도록 다시 시도해 주세요."; error = true; }
             else if (placement.IsBusy)
@@ -130,6 +130,8 @@ namespace MidtermAR
                 title = placement.PlacementTracking ? "정보판을 공간에 배치했습니다" : "공간 추적을 복구하고 있습니다";
                 message = placement.PlacementTracking ? "휴대폰을 움직이며 정보를 확인하세요.\n상품을 옮기면 재배치를 눌러주세요." : "잘못된 위치를 표시하지 않도록 정보판을 숨겼습니다.\n주변을 천천히 비추거나 다시 배치해 주세요.";
             }
+            else if (workflow.Phase == ProductPhase.Scanning && scanner.ConfirmationCount > 0)
+                title = "바코드 확인 중 (" + scanner.ConfirmationCount + "/" + BarcodeConfirmation.RequiredReads + ")";
             if (cameraReady && Time.unscaledTime < noticeUntil) message = notice;
             screen.Show(title, message, summary, action, !readiness.IsInitializing && !placement.IsBusy && workflow.Phase != ProductPhase.DataUnavailable,
                 ready && workflow.Phase == ProductPhase.Placed && !placement.IsBusy, placement.HasPlacement && !placement.IsBusy, error);

@@ -2,6 +2,8 @@
 
 확인일: **2026-10-23 KST**. 소스 경계는 `feat/ar-foundation-m0-m3`의 구현 커밋 `b949cf7`이다. 초기 조사 기준은 `45c7037`이며 문서는 별도 커밋으로 기록한다. 제품 사진·HTML 등 사용자 입력은 변경하지 않았다. Git 원격 생성·push·배포는 수행하지 않았다.
 
+**후속 수정:** 단발성 판독 확정 방지·미등록 번호 표시를 적용했다. 최신 자동 시험은 **23/23 PASS**이며 수정 APK 설치·실행까지 완료했다. 실물 재시험은 미완료다. 상세 원인·새 로그·한계는 [바코드 수정 기록](BARCODE-VALIDATION.md)을 따른다. 아래 초기 구현 검증 19개와 구분한다.
+
 사용자가 사용자 개입 없이 가능한 후속 구현을 계속하도록 지시했으므로 **구현 완료·자동 시험·기기 실행·실물 검증을 분리**한다. 기기의 존재나 APK 설치만으로 실제 상품 인식·공간 배치의 PASS를 주장하지 않는다.
 
 ## 단계별 판정
@@ -31,13 +33,13 @@
 ### 최종 APK
 
 - 경로: `Builds/Android/ProductAR.apk` — Git 제외.
-- 크기: **85,710,480 bytes** (약 81.7 MiB).
-- SHA-256: `2bdcbecb5c1fda5aac8d6397ed15135ccc787b0609d086f9e1d537778839acad`.
+- 크기: **85,710,171 bytes** (약 81.7 MiB).
+- SHA-256: `5460a6fb04bcc0ab3891f540959b1b66480fa9ed21efe43aaae5e95021a5d0a4`.
 - Development 빌드다. 에디터 테스트 어셈블리를 플레이어에 포함하지 않았다. 개발 빌드에서만 합성 바코드 자체 점검을 한 번 수행한다.
 - 서명 SHA-256: `cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135`.
 - 최초 새 패키지 설치 후 최종 APK는 동일 서명·동일 버전을 확인한 `install --user 0 -r`로 업데이트했다. uninstall·`pm clear`·다운그레이드는 사용하지 않았다. 다른 앱의 패키지·데이터는 변경하지 않았다.
 
-## 자동 시험 — PASS
+## 초기 구현 자동 시험 — PASS (최신 후속 수정은 23개)
 
 명령: 지정 Unity 실행 파일의 `-batchmode -nographics -buildTarget Android -runTests -testPlatform EditMode -assemblyNames MidtermAR.Tests -testResults <결과 XML> -logFile <로그>`.
 
@@ -56,7 +58,7 @@
 
 첫 시험에서는 15개 중 13개가 통과했다. 테스트가 발견한 프리팹 참조 누락과 가격 영역 높이를 수정한 뒤 15개가 통과했고, 카메라/공간 준비 분리 회귀 시험 4개를 추가해 최종 19개를 통과했다. 합성 디코더 시험을 실물 카메라 정확도로 해석하지 않는다.
 
-## Android 빌드·설치 — PASS
+## 초기 Android 빌드·설치 — PASS (후속 재빌드·설치는 수정 기록 참조)
 
 1. 지정 에디터의 `MidtermAR.Editor.ProjectBuilder.PrepareProject`로 씬·프리팹·한국어 SDF를 생성했다.
 2. 원본 한글 경로에서 Android 빌드는 `Invalid project path ... contains non-ASCII characters`로 실패했다. 원본을 이동하지 않고 영문 임시 디렉터리의 복사본에서 빌드하도록 `scripts/Build-Android.ps1`을 작성했다.

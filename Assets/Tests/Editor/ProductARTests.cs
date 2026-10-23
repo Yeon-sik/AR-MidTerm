@@ -120,6 +120,53 @@ namespace MidtermAR.Tests
         }
 
         [Test]
+        public void BarcodeNeedsThreeConsecutiveMatchingCameraFrames()
+        {
+            var confirmation = new BarcodeConfirmation();
+            var known = new BarcodeReadResult("8801104671507", "EAN_13");
+            Assert.That(confirmation.Observe(known, 0), Is.False);
+            Assert.That(confirmation.Observe(known, 0.35f), Is.False);
+            Assert.That(confirmation.Observe(known, 0.7f), Is.True);
+            confirmation.Reset();
+            Assert.That(confirmation.Count, Is.Zero);
+            Assert.That(confirmation.Observe(known, 1), Is.False, "Rescan must not reuse previous confidence");
+        }
+
+        [Test]
+        public void BarcodeDisagreementMissingFramesAndExpiredReadsResetConfidence()
+        {
+            var confirmation = new BarcodeConfirmation();
+            var known = new BarcodeReadResult("8801104671507", "EAN_13");
+            foreach (var text in new[] { "5505256701701", "7201143677507" })
+                Assert.That(confirmation.Observe(new BarcodeReadResult(text, "EAN_13"), 0), Is.False);
+            Assert.That(confirmation.Observe(known, 0.35f), Is.False);
+            Assert.That(confirmation.Count, Is.EqualTo(1));
+            Assert.That(confirmation.Observe(null, 0.7f), Is.False);
+            Assert.That(confirmation.Observe(known, 1.05f), Is.False);
+            Assert.That(confirmation.Count, Is.EqualTo(1));
+            Assert.That(confirmation.Observe(known, 3), Is.False);
+            Assert.That(confirmation.Count, Is.EqualTo(1));
+            Assert.That(confirmation.Observe(new BarcodeReadResult("8801104671508", "EAN_13"), 3.35f), Is.False);
+            Assert.That(confirmation.Count, Is.Zero);
+        }
+
+        [TestCase("5505256701701")]
+        [TestCase("7201143677507")]
+        public void ConfirmedUnknownBarcodeNeverFallsBackToDemoProduct(string barcode)
+        {
+            var confirmation = new BarcodeConfirmation();
+            var read = new BarcodeReadResult(barcode, "EAN_13");
+            confirmation.Observe(read, 0);
+            confirmation.Observe(read, 0.35f);
+            Assert.That(confirmation.Observe(read, 0.7f), Is.True);
+            var flow = new ProductWorkflow(new ProductCatalog(Json));
+            Assert.That(flow.AcceptBarcode(confirmation.Candidate), Is.True);
+            Assert.That(flow.LastBarcode, Is.EqualTo(barcode));
+            Assert.That(flow.Phase, Is.EqualTo(ProductPhase.UnknownBarcode));
+            Assert.That(flow.Selected, Is.Null);
+        }
+
+        [Test]
         public void SceneHasWiredComponentsAndTrackedCamera()
         {
             var scene = EditorSceneManager.OpenScene(ProjectBuilder.ScenePath, OpenSceneMode.Single);
