@@ -125,8 +125,16 @@ namespace MidtermAR
             { title = "정보판을 고정하고 있습니다"; message = "휴대폰을 잠시 움직이지 말아주세요."; }
             else if (workflow.Phase == ProductPhase.AwaitingPlacement)
             {
-                title = ready && placement.HasTrackedPlane ? "상품 옆을 눌러 배치하세요" : "책상 표면을 천천히 비춰주세요";
-                message = ready && placement.HasTrackedPlane ? "표시된 수평 표면을 누르면 정보판이 놓입니다.\n상품을 옮기면 정보판도 재배치해 주세요." : "상품 옆의 책상을 여러 각도에서 비추면\n정보판을 놓을 표면을 찾을 수 있습니다.";
+                if (!ready)
+                {
+                    title = "공간 추적을 복구하고 있습니다";
+                    message = readiness.TrackingGuidance;
+                }
+                else
+                {
+                    title = placement.HasTrackedPlane ? "상품 옆을 눌러 배치하세요" : "책상 표면을 천천히 비춰주세요";
+                    message = placement.HasTrackedPlane ? "표시된 수평 표면을 누르면 정보판이 놓입니다.\n상품을 옮기면 정보판도 재배치해 주세요." : "상품 옆의 책상을 여러 각도에서 비추면\n정보판을 놓을 표면을 찾을 수 있습니다.";
+                }
             }
             else if (workflow.Phase == ProductPhase.Placed)
             {
