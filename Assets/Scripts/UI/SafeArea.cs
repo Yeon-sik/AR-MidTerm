@@ -4,8 +4,8 @@ namespace MidtermAR
 {
     public sealed class SafeArea : MonoBehaviour
     {
-        private Rect previous;
-        private RectTransform rect;
+        private Rect previous; // 화면 안전 영역이 바뀔 때만 다시 적용
+        private RectTransform rect; // 노치·시스템 영역을 피해 배치할 UI 영역
         private void Awake() { rect = (RectTransform)transform; Apply(); }
         private void Update() { if (Screen.safeArea != previous) Apply(); }
         private void Apply()

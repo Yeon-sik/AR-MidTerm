@@ -4,18 +4,18 @@ using UnityEngine.InputSystem;
 
 namespace MidtermAR
 {
-    public sealed class ProductARApp : MonoBehaviour
+    public sealed class ProductARApp : MonoBehaviour // 스캔·상품 조회·배치·화면 안내 연결
     {
-        [SerializeField] private TextAsset catalogJson;
+        [SerializeField] private TextAsset catalogJson; // 출처를 보존한 시연 상품 스냅샷
         [SerializeField] private ARReadiness readiness;
         [SerializeField] private ARBarcodeScanner scanner;
         [SerializeField] private ProductPlacement placement;
         [SerializeField] private ProductScreenView screen;
-        private ProductWorkflow workflow;
+        private ProductWorkflow workflow; // 현재 상품과 진행 단계 관리
         private float nextRefresh;
-        private float noticeUntil;
+        private float noticeUntil; // 일시 안내 메시지를 표시할 종료 시각
         private string notice;
-        private bool paused;
+        private bool paused; // 백그라운드에서 스캔·배치 차단
 
         private void Awake()
         {

@@ -7,9 +7,9 @@ namespace MidtermAR
     public sealed class AndroidMotionSampling : IDisposable
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
-        private AndroidJavaObject bridge;
-        private bool attempted;
-        private bool active;
+        private AndroidJavaObject bridge; // Android 센서 리스너를 소유하는 Java 객체
+        private bool attempted; // 현재 활성 구간에서 중복 등록 시도 방지
+        private bool active; // 두 센서의 등록 성공 여부
 #endif
 
         public void SetActive(bool requested)
@@ -53,7 +53,7 @@ namespace MidtermAR
 #endif
         }
 
-        public void Dispose()
+        public void Dispose() // 리스너 해제 후 JNI 참조 반환
         {
             Stop();
 #if UNITY_ANDROID && !UNITY_EDITOR

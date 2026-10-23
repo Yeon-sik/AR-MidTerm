@@ -8,7 +8,7 @@ namespace MidtermAR
 {
     // Bounded local diagnostics: eight source frames, overwritten on each new scan.
     // No image upload, gallery permission, Unity object access or synthetic camera input.
-    public static class BarcodeFrameDiagnostics
+    public static class BarcodeFrameDiagnostics // 개발 빌드의 판독 영상·결과를 제한된 슬롯에 저장
     {
         public static void Save(string directory, int slot, int scanGeneration, double sourceTimestamp, byte[] pixels, int width, int height, string barcode, double decodeMilliseconds)
         {

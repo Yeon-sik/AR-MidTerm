@@ -31,7 +31,7 @@ namespace MidtermAR.Editor
         private static readonly Color Green = new Color32(37, 126, 92, 255);
 
         [MenuItem("Product AR/Prepare Project and Scene")]
-        public static void PrepareProject()
+        public static void PrepareProject() // 참조가 연결된 실행 씬·프리팹 생성
         {
             Directory.CreateDirectory("Assets/Prefabs");
             Directory.CreateDirectory("Assets/Fonts/Generated");
@@ -48,7 +48,7 @@ namespace MidtermAR.Editor
         }
 
         [MenuItem("Product AR/Build Android APK")]
-        public static void BuildAndroid()
+        public static void BuildAndroid() // 지정 실행 씬을 Android APK로 빌드
         {
             if (!File.Exists(ScenePath)) PrepareProject();
             ConfigureAndroid();

@@ -17,13 +17,13 @@ namespace MidtermAR
     [Preserve, Serializable]
     public sealed class ProductSnapshot
     {
-        public string catalogProductId;
+        public string catalogProductId; // 가격·영양정보 연결의 기준 상품 ID
         public string name;
         public string brand;
         public string specification;
-        public string barcode;
+        public string barcode; // 숫자로 변환하지 않는 정확한 식별 문자열
         public string barcodeFormat;
-        public MappingEvidence mapping;
+        public MappingEvidence mapping; // 시연용 연결의 범위와 근거
         public PriceSnapshot price;
         public NutritionSnapshot nutrition;
     }
@@ -39,7 +39,7 @@ namespace MidtermAR
     [Preserve, Serializable]
     public sealed class PriceSnapshot
     {
-        public double? unitPriceKrw;
+        public double? unitPriceKrw; // 관측한 개당 원화 가격, null은 정보 없음
         public string seller;
         public string observedAt;
         public string source;
@@ -50,7 +50,7 @@ namespace MidtermAR
     [Preserve, Serializable]
     public sealed class NutritionSnapshot
     {
-        public double? basisAmount;
+        public double? basisAmount; // 영양 수치가 적용되는 기준량
         public string basisUnit;
         public string prepState;
         public double? caloriesKcal;
@@ -63,12 +63,12 @@ namespace MidtermAR
         public double? fiberGrams;
         public string source;
         public string nutritionFoodId;
-        public string sourceCatalogProductId;
+        public string sourceCatalogProductId; // 영양정보의 연결 상품 일치 검증에 사용
     }
 
     public sealed class ProductCatalog
     {
-        private readonly Dictionary<string, ProductSnapshot> products = new Dictionary<string, ProductSnapshot>(StringComparer.Ordinal);
+        private readonly Dictionary<string, ProductSnapshot> products = new Dictionary<string, ProductSnapshot>(StringComparer.Ordinal); // 정확한 바코드 문자열만 키로 사용
         public int Count => products.Count;
 
         public ProductCatalog(string json)

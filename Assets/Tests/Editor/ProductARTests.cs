@@ -197,7 +197,7 @@ namespace MidtermAR.Tests
         }
 
         [Test]
-        public void PlaneVisualizationCannotBeRestoredByThePackagesNextUpdate()
+        public void PlaneVisualizationCannotBeRestoredByThePackagesNextUpdate() // 패키지의 다음 프레임에도 평면 숨김이 유지되는지 검증
         {
             var root = PrefabUtility.LoadPrefabContents("Assets/Prefabs/PlacementPlane.prefab");
             var sessionField = typeof(ARSession).GetField("s_State", BindingFlags.Static | BindingFlags.NonPublic);
@@ -241,7 +241,7 @@ namespace MidtermAR.Tests
         }
 
         [Test]
-        public void SubsumedAndLimitedPlanesAreNotPlacementCandidates()
+        public void SubsumedAndLimitedPlanesAreNotPlacementCandidates() // 병합되거나 추적 제한된 평면의 배치 제외 검증
         {
             var root = PrefabUtility.LoadPrefabContents("Assets/Prefabs/PlacementPlane.prefab");
             var replacement = new GameObject("Replacement plane");

@@ -2,12 +2,12 @@ namespace MidtermAR
 {
     public enum ProductPhase { Scanning, AwaitingPlacement, Placed, UnknownBarcode, ScanFailed, DataUnavailable }
 
-    public sealed class ProductWorkflow
+    public sealed class ProductWorkflow // Unity 객체와 분리한 상품 선택 상태 흐름
     {
         private readonly ProductCatalog catalog;
-        public ProductPhase Phase { get; private set; } = ProductPhase.Scanning;
-        public ProductSnapshot Selected { get; private set; }
-        public string LastBarcode { get; private set; }
+        public ProductPhase Phase { get; private set; } = ProductPhase.Scanning; // 스캔부터 배치까지의 현재 단계
+        public ProductSnapshot Selected { get; private set; } // 정확한 바코드로 조회된 상품
+        public string LastBarcode { get; private set; } // 미등록 안내에도 표시할 마지막 판독 번호
         public bool CanPlace => Selected != null && Phase == ProductPhase.AwaitingPlacement;
 
         public ProductWorkflow(ProductCatalog catalog) { this.catalog = catalog; StartScan(); }

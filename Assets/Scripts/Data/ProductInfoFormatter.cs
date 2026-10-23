@@ -2,9 +2,9 @@ using System.Globalization;
 
 namespace MidtermAR
 {
-    public static class ProductInfoFormatter
+    public static class ProductInfoFormatter // 출처·기준량·누락값을 보존하는 표시 문자열 생성
     {
-        private static readonly CultureInfo Korean = CultureInfo.GetCultureInfo("ko-KR");
+        private static readonly CultureInfo Korean = CultureInfo.GetCultureInfo("ko-KR"); // 원화 가격의 천 단위 구분 형식
         public static string Number(double? value, string unit) => value.HasValue ? value.Value.ToString("0.##", CultureInfo.InvariantCulture) + unit : "정보 없음";
         public static string Price(ProductSnapshot product) => product.price?.unitPriceKrw is double value ? value.ToString("N0", Korean) + "원" : "가격 정보 없음";
         public static string PriceSource(ProductSnapshot product) => product.price?.unitPriceKrw.HasValue == true

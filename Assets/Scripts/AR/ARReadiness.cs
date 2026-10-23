@@ -8,10 +8,10 @@ using UnityEngine.Android;
 
 namespace MidtermAR
 {
-    public sealed class ARReadiness : MonoBehaviour
+    public sealed class ARReadiness : MonoBehaviour // 카메라 권한·AR 준비·센서 요청 수명 관리
     {
-        [SerializeField] private ARSession session;
-        [SerializeField] private ARCameraManager cameraManager;
+        [SerializeField] private ARSession session; // AR 공간 추적 세션
+        [SerializeField] private ARCameraManager cameraManager; // 같은 AR 카메라의 권한·방향 제어
         public bool IsReady => !permissionBlocked && ARSession.state == ARSessionState.SessionTracking && cameraManager.permissionGranted;
         public bool CameraReady => !permissionBlocked && cameraManager.permissionGranted && CanReadCameraInState(ARSession.state);
         public static bool CanReadCameraInState(ARSessionState state) => state == ARSessionState.SessionInitializing || state == ARSessionState.SessionTracking;
@@ -26,10 +26,10 @@ namespace MidtermAR
             _ => "주변을 천천히 비춰 공간 추적을 복구해 주세요."
         };
         private bool permissionBlocked;
-        private bool permissionPending;
-        private bool applicationPaused;
+        private bool permissionPending; // 권한 요청 응답 대기 여부
+        private bool applicationPaused; // 백그라운드에서 센서 재등록 방지
         private bool started;
-        private int initializationGeneration;
+        private int initializationGeneration; // 이전 초기화의 늦은 권한 응답 무시
         private readonly AndroidMotionSampling motionSampling = new AndroidMotionSampling();
 
         private void OnEnable()

@@ -9,7 +9,7 @@ using UnityEngine;
 namespace MidtermAR.Editor
 {
     // Replays genuine captured frames; results are diagnostics, not synthetic device proof.
-    public static class BarcodeImageAnalysis
+    public static class BarcodeImageAnalysis // 에디터에서 입력 이미지의 바코드 판독 분석
     {
         public static void Run()
         {

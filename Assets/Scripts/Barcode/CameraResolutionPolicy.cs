@@ -1,6 +1,6 @@
 namespace MidtermAR
 {
-    public static class CameraResolutionPolicy
+    public static class CameraResolutionPolicy // 지원 카메라 해상도의 판독용 우선순위 계산
     {
         // Preserve barcode modules up to 1080p; prefer 30 fps at an equal resolution.
         public static int Score(int width, int height, int? framesPerSecond)

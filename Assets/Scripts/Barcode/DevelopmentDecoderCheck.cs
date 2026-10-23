@@ -8,7 +8,7 @@ namespace MidtermAR
 {
     // Development builds only. This proves the managed decoder runs under IL2CPP,
     // not that the camera has read a physical product.
-    public static class DevelopmentDecoderCheck
+    public static class DevelopmentDecoderCheck // 개발 기기에서 합성 바코드 판독 경로 점검
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static async void Run()

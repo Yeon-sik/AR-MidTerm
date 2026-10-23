@@ -10,10 +10,10 @@ import android.os.Looper;
 
 /** Keeps an explicit motion-sensor request while AR is active; never consumes pose data. */
 public final class MotionSampling implements SensorEventListener {
-    private static final int SAMPLING_PERIOD_US = 10000;
-    private final SensorManager manager;
-    private final Handler callbackHandler = new Handler(Looper.getMainLooper());
-    private boolean active;
+    private static final int SAMPLING_PERIOD_US = 10000; // AR 사용 중 요청할 센서 주기 10ms
+    private final SensorManager manager; // 앱 Context로 얻은 Android 센서 서비스
+    private final Handler callbackHandler = new Handler(Looper.getMainLooper()); // 빈 센서 콜백을 Android 메인 스레드에서 처리
+    private boolean active; // 두 센서가 모두 등록된 상태
 
     public MotionSampling(Context context) {
         manager = (SensorManager) context.getApplicationContext().getSystemService(Context.SENSOR_SERVICE);

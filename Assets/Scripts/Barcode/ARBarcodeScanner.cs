@@ -7,12 +7,12 @@ using UnityEngine.XR.ARSubsystems;
 
 namespace MidtermAR
 {
-    public sealed class ARBarcodeScanner : MonoBehaviour
+    public sealed class ARBarcodeScanner : MonoBehaviour // AR 카메라 프레임 획득과 비동기 판독 조율
     {
         [SerializeField] private ARCameraManager cameraManager;
         [SerializeField, Range(0.2f, 1f)] private float interval = 0.35f;
         [SerializeField, Range(640, 1920)] private int longestEdge = 1920;
-        [SerializeField] private float timeoutSeconds = 15f;
+        [SerializeField] private float timeoutSeconds = 15f; // 한 번의 스캔 제한 시간
 
         public event Action<BarcodeReadResult> Decoded;
         public event Action TimedOut;
@@ -23,21 +23,21 @@ namespace MidtermAR
 
         private readonly BarcodeDecoder decoder = new BarcodeDecoder();
         private readonly BarcodeConfirmation confirmation = new BarcodeConfirmation();
-        private NativeArray<byte> conversionBuffer;
-        private byte[] workerPixels;
-        private Task<BarcodeReadResult> pending;
+        private NativeArray<byte> conversionBuffer; // CPU 이미지 변환에 재사용하는 네이티브 버퍼
+        private byte[] workerPixels; // 작업 스레드에서 읽는 관리 배열
+        private Task<BarcodeReadResult> pending; // 동시에 하나만 실행하는 판독 작업
         private float nextCapture;
         private float scanStarted;
-        private int generation;
-        private int pendingGeneration;
+        private int generation; // 스캔 재시작 전의 판독 결과 무시
+        private int pendingGeneration; // 진행 중인 판독 작업의 스캔 세대
         private float pendingCapturedAt;
         private bool conversionErrorLogged;
         private float lastFrameTime = float.NegativeInfinity;
-        private bool configurationAttempted;
+        private bool configurationAttempted; // 카메라 해상도 설정의 반복 적용 방지
         private Vector2Int lastImageSize;
         private int scanFrames;
         private string diagnosticDirectory;
-        private double lastImageTimestamp = double.NegativeInfinity;
+        private double lastImageTimestamp = double.NegativeInfinity; // 동일 카메라 이미지의 중복 확인 방지
 
         private void OnEnable()
         {

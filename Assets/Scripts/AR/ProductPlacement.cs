@@ -10,11 +10,11 @@ namespace MidtermAR
 {
     public sealed class ProductPlacement : MonoBehaviour
     {
-        [SerializeField] private ARPlaneManager planeManager;
-        [SerializeField] private ARRaycastManager raycastManager;
-        [SerializeField] private ARAnchorManager anchorManager;
+        [SerializeField] private ARPlaneManager planeManager; // 배치 가능한 현실 수평면 감지
+        [SerializeField] private ARRaycastManager raycastManager; // 화면 터치와 현실 평면의 교점 계산
+        [SerializeField] private ARAnchorManager anchorManager; // 정보판의 현실 공간 고정점 관리
         [SerializeField] private Camera arCamera;
-        [SerializeField] private WorldProductPanel panelPrefab;
+        [SerializeField] private WorldProductPanel panelPrefab; // 앵커 아래에 생성할 정보판 원본
         public event Action Placed;
         public event Action<string> Notice;
         public bool AllowPlacement { get; set; }
@@ -24,12 +24,12 @@ namespace MidtermAR
         public bool PlacementTracking => HasPlacement && anchor.trackingState == TrackingState.Tracking && ARSession.state == ARSessionState.SessionTracking;
         private readonly List<ARRaycastHit> hits = new List<ARRaycastHit>();
         private readonly List<RaycastResult> uiHits = new List<RaycastResult>();
-        private ARAnchor anchor;
+        private ARAnchor anchor; // 현재 정보판을 고정하는 앵커 하나
         private WorldProductPanel panel;
         private ProductSnapshot product;
-        private int generation;
-        private float nextVisualUpdate;
-        private int lastTrackedPlaneCount = -1;
+        private int generation; // 취소된 비동기 배치 결과 무시
+        private float nextVisualUpdate; // 평면 표시 갱신 간격 제한
+        private int lastTrackedPlaneCount = -1; // 평면 수가 바뀔 때만 로그 출력
         private bool? lastPlacementTracking;
 
         public void SetProduct(ProductSnapshot value)
