@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "products": [
+    {
+      "catalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0",
+      "name": "더단백 크런치바 초코",
+      "brand": "빙그레",
+      "specification": "40g · 1개",
+      "barcode": "8801104671507",
+      "barcodeFormat": "EAN_13",
+      "mapping": {
+        "scope": "demo-only",
+        "source": "2026-10-23 사용자 제공 실물 상품명·브랜드·40g 규격·바코드 숫자와 기존 PriceTrace 정확 규격 조회를 대조. 운영 DB 기존 바코드 매핑은 권한 부족으로 UNVERIFIED.",
+        "physicalDecodeVerification": "PENDING_DEVICE_TEST"
+      },
+      "price": {
+        "unitPriceKrw": 1400,
+        "seller": "국군복지단 바다마을마트",
+        "observedAt": "2026-05-08",
+        "source": "PriceTrace public product-observations.v3 snapshot revision e6e6315772fcfc71; exact seller + sourceProductCode 260190 join; not verified current/global-latest price",
+        "confidence": "medium",
+        "observationId": "e78107dfe0379bff"
+      },
+      "nutrition": {
+        "basisAmount": 40,
+        "basisUnit": "g",
+        "prepState": "unspecified",
+        "caloriesKcal": 185,
+        "carbsGrams": 15,
+        "proteinGrams": 15,
+        "fatGrams": 7,
+        "sugarsGrams": 7,
+        "saturatedFatGrams": 5,
+        "sodiumMg": 200,
+        "fiberGrams": null,
+        "source": "Nutrition approved public pricetrace exact-ID link; pricetrace_manual; revision 1; package nutrition label not independently verified",
+        "nutritionFoodId": "17637a49-e3c6-45d9-8425-48b47612152b",
+        "sourceCatalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0"
+      }
+    }
+  ]
+}

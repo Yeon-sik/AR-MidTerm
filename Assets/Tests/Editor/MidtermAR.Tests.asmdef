@@ -1,0 +1,8 @@
+{
+  "name": "MidtermAR.Tests",
+  "references": ["MidtermAR", "MidtermAR.Editor", "Unity.XR.ARFoundation", "Unity.XR.ARSubsystems", "Unity.XR.CoreUtils", "Unity.InputSystem", "Unity.TextMeshPro", "Unity.ugui"],
+  "overrideReferences": true,
+  "precompiledReferences": ["nunit.framework.dll", "zxing.dll", "Newtonsoft.Json.dll"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

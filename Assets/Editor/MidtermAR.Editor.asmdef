@@ -1,0 +1,6 @@
+{
+  "name": "MidtermAR.Editor",
+  "rootNamespace": "MidtermAR.Editor",
+  "references": ["MidtermAR", "Unity.XR.ARFoundation", "Unity.XR.ARSubsystems", "Unity.XR.CoreUtils", "Unity.InputSystem", "Unity.TextMeshPro", "Unity.ugui", "Unity.RenderPipelines.Universal.Runtime"],
+  "includePlatforms": ["Editor"]
+}

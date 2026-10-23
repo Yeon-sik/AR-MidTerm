@@ -1,0 +1,4 @@
+<linker>
+  <assembly fullname="MidtermAR" preserve="all" />
+  <assembly fullname="zxing" preserve="all" />
+</linker>
