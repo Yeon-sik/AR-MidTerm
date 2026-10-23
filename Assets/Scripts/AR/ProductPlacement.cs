@@ -29,12 +29,16 @@ namespace MidtermAR
         private ProductSnapshot product;
         private int generation;
         private float nextVisualUpdate;
+        private int lastTrackedPlaneCount = -1;
+        private bool? lastPlacementTracking;
 
         public void SetProduct(ProductSnapshot value)
         {
             ClearPlacement();
             product = value;
             planeManager.enabled = value != null;
+            RefreshPlaneVisuals();
+            Debug.Log("[ProductAR] Plane detection " + (value != null ? "enabled for " + value.name : "disabled"));
         }
 
         public void ClearPlacement()
@@ -47,25 +51,59 @@ namespace MidtermAR
         }
 
         private void OnDestroy() { ClearPlacement(); }
-        private void OnDisable() { generation++; if (panel != null) panel.gameObject.SetActive(false); }
+        private void OnDisable()
+        {
+            generation++;
+            if (panel != null) panel.gameObject.SetActive(false);
+            RefreshPlaneVisuals();
+        }
 
         private void Update()
         {
-            if (panel != null) panel.gameObject.SetActive(PlacementTracking);
+            var tracking = PlacementTracking;
+            if (panel != null) panel.gameObject.SetActive(tracking);
+            if (lastPlacementTracking != tracking)
+            {
+                lastPlacementTracking = tracking;
+                Debug.Log("[ProductAR] Placement tracking=" + tracking + "; anchor=" + (anchor != null ? anchor.trackableId.ToString() : "none"));
+            }
             if (Time.unscaledTime >= nextVisualUpdate)
             {
                 nextVisualUpdate = Time.unscaledTime + 0.2f;
-                HasTrackedPlane = false;
-                foreach (var plane in planeManager.trackables)
-                {
-                    var valid = plane.trackingState == TrackingState.Tracking && plane.alignment == PlaneAlignment.HorizontalUp;
-                    HasTrackedPlane |= valid;
-                    if (plane.TryGetComponent<MeshRenderer>(out var renderer))
-                        renderer.enabled = valid && AllowPlacement && ARSession.state == ARSessionState.SessionTracking;
-                }
+                RefreshPlaneVisuals();
             }
             if (!AllowPlacement || IsBusy || product == null || ARSession.state != ARSessionState.SessionTracking) return;
-            if (TryGetPressedPosition(out var screenPosition) && !IsOverUI(screenPosition)) Place(screenPosition);
+            if (!TryGetPressedPosition(out var screenPosition)) return;
+            if (IsOverUI(screenPosition))
+            { Debug.Log("[ProductAR] Placement touch skipped over UI at " + screenPosition); return; }
+            Place(screenPosition);
+        }
+
+        private void RefreshPlaneVisuals()
+        {
+            if (planeManager == null) return;
+            var count = 0;
+            var show = isActiveAndEnabled && planeManager.enabled && AllowPlacement && ARSession.state == ARSessionState.SessionTracking;
+            foreach (var plane in planeManager.trackables)
+            {
+                var valid = IsUsablePlane(plane);
+                if (valid) count++;
+                SetPlaneVisualization(plane, valid && show);
+            }
+            HasTrackedPlane = planeManager.enabled && count > 0;
+            if (lastTrackedPlaneCount == count) return;
+            lastTrackedPlaneCount = count;
+            Debug.Log("[ProductAR] Usable horizontal planes=" + count);
+        }
+
+        private static bool IsUsablePlane(ARPlane plane) => plane != null && plane.subsumedBy == null
+            && plane.trackingState == TrackingState.Tracking && plane.alignment == PlaneAlignment.HorizontalUp;
+
+        private static void SetPlaneVisualization(ARPlane plane, bool visible)
+        {
+            // 메시 갱신 컴포넌트가 매 프레임 렌더러를 제어하므로 표시 책임도 함께 켜고 끈다.
+            if (plane.TryGetComponent<ARPlaneMeshVisualizer>(out var visualizer)) visualizer.enabled = visible;
+            else if (plane.TryGetComponent<MeshRenderer>(out var renderer)) renderer.enabled = visible;
         }
 
         private static bool TryGetPressedPosition(out Vector2 position)
@@ -91,10 +129,19 @@ namespace MidtermAR
         private async void Place(Vector2 screenPosition)
         {
             if (!raycastManager.Raycast(screenPosition, hits, TrackableType.PlaneWithinPolygon))
-            { Notice?.Invoke("아직 표면을 찾지 못했습니다. 책상을 천천히 비춘 뒤 다시 눌러주세요."); return; }
-            var hit = hits[0];
-            var plane = planeManager.GetPlane(hit.trackableId);
-            if (plane == null || plane.alignment != PlaneAlignment.HorizontalUp || plane.trackingState != TrackingState.Tracking) return;
+            {
+                Debug.Log("[ProductAR] Placement raycast missed at " + screenPosition);
+                Notice?.Invoke("아직 표면을 찾지 못했습니다. 책상을 천천히 비춘 뒤 다시 눌러주세요.");
+                return;
+            }
+            var hitIndex = hits.FindIndex(candidate => IsUsablePlane(planeManager.GetPlane(candidate.trackableId)));
+            if (hitIndex < 0)
+            {
+                Debug.Log("[ProductAR] Placement raycast found no usable horizontal plane; hits=" + hits.Count);
+                Notice?.Invoke("이 위치는 아직 배치할 수 없습니다. 표시된 책상 표면을 눌러주세요.");
+                return;
+            }
+            var hit = hits[hitIndex];
             var forward = Vector3.ProjectOnPlane(hit.pose.position - arCamera.transform.position, Vector3.up);
             if (forward.sqrMagnitude < 0.001f) forward = Vector3.ProjectOnPlane(arCamera.transform.forward, Vector3.up);
             var rotation = forward.sqrMagnitude > 0.001f ? Quaternion.LookRotation(forward.normalized, Vector3.up) : Quaternion.identity;
@@ -104,7 +151,11 @@ namespace MidtermAR
             {
                 var result = await anchorManager.TryAddAnchorAsync(new Pose(hit.pose.position, rotation));
                 if (!result.status.IsSuccess() || result.value == null)
-                { if (this != null) Notice?.Invoke("공간에 고정하지 못했습니다. 주변을 비추고 다시 눌러주세요."); return; }
+                {
+                    Debug.LogWarning("[ProductAR] Anchor creation failed; status=" + result.status + "; plane=" + hit.trackableId + "; position=" + hit.pose.position);
+                    if (this != null) Notice?.Invoke("공간에 고정하지 못했습니다. 주변을 비추고 다시 눌러주세요.");
+                    return;
+                }
                 var created = result.value;
                 if (this == null || !isActiveAndEnabled || requestGeneration != generation || !AllowPlacement
                     || ARSession.state != ARSessionState.SessionTracking || product == null)
@@ -120,8 +171,9 @@ namespace MidtermAR
                 panel.gameObject.SetActive(PlacementTracking);
                 ReleaseAnchor(previous);
                 AllowPlacement = false;
+                RefreshPlaneVisuals();
                 Placed?.Invoke();
-                Debug.Log("[ProductAR] World panel placed at " + hit.pose.position);
+                Debug.Log("[ProductAR] World panel placed; anchor=" + created.trackableId + "; plane=" + hit.trackableId + "; position=" + hit.pose.position);
             }
             catch (Exception error)
             {

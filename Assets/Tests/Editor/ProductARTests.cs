@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using MidtermAR.Editor;
 using NUnit.Framework;
 using TMPro;
@@ -9,6 +10,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 using ZXing;
 using FormatException = System.FormatException;
 
@@ -192,6 +194,84 @@ namespace MidtermAR.Tests
                     if (iterator.propertyType == SerializedPropertyType.ObjectReference)
                         Assert.That(iterator.objectReferenceValue, Is.Not.Null, component.name + ": " + iterator.propertyPath);
             }
+        }
+
+        [Test]
+        public void PlaneVisualizationCannotBeRestoredByThePackagesNextUpdate()
+        {
+            var root = PrefabUtility.LoadPrefabContents("Assets/Prefabs/PlacementPlane.prefab");
+            var sessionField = typeof(ARSession).GetField("s_State", BindingFlags.Static | BindingFlags.NonPublic);
+            var previousSession = sessionField.GetValue(null);
+            var visualizer = root.GetComponent<ARPlaneMeshVisualizer>();
+            Mesh createdMesh = null;
+            try
+            {
+                sessionField.SetValue(null, ARSessionState.SessionTracking);
+                SetPlaneData(root.GetComponent<ARPlane>(), TrackingState.Tracking);
+                // EditMode에서 실제 패키지의 프레임 로직을 직접 실행해 기기 없이 표시 경쟁을 재현한다.
+                typeof(ARPlaneMeshVisualizer).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(visualizer, null);
+                createdMesh = visualizer.mesh;
+                var packageUpdate = typeof(ARPlaneMeshVisualizer).GetMethod("Update", BindingFlags.Instance | BindingFlags.NonPublic);
+                var applyVisibility = typeof(ProductPlacement).GetMethod("SetPlaneVisualization", BindingFlags.Static | BindingFlags.NonPublic);
+                var renderer = root.GetComponent<MeshRenderer>();
+                renderer.enabled = false;
+                packageUpdate.Invoke(visualizer, null);
+                Assert.That(renderer.enabled, Is.True, "Old renderer-only hiding is overwritten by the actual package update.");
+
+                applyVisibility.Invoke(null, new object[] { root.GetComponent<ARPlane>(), false });
+                Assert.That(visualizer.enabled, Is.False);
+                for (var frame = 0; frame < 4; frame++)
+                {
+                    // 비활성 컴포넌트의 Update까지 강제로 호출해도 패키지가 다시 표시하지 못해야 한다.
+                    packageUpdate.Invoke(visualizer, null);
+                    Assert.That(renderer.enabled, Is.False, "Hidden plane was restored on frame " + frame);
+                }
+
+                applyVisibility.Invoke(null, new object[] { root.GetComponent<ARPlane>(), true });
+                packageUpdate.Invoke(visualizer, null);
+                Assert.That(visualizer.enabled, Is.True);
+                Assert.That(renderer.enabled, Is.True, "Repositioning must allow the tracked plane to appear again.");
+            }
+            finally
+            {
+                sessionField.SetValue(null, previousSession);
+                if (createdMesh != null) UnityEngine.Object.DestroyImmediate(createdMesh);
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        [Test]
+        public void SubsumedAndLimitedPlanesAreNotPlacementCandidates()
+        {
+            var root = PrefabUtility.LoadPrefabContents("Assets/Prefabs/PlacementPlane.prefab");
+            var replacement = new GameObject("Replacement plane");
+            try
+            {
+                var plane = root.GetComponent<ARPlane>();
+                var replacementPlane = replacement.AddComponent<ARPlane>();
+                var usable = typeof(ProductPlacement).GetMethod("IsUsablePlane", BindingFlags.Static | BindingFlags.NonPublic);
+                SetPlaneData(plane, TrackingState.Tracking);
+                Assert.That(usable.Invoke(null, new object[] { plane }), Is.True);
+                typeof(ARPlane).GetProperty("subsumedBy").SetValue(plane, replacementPlane);
+                Assert.That(usable.Invoke(null, new object[] { plane }), Is.False, "A merged plane must not count as a placement surface.");
+                typeof(ARPlane).GetProperty("subsumedBy").SetValue(plane, null);
+                SetPlaneData(plane, TrackingState.Limited);
+                Assert.That(usable.Invoke(null, new object[] { plane }), Is.False);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(replacement);
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static void SetPlaneData(ARPlane plane, TrackingState state)
+        {
+            var data = new BoundedPlane(new TrackableId(1, 1), TrackableId.invalidId, Pose.identity,
+                Vector2.zero, Vector2.one, PlaneAlignment.HorizontalUp, state, IntPtr.Zero,
+                PlaneClassifications.Table, TrackableId.invalidId);
+            typeof(ARTrackable<BoundedPlane, ARPlane>).GetProperty("sessionRelativeData", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(plane, data);
         }
 
         [Test]
