@@ -43,4 +43,4 @@
 - 설치·실행: `scripts/Install-Android.ps1 -DeviceSerial <serial> -Launch`. 서명·버전을 확인한 `-r` 업데이트를 사용한다.
 - 씬·프리팹 재생성: Unity 메뉴 **Product AR → Prepare Project and Scene**. 생성 씬을 수동 수정했다면 재생성 전 내용을 보존한다.
 - 남은 실물 시험: [v3 자동 추종 완료 기준](docs/BARCODE-FOLLOW.md). 바코드를 보여주고 터치 없이 정보창 표시·상품 이동·가림·재획득을 확인한다. [기존 기기 체크리스트](docs/DEVICE-CHECKLIST.md)의 평면 배치 절차는 v2 기록이다.
-- 제출 준비: [중간보고서 초안](docs/REPORT-DRAFT.md). 실제 시험 결과·학번·이름·데모 영상은 보완해야 한다.
+- 제출 준비: [중간보고서 초안](docs/REPORT-DRAFT.md) (v3 기준, 2026-10-25). Part A는 템플릿 순서의 제출 본문, Part B는 강의 요구와의 차이·방향 전환 선택지를 정리한 후속 구현자용 메모다. 실제 v3 기기 시험 결과·조사 근거·학번·이름·데모 영상은 보완해야 한다.
