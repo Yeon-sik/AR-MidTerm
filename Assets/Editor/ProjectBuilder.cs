@@ -47,6 +47,153 @@ namespace MidtermAR.Editor
             Debug.Log("[ProductAR Build] Project prepared: " + ScenePath);
         }
 
+        [MenuItem("Product AR/Update Camera UI")]
+        public static void UpdateCameraUI()
+        {
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var app = scene.GetRootGameObjects().SelectMany(go => go.GetComponentsInChildren<ProductARApp>(true)).Single();
+            var scanner = app.GetComponent<ARBarcodeScanner>();
+            var session = UnityEngine.Object.FindFirstObjectByType<ARSession>();
+            Assign(scanner, "session", session);
+            app.GetComponent<ProductPlacement>().enabled = false;
+            UnityEngine.Object.FindFirstObjectByType<ARPlaneManager>().enabled = false;
+            foreach (var root in scene.GetRootGameObjects())
+                if (root.name == "Camera UI" || root.name == "UI Event System") UnityEngine.Object.DestroyImmediate(root);
+            Assign(app, "screen", CreateOverlay(EnsureFont(), app));
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[ProductAR Build] Compact camera UI updated.");
+        }
+
+        public static void CaptureBarcodeFollowPreviews()
+        {
+            EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var view = UnityEngine.Object.FindFirstObjectByType<ProductScreenView>();
+            var follow = view.GetComponent<BarcodeProductPanel>();
+            var catalog = new ProductCatalog(File.ReadAllText("Assets/Data/demo-products.json"));
+            catalog.TryFind("8801104671507", out var product);
+            // 렌더 검증 전용 데이터. 상품 카탈로그나 실행 씬에는 저장하지 않는다.
+            var missing = new ProductSnapshot { name = product.name, brand = product.brand, specification = product.specification, barcode = product.barcode };
+            var partial = new ProductSnapshot
+            {
+                name = product.name, brand = product.brand, specification = product.specification, barcode = product.barcode,
+                price = new PriceSnapshot { unitPriceKrw = 0, seller = product.price.seller, observedAt = product.price.observedAt },
+                nutrition = new NutritionSnapshot { basisAmount = 40, basisUnit = "g", sugarsGrams = 0, sodiumMg = 0 }
+            };
+            var canvas = view.GetComponent<Canvas>();
+            var camera = new GameObject("Follow UI Preview", typeof(Camera)).GetComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color32(78, 94, 100, 255);
+            camera.orthographic = true;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 1;
+            Directory.CreateDirectory("artifacts/ui/barcode-follow");
+            foreach (var height in new[] { 1920, 2400 })
+            {
+                var target = new RenderTexture(1080, height, 24);
+                camera.targetTexture = target;
+                Canvas.ForceUpdateCanvases();
+                Capture("scanning", null);
+                Capture("following-center", new Vector2(0.5f, 0.45f));
+                Capture("following-left", new Vector2(0.2f, 0.5f));
+                Capture("following-top", new Vector2(0.8f, 0.78f));
+                Capture("lost", null, true);
+                Capture("data-missing", new Vector2(0.5f, 0.45f), sample: missing);
+                Capture("data-partial-zero", new Vector2(0.5f, 0.45f), sample: partial);
+                camera.targetTexture = null;
+                UnityEngine.Object.DestroyImmediate(target);
+
+                void Capture(string name, Vector2? position, bool lost = false, ProductSnapshot sample = null)
+                {
+                    follow.SetProduct(position.HasValue || lost ? sample ?? product : null);
+                    view.Show(position.HasValue ? "2 / 2 · 바코드 따라가는 중" : lost ? "2 / 2 · 바코드 위치 찾는 중" : "1 / 2 · 바코드 스캔",
+                        position.HasValue ? "상품정보를 자동으로 표시해요" : lost ? "바코드를 다시 비춰주세요" : "바코드를 비춰주세요",
+                        position.HasValue ? "바코드가 보이는 동안 정보창이 따라가요." : "바코드 전체가 선명하게 보이도록\n휴대폰을 잠시 멈춰주세요.",
+                        lost ? product.name + " · " + product.specification : "", "다른 상품 스캔", position.HasValue || lost, false, false, false, lost,
+                        secondaryAction: position.HasValue || lost);
+                    Canvas.ForceUpdateCanvases();
+                    if (position.HasValue && !follow.LayoutAtViewport(position.Value)) throw new InvalidOperationException("Follow preview could not fit: " + name);
+                    Canvas.ForceUpdateCanvases();
+                    foreach (var text in view.GetComponentsInChildren<TMP_Text>())
+                    {
+                        text.ForceMeshUpdate(true, true);
+                        if (text.isTextOverflowing) throw new InvalidOperationException("Follow text overflow: " + name + "/" + text.name);
+                    }
+                    camera.Render();
+                    var previous = RenderTexture.active;
+                    var pixels = new Texture2D(1080, height, TextureFormat.RGB24, false);
+                    try
+                    {
+                        RenderTexture.active = target;
+                        pixels.ReadPixels(new Rect(0, 0, 1080, height), 0, 0); pixels.Apply();
+                        File.WriteAllBytes($"artifacts/ui/barcode-follow/{name}-{height}.png", pixels.EncodeToPNG());
+                    }
+                    finally { RenderTexture.active = previous; UnityEngine.Object.DestroyImmediate(pixels); }
+                    Debug.Log($"[ProductAR Follow UI] {name} 1080x{height} PASS");
+                }
+            }
+        }
+
+        public static void CaptureCameraUIPreviews()
+        {
+            EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var view = UnityEngine.Object.FindFirstObjectByType<ProductScreenView>();
+            var canvas = view.GetComponent<Canvas>();
+            var cameraObject = new GameObject("UI Preview Camera", typeof(Camera));
+            var camera = cameraObject.GetComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color32(78, 94, 100, 255);
+            camera.orthographic = true;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = camera;
+            canvas.planeDistance = 1;
+            Directory.CreateDirectory("artifacts/ui");
+            const string product = "더단백 크런치바 초코 · 40g · 1개";
+            foreach (var height in new[] { 1920, 2400 })
+            {
+                var target = new RenderTexture(1080, height, 24);
+                camera.targetTexture = target;
+                Canvas.ForceUpdateCanvases();
+                Capture("scan", "1 / 3 · 바코드 스캔", "바코드를 비춰주세요", "바코드 전체가 선명하게 보이도록\n휴대폰을 잠시 멈춰주세요.", "", false, false, false);
+                Capture("surface", "2 / 3 · 표면 찾는 중", "책상 표면을 찾아주세요", "상품 옆 책상과 주변 물체를\n천천히 여러 각도에서 비춰주세요.", product, true, false, false);
+                Capture("place", "2 / 3 · 배치 위치 선택", "초록색 표면을 눌러주세요", "상품 옆 원하는 위치를 누르면\n그 자리에 정보판이 놓여요.", product, true, false, false);
+                Capture("placed", "3 / 3 · 배치 완료", "공간에 정보를 배치했어요", "상품을 옮겼다면 재배치를 눌러주세요.", product, true, true, true);
+                Capture("reposition", "2 / 3 · 배치 위치 선택", "초록색 표면을 눌러주세요", "상품 옆 원하는 위치를 누르면\n그 자리에 정보판이 놓여요.", product, true, true, false, moveAction: "재배치 취소");
+                Capture("recovery", "3 / 3 · 공간 추적 복구 중", "정보판 위치를 다시 찾는 중", "추적이 끊겨 정보판을 잠시 숨겼어요.\n무늬가 있는 책상과 주변 물체를 함께 비춰주세요.", product, true, false, true, attention: true);
+                Capture("unknown", "1 / 3 · 상품 확인 필요", "시연 데이터에 없는 상품이에요", "읽은 번호: 4006381333931\n포장의 번호를 확인하고 다시 스캔해 주세요.", "", true, false, false, error: true);
+                Capture("permission", "카메라 권한 필요", "카메라 사용을 허용해 주세요", "설정에서 카메라 권한을 허용한 뒤 돌아와 주세요.", "", true, false, false, error: true, action: "설정 열기");
+                camera.targetTexture = null;
+                UnityEngine.Object.DestroyImmediate(target);
+
+                void Capture(string name, string step, string title, string message, string summary,
+                    bool primary, bool move, bool delete, bool error = false, bool attention = false, string moveAction = "재배치", string action = null)
+                {
+                    view.Show(step, title, message, summary, action ?? (summary.Length == 0 ? "다시 스캔" : "다른 상품 스캔"), primary, move, delete, error, attention, moveAction);
+                    Canvas.ForceUpdateCanvases();
+                    foreach (var text in view.GetComponentsInChildren<TMP_Text>())
+                    {
+                        text.ForceMeshUpdate(true, true);
+                        if (text.isTextOverflowing) throw new InvalidOperationException("UI preview text overflow: " + name + "/" + text.name);
+                    }
+                    var safe = (RectTransform)view.transform.Find("Safe Area");
+                    var header = (RectTransform)safe.Find("Header");
+                    var footer = (RectTransform)safe.Find("Actions");
+                    Debug.Log($"[ProductAR UI] {name} 1080x{height}: UI height fraction={(header.rect.height + footer.rect.height) / safe.rect.height:F3}");
+                    camera.Render();
+                    var previous = RenderTexture.active;
+                    try
+                    {
+                        RenderTexture.active = target;
+                        var image = new Texture2D(1080, height, TextureFormat.RGB24, false);
+                        image.ReadPixels(new Rect(0, 0, 1080, height), 0, 0);
+                        image.Apply();
+                        File.WriteAllBytes($"artifacts/ui/{name}-{height}.png", image.EncodeToPNG());
+                        UnityEngine.Object.DestroyImmediate(image);
+                    }
+                    finally { RenderTexture.active = previous; }
+                }
+            }
+        }
+
         [MenuItem("Product AR/Build Android APK")]
         public static void BuildAndroid() // 지정 실행 씬을 Android APK로 빌드
         {
@@ -226,6 +373,8 @@ namespace MidtermAR.Editor
             Assign(readiness, "session", session);
             Assign(readiness, "cameraManager", cameraObject.GetComponent<ARCameraManager>());
             Assign(scanner, "cameraManager", cameraObject.GetComponent<ARCameraManager>());
+            Assign(scanner, "session", session);
+            placement.enabled = false;
             Assign(placement, "planeManager", planes);
             Assign(placement, "raycastManager", rays);
             Assign(placement, "anchorManager", anchors);
@@ -237,7 +386,6 @@ namespace MidtermAR.Editor
             Assign(app, "catalogJson", AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Data/demo-products.json"));
             Assign(app, "readiness", readiness);
             Assign(app, "scanner", scanner);
-            Assign(app, "placement", placement);
             Assign(app, "screen", screen);
             EditorSceneManager.SaveScene(scene, ScenePath);
         }
@@ -277,32 +425,113 @@ namespace MidtermAR.Editor
             safe.gameObject.AddComponent<SafeArea>();
             var top = Plate("Header", safe, Ink);
             top.anchorMin = new Vector2(0, 1); top.anchorMax = Vector2.one; top.pivot = new Vector2(0.5f, 1);
-            top.offsetMin = new Vector2(24, -222); top.offsetMax = new Vector2(-24, -24);
-            Text(top, "AppTitle", "상품정보 AR", font, 44, Color.white, 28, 22, 920, 64);
-            Text(top, "Intro", "바코드로 찾고, 상품 옆 공간에 배치", font, 30, Color.white, 28, 94, 920, 56);
+            top.offsetMin = new Vector2(24, -148); top.offsetMax = new Vector2(-24, -24);
             var bottom = Plate("Actions", safe, Ink);
             bottom.anchorMin = Vector2.zero; bottom.anchorMax = new Vector2(1, 0); bottom.pivot = new Vector2(0.5f, 0);
-            bottom.offsetMin = new Vector2(24, 24); bottom.offsetMax = new Vector2(-24, 584);
+            bottom.offsetMin = new Vector2(24, 24); bottom.offsetMax = new Vector2(-24, 140);
             var view = canvasObject.GetComponent<ProductScreenView>();
-            Assign(view, "statusTitle", Text(bottom, "Status", "AR 카메라 준비 중", font, 39, Color.white, 28, 28, 940, 72));
-            Assign(view, "statusMessage", Text(bottom, "Instruction", "주변을 천천히 비춰주세요.", font, 31, Color.white, 28, 112, 940, 126));
-            Assign(view, "productSummary", Text(bottom, "Product", "시연 상품 · 더단백 크런치바 초코 40g", font, 28, new Color(0.78f, 0.9f, 0.86f), 28, 260, 940, 94));
+            var follow = canvasObject.AddComponent<BarcodeProductPanel>();
+            Assign(follow, "safeArea", safe); Assign(follow, "header", top); Assign(follow, "footer", bottom);
+            CreateFollowingCard(font, safe, follow);
+            Assign(app, "followPanel", follow);
+            Assign(view, "statusStep", Text(top, "Step", "카메라 준비 중", font, 27, new Color(1f, 0.82f, 0.43f), 24, 14, 940, 40));
+            Assign(view, "statusTitle", Text(top, "Status", "카메라를 준비하고 있어요", font, 38, Color.white, 24, 58, 940, 56));
+            Assign(view, "statusMessage", Text(bottom, "Instruction", "주변을 천천히 비춰주세요.", font, 30, Color.white, 24, 20, 940, 76));
+            Assign(view, "productSummary", Text(bottom, "Product", "", font, 28, new Color(0.78f, 0.9f, 0.86f), 24, 20, 940, 44));
             var buttons = Rect("Buttons", bottom);
-            buttons.anchorMin = Vector2.zero; buttons.anchorMax = new Vector2(1, 0); buttons.pivot = new Vector2(0.5f, 0);
-            buttons.offsetMin = new Vector2(24, 24); buttons.offsetMax = new Vector2(-24, 164);
+            buttons.anchorMin = new Vector2(0, 1); buttons.anchorMax = Vector2.one; buttons.pivot = new Vector2(0.5f, 1);
+            buttons.offsetMin = new Vector2(24, -132); buttons.offsetMax = new Vector2(-24, 0);
             var layout = buttons.gameObject.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
             layout.spacing = 18; layout.childControlWidth = true; layout.childControlHeight = true; layout.childForceExpandWidth = true;
             var primary = Button(buttons, "Primary", "다시 스캔", font, Green, 1.4f, out var primaryLabel);
-            var move = Button(buttons, "Reposition", "재배치", font, new Color(0.2f, 0.3f, 0.34f), 1, out _);
+            var move = Button(buttons, "Reposition", "재배치", font, new Color(0.2f, 0.3f, 0.34f), 1, out var moveLabel);
             var delete = Button(buttons, "Delete", "삭제", font, new Color(0.2f, 0.3f, 0.34f), 1, out _);
             Assign(view, "primaryLabel", primaryLabel); Assign(view, "primaryButton", primary);
+            Assign(view, "moveLabel", moveLabel);
             Assign(view, "moveButton", move); Assign(view, "deleteButton", delete);
+            Assign(view, "instructionPanel", bottom); Assign(view, "buttons", buttons);
             UnityEventTools.AddPersistentListener(primary.onClick, app.PrimaryAction);
-            UnityEventTools.AddPersistentListener(move.onClick, app.Reposition);
-            UnityEventTools.AddPersistentListener(delete.onClick, app.DeletePanel);
             var events = new GameObject("UI Event System", typeof(EventSystem), typeof(InputSystemUIInputModule));
             events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
+            Canvas.ForceUpdateCanvases();
+            view.Show("카메라 준비 중", "카메라를 준비하고 있어요", "잠시만 기다려 주세요.", "", "다시 확인", false, false, false, false, true);
             return view;
+        }
+
+        private static void CreateFollowingCard(TMP_FontAsset font, RectTransform safe, BarcodeProductPanel follow)
+        {
+            var card = Plate("Barcode Product", safe, Paper);
+            card.anchorMin = card.anchorMax = new Vector2(0.5f, 0.5f);
+            card.pivot = Vector2.zero;
+            card.sizeDelta = new Vector2(720, 648);
+            card.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
+            Assign(follow, "card", card);
+            Assign(follow, "productTitle", Text(card, "ProductTitle", "", font, 32, Ink, 24, 12, 672, 54));
+            Assign(follow, "specification", Text(card, "Specification", "", font, 24, Ink, 24, 68, 672, 38));
+
+            var priceBlock = Plate("Observed Price", card, new Color32(231, 238, 230, 255));
+            priceBlock.anchorMin = new Vector2(0, 1); priceBlock.anchorMax = Vector2.one;
+            priceBlock.offsetMin = new Vector2(24, -256); priceBlock.offsetMax = new Vector2(-24, -116);
+            priceBlock.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
+            var priceLabel = Text(priceBlock, "PriceLabel", "관측 가격", font, 24, Green, 16, 12, 640, 40);
+            priceLabel.rectTransform.anchorMax = new Vector2(0.45f, 1);
+            var amount = Text(priceBlock, "Price", "", font, 40, Ink, 16, 0, 640, 66);
+            amount.rectTransform.anchorMin = new Vector2(0.45f, 1);
+            amount.alignment = TextAlignmentOptions.TopRight;
+            amount.fontStyle = FontStyles.Bold;
+            Assign(follow, "price", amount);
+            Assign(follow, "seller", Text(priceBlock, "Seller", "", font, 24, Ink, 16, 62, 640, 38));
+            Assign(follow, "observedAt", Text(priceBlock, "ObservedAt", "", font, 22, Ink, 16, 100, 640, 36));
+
+            var nutritionTitle = Text(card, "NutritionTitle", "영양정보", font, 32, Ink, 24, 266, 672, 50);
+            nutritionTitle.fontStyle = FontStyles.Bold;
+            nutritionTitle.rectTransform.anchorMax = new Vector2(0.5f, 1);
+            var basis = Text(card, "NutritionBasis", "", font, 24, Ink, 24, 276, 672, 38);
+            basis.rectTransform.anchorMin = new Vector2(0.5f, 1);
+            basis.alignment = TextAlignmentOptions.TopRight;
+            Assign(follow, "nutritionBasis", basis);
+            Rule(card, "Nutrition Top Rule", 320, 6, Ink);
+            NutritionRow("Calories", "열량", "calories", 328, 42, 27, true);
+            Rule(card, "Calories Rule", 372, 4, Ink);
+            NutritionRow("Sodium", "나트륨", "sodium", 378, 36);
+            NutritionRow("Carbs", "탄수화물", "carbs", 414, 36);
+            NutritionRow("Sugars", "당류", "sugars", 450, 36, indent: true);
+            NutritionRow("Fat", "지방", "fat", 486, 36);
+            NutritionRow("SaturatedFat", "포화지방", "saturatedFat", 522, 36, indent: true);
+            NutritionRow("Protein", "단백질", "protein", 558, 36);
+            Rule(card, "Nutrition Bottom Rule", 596, 4, Ink);
+            Text(card, "Provenance", "시연용 연결 · 로컬 데이터", font, 22, Ink, 24, 606, 672, 36);
+
+            void NutritionRow(string name, string label, string field, float y, float height, float size = 24, bool bold = false, bool indent = false)
+            {
+                var row = Rect(name + " Row", card);
+                row.anchorMin = new Vector2(0, 1); row.anchorMax = Vector2.one;
+                row.offsetMin = new Vector2(24, -y - height); row.offsetMax = new Vector2(-24, -y);
+                var heading = Text(row, "Label", label, font, size, Ink, indent ? 20 : 0, 0, 672, height);
+                heading.rectTransform.anchorMax = new Vector2(0.6f, 1);
+                var value = Text(row, "Amount", "", font, size, Ink, 0, 0, 672, height);
+                value.rectTransform.anchorMin = new Vector2(0.6f, 1);
+                heading.alignment = TextAlignmentOptions.MidlineLeft;
+                value.alignment = TextAlignmentOptions.MidlineRight;
+                if (bold) heading.fontStyle = value.fontStyle = FontStyles.Bold;
+                Assign(follow, field, value);
+                if (!bold && name != "Protein") Rule(card, name + " Rule", y + height, 1, new Color32(183, 191, 187, 255));
+            }
+            var marker = Plate("Barcode Position", safe, Green);
+            marker.anchorMin = marker.anchorMax = new Vector2(0.5f, 0.5f);
+            marker.pivot = new Vector2(0.5f, 0.5f);
+            marker.sizeDelta = new Vector2(18, 18);
+            marker.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
+            Assign(follow, "marker", marker);
+            card.gameObject.SetActive(false); marker.gameObject.SetActive(false);
+        }
+
+        private static void Rule(RectTransform parent, string name, float y, float thickness, Color color)
+        {
+            var rule = Plate(name, parent, color);
+            rule.anchorMin = new Vector2(0, 1); rule.anchorMax = Vector2.one;
+            rule.offsetMin = new Vector2(24, -y - thickness); rule.offsetMax = new Vector2(-24, -y);
+            rule.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
         }
 
         private static RectTransform Rect(string name, Transform parent)
