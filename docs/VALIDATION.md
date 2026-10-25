@@ -1,5 +1,21 @@
 # 상품정보 AR 구현·검증 기록
 
+## 2026-10-25 이미지 추적 최소 구현·실기기 업데이트
+
+과제의 3차원 정합을 먼저 검증하기 위해 [이미지 추적 검증](IMAGE-TRACKING-PROBE.md)을 추가했다. 전용 씬에서 강의 예제 이미지 1개의 현재 자세에 큐브 1개를 표시한다. 상품정보 기능을 연결하거나 v3의 실제 추적 성공을 주장하는 단계가 아니다.
+
+- 강의 `Chap4-Resources.zip/Target-Hansung.jpg`와 참조 이미지의 SHA-256 일치, `arcoreimg` **80점 / exit 0**. 실측 크기를 지정하지 않고 ARCore의 크기 추정을 사용한다.
+- `ARReadiness`의 권한·세션·100Hz 센서 처리를 재사용한다. ARCore의 현재 이미지 추적 방식이 FULL_TRACKING일 때만 표시하며 LAST_KNOWN_POSE·추적 제한·pause에서는 숨긴다. 실제 네이티브 추적 방식 호출은 이미지가 인식된 후에야 검증된다.
+- Unity EditMode **51/51 PASS**, 실패·건너뜀 0, Unity exit **0**. 기존 42개와 추적 상태 조건 8개·생성 씬 저장/복원 검증 1개다. 첫 실행은 생성 직후 에셋의 일시 참조를 읽는 시험 1개가 실패했다. 저장된 씬을 다시 열어 영속 참조를 검증하도록 수정한 뒤 전체 통과했다. 근거: `artifacts/image-tracking-probe/tests-final.xml`, `tests-final.log`.
+- Android ARM64·IL2CPP Development 빌드 **Succeeded / errors=0 / Unity exit=0**. APK: `Builds/Android/ImageTrackingProbe.apk`, **62,269,962 bytes**, SHA-256 `29125396d97f24dae267bda65d638cdbc07e684011984da354306663c41f85ce`. 근거: `build.log`, `build-summary.json`.
+- 빌드에 사용한 Assets·Packages **862개 파일의 원본/빌드 복사본 SHA-256 일치**, 불일치 0. 원래 상품 씬·상품 JSON·ProjectSettings·EditorBuildSettings의 해시도 유지됐다. 검증용 Android 설정은 영문 임시 프로젝트에만 적용했다. 근거: `source-inventory.json`, `preserved-source-hashes.json`.
+- 이전 서명 불일치를 현재 환경에서 재확인했다. 현재 로컬 `.android/debug.keystore`의 인증서는 기기의 기존 앱과 같은 **`cad84c…6135`**였다. 이를 빌드에서 명시하고 설치 스크립트로 다시 검증해 **같은 패키지 `com.yeonsik.midtermar`의 호환 `-r` 업데이트 성공**. 앱 삭제·데이터 초기화·다운그레이드는 하지 않았다. 기존 APK도 보존했다.
+- Galaxy A25에서 **2026-10-25 02:26 KST**, versionName **0.1.1 / versionCode 2**, 앱 이름 **이미지 추적 검증**으로 업데이트하고 **COLD 실행 성공**. 실제 카메라 영상·한국어 안내·버튼을 화면으로 확인했다. 이미지 DB **1개 이미지**, 요청/지원 기능의 **Image Tracking**, 카메라 권한 허용, 두 센서 등록 성공을 로그로 확인했다.
+- 02:27 KST 추가 관찰까지 동일 PID가 유지됐다. 수집한 앱 로그에서 FATAL EXCEPTION·NullReferenceException·DllNotFoundException·EntryPointNotFoundException은 0회였다. 네이티브 로그에는 초기 센서 큐 등록 오류와 타임스탬프 순서 경고가 있어 전체 로그가 무오류라고 판정하지 않는다.
+- **실물 마커 인식·이동·회전·가림·재획득은 NOT PERFORMED**. 이번 관찰에서 세션은 `SessionInitializing`까지 확인했으며 `SessionTracking`과 이미지 `FULL_TRACKING`은 확인하지 못했다. 카메라 실행·설치 성공을 3차원 정합 성공으로 해석하지 않는다. 사용자가 사진과 주변을 비추며 움직이는 다음 시험이 필요하다.
+
+기기 근거: `artifacts/image-tracking-probe/install-result.json`, `device-launch.log`, `device-observation.log`, `device-summary.json`, `device-screen.png`. Git 브랜치: `feat/image-tracking-probe`. 위 내용은 실기기 검증 시점의 기록이며 이후 커밋·push 상태는 Git 이력을 따른다.
+
 ## 2026-10-24 영양성분표·관측 가격 표시 개선
 
 - 현재 자동 정보창의 영양정보를 항목·함량이 정렬된 표로 바꿨다. 기준량과 열량을 상단에 두고 굵은 구분선·행별 선·당류/포화지방 들여쓰기를 적용했다. 데이터에 없는 일일 기준치 비율이나 성분은 추가하지 않았다.
