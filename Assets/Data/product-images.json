@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "images": [
+    {
+      "barcode": "8801104671507",
+      "referenceImageName": "test-card",
+      "displayName": "브이젤 카드 · 개발용",
+      "developmentOnly": true
+    }
+  ]
+}

@@ -19,6 +19,7 @@
         "observedAt": "2026-05-08",
         "source": "PriceTrace public product-observations.v3 snapshot revision e6e6315772fcfc71; exact seller + sourceProductCode 260190 join; not verified current/global-latest price",
         "confidence": "medium",
+        "displaySource": "PriceTrace 관측 기록",
         "observationId": "e78107dfe0379bff"
       },
       "nutrition": {
@@ -35,6 +36,7 @@
         "fiberGrams": null,
         "source": "Nutrition approved public pricetrace exact-ID link; pricetrace_manual; revision 1; package nutrition label not independently verified",
         "nutritionFoodId": "17637a49-e3c6-45d9-8425-48b47612152b",
+        "displaySource": "PriceTrace 승인 영양자료 · 포장 표기 대조 전",
         "sourceCatalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0"
       }
     }

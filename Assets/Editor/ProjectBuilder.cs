@@ -7,6 +7,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.Events;
 using UnityEditor.SceneManagement;
+using UnityEditor.XR.ARSubsystems;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -25,6 +26,7 @@ namespace MidtermAR.Editor
     {
         public const string ScenePath = "Assets/Scenes/ProductAR.unity";
         public const string PanelPath = "Assets/Prefabs/ProductInfoPanel.prefab";
+        public const string ImageLibraryPath = "Assets/Images/ProductImageLibrary.asset";
         public const string PackageId = "com.yeonsik.midtermar";
         private static readonly Color Ink = new Color32(18, 34, 43, 255);
         private static readonly Color Paper = new Color32(249, 248, 241, 255);
@@ -60,9 +62,19 @@ namespace MidtermAR.Editor
             foreach (var root in scene.GetRootGameObjects())
                 if (root.name == "Camera UI" || root.name == "UI Event System") UnityEngine.Object.DestroyImmediate(root);
             Assign(app, "screen", CreateOverlay(EnsureFont(), app));
+            ConfigureImageTracking(app, CreatePanel(EnsureFont()));
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
             Debug.Log("[ProductAR Build] Compact camera UI updated.");
+        }
+
+        [MenuItem("Product AR/Prepare Image Tracking Scene (No Build)")]
+        public static void PrepareImageTrackingScene()
+        {
+            // 씬·프리팹만 갱신한다. PlayerSettings, 빌드 목록, APK 생성 경로는 실행하지 않는다.
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            UpdateCameraUI();
+            Debug.Log("[ProductAR] Image tracking scene prepared; no player build requested.");
         }
 
         public static void CaptureBarcodeFollowPreviews()
@@ -306,22 +318,48 @@ namespace MidtermAR.Editor
 
         private static WorldProductPanel CreatePanel(TMP_FontAsset font)
         {
-            var root = new GameObject("ProductInfoPanel", typeof(RectTransform), typeof(Canvas), typeof(WorldProductPanel));
+            var root = new GameObject("ProductInfoPanel", typeof(RectTransform), typeof(Canvas), typeof(UnityEngine.UI.GraphicRaycaster), typeof(WorldProductPanel));
             var rect = (RectTransform)root.transform;
-            rect.sizeDelta = new Vector2(640, 940);
+            rect.sizeDelta = new Vector2(640, 960);
             rect.localScale = Vector3.one * 0.00042f;
             root.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
             var background = root.AddComponent<UnityEngine.UI.Image>();
             background.color = Paper;
             background.raycastTarget = false;
             var view = root.GetComponent<WorldProductPanel>();
-            Assign(view, "productTitle", Text(rect, "Title", "더단백 크런치바 초코", font, 44, Ink, 28, 26, 584, 120));
-            Assign(view, "specification", Text(rect, "Specification", "빙그레 · 40g · 1개", font, 29, Ink, 28, 156, 584, 48));
-            Text(rect, "PriceLabel", "관측 가격", font, 27, Green, 28, 230, 584, 42);
-            Assign(view, "price", Text(rect, "Price", "1,400원", font, 72, Ink, 28, 274, 584, 128));
-            Assign(view, "priceSource", Text(rect, "PriceSource", "", font, 27, Ink, 28, 416, 584, 112));
-            Assign(view, "nutrition", Text(rect, "Nutrition", "", font, 31, Ink, 28, 566, 584, 250));
-            Assign(view, "provenance", Text(rect, "Provenance", "", font, 24, Ink, 28, 842, 584, 80));
+            Assign(view, "productTitle", Text(rect, "Title", "", font, 40, Ink, 24, 20, 592, 100));
+            Assign(view, "specification", Text(rect, "Specification", "", font, 26, Ink, 24, 124, 592, 44));
+            var tabs = Rect("Information Tabs", rect);
+            tabs.anchorMin = new Vector2(0, 1); tabs.anchorMax = Vector2.one;
+            tabs.offsetMin = new Vector2(24, -256); tabs.offsetMax = new Vector2(-24, -184);
+            var layout = tabs.gameObject.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
+            layout.spacing = 12; layout.childControlWidth = layout.childControlHeight = layout.childForceExpandWidth = true;
+            var nutritionButton = Button(tabs, "Nutrition Tab", "영양", font, Green, 1, out _);
+            var priceButton = Button(tabs, "Price Tab", "가격", font, Ink, 1, out _);
+            nutritionButton.GetComponent<UnityEngine.UI.LayoutElement>().minHeight = 72;
+            priceButton.GetComponent<UnityEngine.UI.LayoutElement>().minHeight = 72;
+            Assign(view, "nutritionTab", nutritionButton); Assign(view, "priceTab", priceButton);
+            UnityEventTools.AddPersistentListener(nutritionButton.onClick, view.ShowNutrition);
+            UnityEventTools.AddPersistentListener(priceButton.onClick, view.ShowPrice);
+            var nutritionPage = Rect("Nutrition Page", rect);
+            var pricePage = Rect("Price Page", rect);
+            foreach (var page in new[] { nutritionPage, pricePage })
+            {
+                page.anchorMin = new Vector2(0, 1); page.anchorMax = Vector2.one;
+                page.offsetMin = new Vector2(0, -676); page.offsetMax = new Vector2(0, -280);
+            }
+            Assign(view, "nutritionPage", nutritionPage.gameObject); Assign(view, "pricePage", pricePage.gameObject);
+            Assign(view, "nutrition", Text(nutritionPage, "Nutrition", "", font, 30, Ink, 24, 0, 592, 240));
+            Assign(view, "nutritionSource", Text(nutritionPage, "NutritionSource", "", font, 20, Ink, 24, 250, 592, 146));
+            Text(pricePage, "PriceLabel", "관측 가격 · 개당", font, 26, Green, 24, 0, 592, 40);
+            Assign(view, "price", Text(pricePage, "Price", "", font, 66, Ink, 24, 44, 592, 92));
+            Assign(view, "priceSource", Text(pricePage, "PriceSource", "", font, 21, Ink, 24, 146, 592, 250));
+            Assign(view, "provenance", Text(rect, "Provenance", "", font, 23, Ink, 24, 696, 592, 120));
+            var rescan = Button(rect, "Rescan", "다른 상품 스캔", font, Ink, 1, out _);
+            var rescanRect = (RectTransform)rescan.transform;
+            rescanRect.anchorMin = new Vector2(0, 1); rescanRect.anchorMax = Vector2.one;
+            rescanRect.offsetMin = new Vector2(24, -936); rescanRect.offsetMax = new Vector2(-24, -840);
+            UnityEventTools.AddPersistentListener(rescan.onClick, view.RequestRescan);
             var catalog = new ProductCatalog(File.ReadAllText("Assets/Data/demo-products.json"));
             catalog.TryFind("8801104671507", out var product);
             view.Bind(product);
@@ -387,7 +425,46 @@ namespace MidtermAR.Editor
             Assign(app, "readiness", readiness);
             Assign(app, "scanner", scanner);
             Assign(app, "screen", screen);
+            ConfigureImageTracking(app, panel);
             EditorSceneManager.SaveScene(scene, ScenePath);
+        }
+
+        private static void ConfigureImageTracking(ProductARApp app, WorldProductPanel panel)
+        {
+            var library = AssetDatabase.LoadAssetAtPath<XRReferenceImageLibrary>(ImageLibraryPath);
+            if (library == null)
+            {
+                library = ScriptableObject.CreateInstance<XRReferenceImageLibrary>();
+                AssetDatabase.CreateAsset(library, ImageLibraryPath);
+                library.Add();
+                library.SetName(0, ImageTrackingProbe.TargetName);
+                library.SetTexture(0, AssetDatabase.LoadAssetAtPath<Texture2D>(ImageTrackingProbeBuilder.MarkerPath), false);
+                library.SetSpecifySize(0, false); // 개발용 카드의 실측값은 아직 없다.
+                EditorUtility.SetDirty(library);
+            }
+            var json = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Data/product-images.json");
+            var catalog = new ProductImageCatalog(json.text, new ProductCatalog(File.ReadAllText("Assets/Data/demo-products.json")));
+            catalog.ValidateLibrary(library);
+            var origin = UnityEngine.Object.FindFirstObjectByType<XROrigin>();
+            origin.GetComponent<ARPlaneManager>().enabled = false;
+            origin.GetComponent<ARRaycastManager>().enabled = false;
+            origin.GetComponent<ARAnchorManager>().enabled = false;
+            var images = origin.GetComponent<ARTrackedImageManager>() ?? origin.gameObject.AddComponent<ARTrackedImageManager>();
+            images.referenceLibrary = library;
+            images.requestedMaxNumberOfMovingImages = 2; // 다른 등록 이미지가 동시에 보이면 숨길 수 있도록 한다.
+            var presenter = app.GetComponent<TrackedImageProductPanel>() ?? app.gameObject.AddComponent<TrackedImageProductPanel>();
+            var camera = origin.Camera;
+            Assign(presenter, "imageManager", images);
+            Assign(presenter, "session", UnityEngine.Object.FindFirstObjectByType<ARSession>());
+            Assign(presenter, "readiness", app.GetComponent<ARReadiness>());
+            Assign(presenter, "cameraManager", camera.GetComponent<ARCameraManager>());
+            Assign(presenter, "arCamera", camera);
+            Assign(presenter, "panelPrefab", panel);
+            Assign(app, "imagePanel", presenter);
+            Assign(app, "imageBindingsJson", json);
+            var scannerSettings = new SerializedObject(app.GetComponent<ARBarcodeScanner>());
+            scannerSettings.FindProperty("captureViewportCoordinates").boolValue = false;
+            scannerSettings.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static GameObject CreatePlanePrefab()
@@ -433,7 +510,7 @@ namespace MidtermAR.Editor
             var follow = canvasObject.AddComponent<BarcodeProductPanel>();
             Assign(follow, "safeArea", safe); Assign(follow, "header", top); Assign(follow, "footer", bottom);
             CreateFollowingCard(font, safe, follow);
-            Assign(app, "followPanel", follow);
+            follow.enabled = false; // 이전 2D 표시기는 비교용으로만 보존한다.
             Assign(view, "statusStep", Text(top, "Step", "카메라 준비 중", font, 27, new Color(1f, 0.82f, 0.43f), 24, 14, 940, 40));
             Assign(view, "statusTitle", Text(top, "Status", "카메라를 준비하고 있어요", font, 38, Color.white, 24, 58, 940, 56));
             Assign(view, "statusMessage", Text(bottom, "Instruction", "주변을 천천히 비춰주세요.", font, 30, Color.white, 24, 20, 940, 76));

@@ -1,5 +1,17 @@
 # 상품정보 AR 구현·검증 기록
 
+## 2026-10-25 이미지 추적 World Space 정보판 — 코드 기능 검증
+
+- `ProductAR.unity`를 바코드 상품 선택 → 등록 이미지의 3D 자세에 정보판 표시 흐름으로 연결했다. 바코드가 사라져도 선택을 유지하며 이미지 FULL_TRACKING에서만 표시한다. 소실·제한·마지막 자세·다른 이미지·다른 바코드·pause에서는 숨긴다.
+- 영양/가격 탭과 다른 상품 스캔 버튼을 World Space 정보판에 연결했다. 추적 복구 시 선택한 탭을 유지하며 재스캔은 상품·자세·본문·탭을 초기화한다. 가격 관측일·판매처·출처, 영양 기준량, 누락값과 0의 차이를 보존한다.
+- 현재 `test-card`와 더단백 데이터의 연결은 **개발용**이다. 상품 포장 인식이 아님을 대기 안내와 정보판에 표시한다. 상품 포장 마커로 전환할 때 실측 Physical Size를 필수 검증한다.
+- `scripts/Test-EditMode.ps1`로 **76/76 PASS**, 실패·건너뜀 **0**, Unity exit **0**. 기존 51개와 새 이미지 정보판 기능 25개를 포함한다. 실제 앱의 선택→정보판→재스캔 이벤트, 위치·방향·크기 계산, pause/복귀, 연결 설정 검증, 정상/누락·0의 재바인딩을 검사했다.
+- World Space 버튼은 카메라·GraphicRaycaster 연결, 정면/이미지 평면 방향의 포인터 영역, `ExecuteEvents` 버튼 이벤트 전달을 검사했다. EditMode의 RuntimeOnly 리스너는 시험 인스턴스에서만 활성화한다. 화면을 렌더링한 Graphic.depth 기반 히트 정렬이나 실기기 터치를 통과했다는 의미는 아니다.
+- 평면 탐색·레이캐스트·공간 앵커와 이전 2D 바코드 표시기를 기본 이미지 추적 모드에서 비활성화했다. Android 설정·기존 probe 씬·probe 라이브러리는 유지했다.
+- **앱 빌드·APK 생성·설치·실기기 시험 미실행**. 기존 APK의 파일 목록·크기·SHA-256·수정 시각이 작업 전과 일치한다. 새 코드의 실물 포장 인식률·정합·가독성·터치는 별도 검증한다.
+
+최종 원시 결과: `artifacts/editmode/20261025-112507-34d4b9d9/results.xml`, `editor.log`, `summary.json`. 씬 준비 exit **0**: `artifacts/product-image-tests/prepare-final.log`. 공개 요약은 [코드 기능 검증 결과](validation/product-image-panel-2026-10-25.json), 구성과 한계는 [이미지 정보판 문서](PRODUCT-IMAGE-TRACKING.md)를 따른다.
+
 ## 2026-10-25 사용자 카드 마커 교체
 
 - 루트의 실제 파일명은 `test.jpg`, `test2.jpg`다. 로컬 ARCore 6.3.5 `arcoreimg eval-img` 결과는 각각 **85점**, **40점**, exit 0이다. `test2.jpg`는 권장 기준 75점보다 낮아 사용자가 지정한 대체 이미지 `test.jpg`를 선택했다. 40점을 인식 불가능 판정으로 해석하지 않는다. 근거: `artifacts/image-tracking-probe/card-quality.json`.

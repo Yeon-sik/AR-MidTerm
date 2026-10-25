@@ -43,6 +43,7 @@ namespace MidtermAR
         public string seller;
         public string observedAt;
         public string source;
+        public string displaySource;
         public string confidence;
         public string observationId;
     }
@@ -62,6 +63,7 @@ namespace MidtermAR
         public double? sodiumMg;
         public double? fiberGrams;
         public string source;
+        public string displaySource;
         public string nutritionFoodId;
         public string sourceCatalogProductId; // 영양정보의 연결 상품 일치 검증에 사용
     }

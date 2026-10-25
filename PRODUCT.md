@@ -12,16 +12,16 @@ android
 
 ## Product Purpose
 
-바코드로 정확한 상품을 식별하고 바코드 위에 상품정보창 하나를 자동 표시한다. 보이는 바코드의 화면 위치를 계속 갱신한다. 현재 상호작용은 `docs/BARCODE-FOLLOW.md`, 기존 데이터 의미는 `docs/MILESTONES.md`를 따른다.
+바코드로 정확한 상품을 선택하고, 사전 등록 이미지의 3D 위치·방향에 World Space 정보판 하나를 표시한다. 영양/가격 탭과 다른 상품 스캔을 제공한다. 현재 기준은 docs/PRODUCT-IMAGE-TRACKING.md와 docs/MILESTONES.md다.
 
 ## Capabilities and Constraints
 
-Unity 6000.3.22f1, AR Foundation·ARCore 6.3.5, 동일 AR 카메라와 ZXing.Net을 사용한다. 첫 상품은 더단백 크런치바 초코 40g이다. 로컬 시연 스냅샷이며 바코드가 보이는 동안 2D 위치를 추종한다. 가림 이후의 상품 전체 3D 추적·이미지 타깃·로그인·상품 등록은 포함하지 않는다. 바코드 연결은 demo-only 매핑이다.
+Unity 6000.3.22f1, AR Foundation·ARCore 6.3.5, 동일 AR 카메라와 ZXing.Net을 사용한다. 더단백 크런치바 초코 40g의 로컬 시연 데이터를 제공하며, 바코드 매핑은 demo-only다. 현재 마커는 브이젤 카드와 상품 데이터의 개발용 연결이다. 실제 포장 이미지·실측 크기와 새 통합의 기기 검증은 남아 있다. 상품 포장 마커에는 Physical Size를 요구한다. 로그인·구매·실시간 가격 수집·바코드 자체의 3D 자세 추정은 포함하지 않는다.
 
 ## Operating Context
 
-바코드를 비추면 터치 없이 정보창이 나타나고 움직이는 바코드를 따라간다. 위치를 놓치면 숨기고 같은 바코드를 다시 비추도록 안내한다. 다른 상품 스캔을 제공한다. 미실행 실기기 검증을 PASS로 표시하지 않는다.
+EAN-13 3회 확인 후 상품을 선택한다. 앞면으로 돌리며 바코드가 사라져도 선택을 유지하고, 일치 이미지가 FULL_TRACKING일 때 표시한다. 이미지 소실·제한·다른 이미지·pause에서는 숨긴다. 다른 유효한 번호를 읽으면 재스캔 전까지 표시를 막는다. 탭은 영양/가격을 전환하며, 재스캔은 선택·자세·본문·탭을 초기화한다.
 
 ## Evidence on Hand
 
-기존 환경·상품·관측 가격·Nutrition 확인 근거는 `docs/M0-M3-validation.md`에 있다. 실행 증거는 `docs/VALIDATION.md`에서 관리한다.
+현재 기능·회귀 시험은 EditMode 76/76 통과다. 과거 카드 위 큐브의 실물 추적 성공과 새 정보판의 코드 기능 검증을 구분한다. 이번 통합은 앱 빌드·APK 생성·설치·실기기 시험을 수행하지 않았다. 근거는 docs/VALIDATION.md와 docs/validation/product-image-panel-2026-10-25.json에 보관한다.

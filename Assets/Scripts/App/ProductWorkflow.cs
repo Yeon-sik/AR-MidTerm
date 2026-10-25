@@ -1,6 +1,6 @@
 namespace MidtermAR
 {
-    public enum ProductPhase { Scanning, AwaitingPlacement, Placed, UnknownBarcode, ScanFailed, DataUnavailable, Following }
+    public enum ProductPhase { Scanning, AwaitingPlacement, Placed, UnknownBarcode, ScanFailed, DataUnavailable, Following, TrackingImage }
 
     public sealed class ProductWorkflow // Unity 객체와 분리한 상품 선택 상태 흐름
     {
@@ -32,5 +32,6 @@ namespace MidtermAR
         public void MarkPlaced() { if (CanPlace) Phase = ProductPhase.Placed; }
         public void RequestPlacement() { if (Selected != null) Phase = ProductPhase.AwaitingPlacement; }
         public void FollowBarcode() { if (Selected != null) Phase = ProductPhase.Following; }
+        public void FollowImage() { if (Selected != null) Phase = ProductPhase.TrackingImage; }
     }
 }

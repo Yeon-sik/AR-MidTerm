@@ -14,6 +14,7 @@ namespace MidtermAR
         [SerializeField, Range(0.2f, 1f)] private float interval = 0.35f;
         [SerializeField, Range(640, 1920)] private int longestEdge = 1920;
         [SerializeField] private float timeoutSeconds = 15f; // 한 번의 스캔 제한 시간
+        [SerializeField] private bool captureViewportCoordinates = true; // 이미지 추적 정보판은 EAN 식별만 사용한다.
 
         public event Action<BarcodeReadResult> Decoded;
         public event Action TimedOut;
@@ -150,7 +151,7 @@ namespace MidtermAR
                 pendingTransform = default;
                 try
                 {
-                    if (!coordinates.TryCapture(cameraManager, session, out pendingTransform) && !coordinateErrorLogged)
+                    if (captureViewportCoordinates && !coordinates.TryCapture(cameraManager, session, out pendingTransform) && !coordinateErrorLogged)
                     { Debug.LogWarning("[ProductAR] Barcode viewport transform unavailable; follow panel remains hidden until coordinates are ready."); coordinateErrorLogged = true; }
                 }
                 catch (Exception error)

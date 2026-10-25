@@ -27,7 +27,7 @@ namespace MidtermAR
 
         // 가림 뒤 LAST_KNOWN_POSE를 상품의 현재 자세로 사용하지 않는다.
         public static bool CanDisplay(bool ready, bool paused, TrackingState state, int method, bool expectedImage)
-            => ready && !paused && expectedImage && state == TrackingState.Tracking && method == 1;
+            => ImageTrackingPolicy.CanDisplay(ready, paused, state, method, expectedImage);
 
         private void OnEnable()
         {
