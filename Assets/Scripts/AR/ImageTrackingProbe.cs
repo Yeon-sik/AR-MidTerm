@@ -10,7 +10,7 @@ namespace MidtermAR
     // 메인 스레드에서 이미지의 현재 자세만 사용한다. 상품 조회·바코드 흐름은 실행하지 않는다.
     public sealed class ImageTrackingProbe : MonoBehaviour
     {
-        public const string TargetName = "lecture-control";
+        public const string TargetName = "test-card";
         [SerializeField] private ARTrackedImageManager imageManager;
         [SerializeField] private ARSession session;
         [SerializeField] private ARReadiness readiness;
@@ -79,7 +79,7 @@ namespace MidtermAR
                 var text = !readiness.IsReady ? readiness.Status
                     : observation.Unavailable ? "추적 상태를 확인하지 못했습니다. 화면을 유지하고 로그를 확인해 주세요."
                     : acquisitions > 0 ? "마커를 놓쳤습니다. 큐브를 숨겼습니다.\n같은 사진을 다시 비춰 주세요."
-                    : "HSU 건물·파란 글자 사진을 비춰 주세요.\n사진 전체가 보이게 천천히 접근해 주세요.";
+                    : "브이젤 카드 사진을 비춰 주세요.\n카드 전체가 보이게 천천히 접근해 주세요.";
                 SetStatus(text + "\n인식/재획득 " + acquisitions + "회 · 상태 " + method);
             }
         }

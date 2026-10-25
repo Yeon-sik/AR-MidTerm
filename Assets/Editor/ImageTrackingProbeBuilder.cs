@@ -26,7 +26,7 @@ namespace MidtermAR.Editor
     {
         public const string ScenePath = "Assets/Scenes/ImageTrackingProbe.unity";
         public const string LibraryPath = "Assets/Images/ProbeImageLibrary.asset";
-        public const string MarkerPath = "Assets/Images/lecture-control.jpg";
+        public const string MarkerPath = "Assets/Images/test-card.jpg";
         public const string PackageId = ProjectBuilder.PackageId;
 
         [MenuItem("Product AR/Image Tracking Probe/Prepare Scene")]
@@ -39,12 +39,16 @@ namespace MidtermAR.Editor
             if (library == null)
             {
                 library = ScriptableObject.CreateInstance<XRReferenceImageLibrary>();
-                library.Add();
-                library.SetName(0, ImageTrackingProbe.TargetName);
-                library.SetTexture(0, texture, false);
-                library.SetSpecifySize(0, false); // 화면 표시·출력 크기가 정해지지 않았으므로 ARCore가 추정한다.
                 AssetDatabase.CreateAsset(library, LibraryPath);
             }
+            if (library.count == 0) library.Add();
+            while (library.count > 1) library.RemoveAt(library.count - 1);
+            // 기존 라이브러리도 갱신해야 마커를 교체한 재빌드에 이전 이미지가 남지 않는다.
+            library.ClearDataStore();
+            library.SetName(0, ImageTrackingProbe.TargetName);
+            library.SetTexture(0, texture, false);
+            library.SetSpecifySize(0, false); // 화면 표시·출력 크기가 정해지지 않았으므로 ARCore가 추정한다.
+            EditorUtility.SetDirty(library);
 
             var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/Generated/NotoSansKR SDF.asset");
             if (font == null) throw new InvalidOperationException("Existing Korean font is missing.");

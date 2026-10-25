@@ -21,9 +21,9 @@ MonoBehaviour:
       m_GuidLow: 5401786352142294490
       m_GuidHigh: 4727951269551801218
     m_SerializedTextureGuid:
-      m_GuidLow: 10490090194574911504
-      m_GuidHigh: 6845787803523403371
+      m_GuidLow: 4934131452308554007
+      m_GuidHigh: 14439109900859847611
     m_Size: {x: 0, y: 0}
     m_SpecifySize: 0
-    m_Name: lecture-control
+    m_Name: test-card
     m_Texture: {fileID: 0}

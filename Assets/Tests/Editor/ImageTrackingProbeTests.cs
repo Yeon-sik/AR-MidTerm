@@ -35,6 +35,9 @@ namespace MidtermAR.Tests
                 Assert.That(manager.referenceLibrary.count, Is.EqualTo(1));
                 var library = AssetDatabase.LoadAssetAtPath<XRReferenceImageLibrary>(ImageTrackingProbeBuilder.LibraryPath);
                 Assert.That(library[0].name, Is.EqualTo(ImageTrackingProbe.TargetName));
+                Assert.That(library[0].textureGuid.ToString("N"),
+                    Is.EqualTo(AssetDatabase.AssetPathToGUID(ImageTrackingProbeBuilder.MarkerPath)),
+                    "An existing reference library must use the current marker texture.");
                 Assert.That(library[0].specifySize, Is.False, "Do not invent a physical width before measurement.");
                 Assert.That(manager.requestedMaxNumberOfMovingImages, Is.EqualTo(1));
                 Assert.That(Object.FindFirstObjectByType<ARBarcodeScanner>(), Is.Null);

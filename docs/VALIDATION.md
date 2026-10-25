@@ -1,5 +1,22 @@
 # 상품정보 AR 구현·검증 기록
 
+## 2026-10-25 사용자 카드 마커 교체
+
+- 루트의 실제 파일명은 `test.jpg`, `test2.jpg`다. 로컬 ARCore 6.3.5 `arcoreimg eval-img` 결과는 각각 **85점**, **40점**, exit 0이다. `test2.jpg`는 권장 기준 75점보다 낮아 사용자가 지정한 대체 이미지 `test.jpg`를 선택했다. 40점을 인식 불가능 판정으로 해석하지 않는다. 근거: `artifacts/image-tracking-probe/card-quality.json`.
+- `test.jpg`를 편집하지 않고 `Assets/Images/test-card.jpg`로 복사했다. SHA-256 `4dca0d093e69a5b7208907d1a158d6f6d98cfaebfccd497831a9da39994b7813`로 일치한다. 참조 이름과 앱의 대기 안내를 카드에 맞췄다.
+- 라이브러리가 이미 있는 경우에도 마커 텍스처·이름·크기 추정 설정을 갱신하도록 생성기를 수정했다. 기존 이미지 DB 캐시를 비우고 단일 마커를 유지한다. 생성 씬 시험에 실제 이미지 GUID 대조를 추가했다.
+- 카드 마커 APK: **Android 빌드 Succeeded / errors=0 / Unity exit=0**. `Builds/Android/ImageTrackingProbe.apk`, **62,265,590 bytes**, SHA-256 `a2b7772f9239c8fa5bd8811f435d45318209add078742958786b2a94e5ff9837`.
+- 새 임시 프로젝트의 전체 초기 빌드는 오래 걸려 중단하고 기존 프로젝트의 Android 캐시를 재사용했다. 빌드 전 ProjectSettings 전체를 백업하고 종료 후 바이트 해시를 대조해 복구했다. 근거: `artifacts/image-tracking-probe/card-cached-build.log`, `build-summary.json`. 일반 재빌드 스크립트의 격리 빌드 동작은 유지한다.
+- Unity EditMode **51/51 PASS**, 실패·건너뜀 0, Unity exit **0**. 생성 씬의 참조 이미지 GUID가 현재 카드 에셋과 일치하는지와 기존 추적 조건을 확인했다. 시험 전 에셋·설정을 백업하고 시험 뒤 복구했다. 근거: `artifacts/image-tracking-probe/card-tests.xml`, `card-tests.log`, `card-tests-summary.json`.
+- Galaxy A25 / Android 16에서 기존 앱과 서명이 달라 기본 설치 스크립트가 업데이트 전에 중단했다. 사용자 교체 설치 요청에 따라 기존 APK·내부 데이터·외부 저장 파일을 백업하고 새 APK로 교체했다. 기기에서 다시 가져온 설치 APK의 SHA-256이 위 카드 빌드와 일치했다. 앱과 백업 원문은 Git에서 제외한다.
+- 초기 설치 직후에는 Android Activity 실행과 PID만 확인했으나 실제 Unity 초기화가 완료되지 않았다. 화면에는 `Not enough storage space to install required resources.`, 로그에는 IL2CPP 리소스 추출 실패가 있었다. 저장 공간은 약 **78GB** 남아 있었고, 복원한 외부 `files/il2cpp` 폴더의 소유자가 새 앱 UID가 아닌 **shell**이었다. 이전 실행 캐시까지 ADB로 복원한 것이 원인이었다.
+- 해당 캐시를 다른 이름으로 보존하고 앱이 자신의 UID로 재생성하도록 하자 초기화가 정상 진행됐다. **18:29:41 KST** `[ImageProbe] Ready; target=test-card; build=0.1.1`, 이미지 DB **1개**, 카메라 활성화 및 이후 `SessionTracking`을 확인했다. 실행 캐시는 후속 데이터 복원 대상에서 제외하도록 로컬 복원 절차를 보완했다. 기본 설치 스크립트의 서명 대조·자동 삭제 방지 동작은 유지한다.
+- **18:34:32 KST** 첫 `Cube visible=True; acquisitions=1`과 `FULL_TRACKING`을 확인했다. **18:35:11** 소실 시 숨김, **18:35:15** 재획득 시 `acquisitions=2`와 표시 재개를 확인했다. 당시 가림 조건을 통제하지 않았으므로 공식 가림 시험 PASS로 기록하지 않는다. 사용자에게서 **카드 위 큐브 표시와 카메라 회전·거리 변화 중 위치 유지**를 확인받았다.
+- 초기 화면의 `상태 0`에서는 이미지 후보가 있으나 완전 추적 전이어서 큐브를 표시하지 않았다. 현재 안내는 이 단계와 미검출을 명확하게 구분하지 않는다. 실측 크기 미지정에 따른 추정 대기와 초기 인식 지연은 추가 검토 대상이며, 참조 이미지의 품질 점수만으로 지연 원인을 확정하지 않는다.
+- **10회 반복·통제된 가림·장시간 시험은 미실시**다. 바코드 자체의 3D 추적·동적 포장 이미지 등록·상품정보판과 이미지 자세 연결도 미구현이다. 이 카드 결과를 기존 v3 바코드 추종 성공으로 확대하지 않는다.
+
+기기 근거: 로컬 `artifacts/install/card-replacement.json`, `card-current-process.log`, `card-cache-fix-process.log`, `card-present-process.log`, `card-present-after.log`, `card-recognition-after.png`. 공개 가능한 빌드 식별·시험·실물 확인 요약은 [card-probe-2026-10-25.json](validation/card-probe-2026-10-25.json), 후속 기술 검토는 [바코드 마커 조사 보고서](BARCODE-MARKER-RESEARCH.md)에 남긴다. 기존 상품 씬·ProjectSettings·EditorBuildSettings의 원본 해시 일치를 최종 확인했다.
+
 ## 2026-10-25 이미지 추적 최소 구현·실기기 업데이트
 
 과제의 3차원 정합을 먼저 검증하기 위해 [이미지 추적 검증](IMAGE-TRACKING-PROBE.md)을 추가했다. 전용 씬에서 강의 예제 이미지 1개의 현재 자세에 큐브 1개를 표시한다. 상품정보 기능을 연결하거나 v3의 실제 추적 성공을 주장하는 단계가 아니다.
