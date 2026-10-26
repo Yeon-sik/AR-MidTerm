@@ -1,16 +1,16 @@
 # 가상현실 중간 프로젝트
 
-**현재 구현: v5 독립 상품 인식 (2026-10-26).** 앞면 이미지와 바코드는 서로를 기다리지 않고 정보를 표시한다. 앞면은 3D, 바코드는 2D 정보판이며 같은 상품은 3D를 우선한다. 목표·등록 상태 4종·데이터 모델은 [v5 상품 인식 구조](docs/PRODUCT-RECOGNITION-V5.md)를 따른다.
+**현재 시연 범위: 앞면 AR은 테아닌 1종, 바코드 식별은 더단백·테아닌 2종이다.** 앞면 이미지와 바코드는 독립적으로 동작하며 앞면은 3D, 바코드는 2D 정보판이다. 같은 상품은 3D를 우선하고, 서로 다른 상품이 동시에 보이면 숨긴다. 여러 상품의 정보판을 동시에 표시하지 않는다. 기반 구조는 [v5 상품 인식](docs/PRODUCT-RECOGNITION-V5.md)을 따른다.
 
 테아닌 밀크씨슬 박스는 사용자 제공 바코드 `8809375984692`·약 58mm 폭과 상단·하단 크롭을 등록했다. 2026-10-27 사용자 동일 상품 확인 후 PT ID `18e83c5c-86a4-4e95-a131-411381789687`로 연결하고 13,210원 관측 2건의 출처·신뢰도를 보존했다. 공개 영양 결과는 없어 비워 둔다. 브이젤 카드와 더단백의 개발용 연결은 계속 구분 표시한다.
 
-**온라인 조회 추가 후 EditMode 162/162 PASS**, 실패·건너뜀 0. 기존 105개와 새 조회·늦은 응답 시험 57개를 포함한다. 앞면 3D 우선·실패 프레임 즉시 해제·최대 0.65초 유효 규칙은 유지한다. 빌드·실기기 결과는 [검증 기록](docs/VALIDATION.md)을 따른다. 기존 `0.5.1 (6)`의 카메라·SessionTracking·설치 해시 확인을 새 온라인 E2E 성공으로 해석하지 않는다. 이전 바코드 선행 흐름은 [v4 구현](docs/PRODUCT-IMAGE-TRACKING.md)에 보존한다.
+**0.6.1 보완 EditMode 172/172 PASS**, 실패·건너뜀 0. 기존 162개를 유지하고 온라인 전용 상품의 표시·해제와 제출 원본의 로컬 설정 없음 경로 등을 추가 검증했다. 온라인 DTO를 로컬 Selected에 넣지 않고 실제 표시 상품과 키를 버튼·상품 변경 감지 기준으로 사용한다. 앞면 3D 우선·실패 프레임 즉시 해제·최대 0.65초 규칙은 유지한다. 빌드·실기기 결과는 [검증 기록](docs/VALIDATION.md)을 따른다. 이전 바코드 선행 흐름은 [v4 구현](docs/PRODUCT-IMAGE-TRACKING.md)에 보존한다.
 
-최신 공개 결과는 [0.6.0 온라인 조회 검증 JSON](docs/validation/barcode-online-lookup-2026-10-27.json)에 기록했다. PT 정상 연결·로컬 대체와 OFF 정상 미발견의 실물 확인, 직접 클라이언트 검사, 미수행 항목을 구분한다.
+최신 결과는 [0.6.1 마무리 검증 JSON](docs/validation/online-lookup-finish-2026-10-27.json), 이전 온라인 도입 결과는 [0.6.0 검증 JSON](docs/validation/barcode-online-lookup-2026-10-27.json)에 기록한다. 기기 실행·사용자 기본 확인·자동 시험·미수행 반복 시험을 구분한다.
 
 상품마다 추가 마커를 붙이지 않는 확장은 [바코드 마커 기술 조사 보고서](docs/BARCODE-MARKER-RESEARCH.md)에 정리했다. ZXing·OpenCV 등 공개 구현, 2D 검출과 3D 자세 추정의 차이, 과제 적합성과 후속 검증 범위를 비교한다.
 
-PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조회하는 계층을 구현했다. [온라인 조회 설정·실행·중단 절차](docs/ONLINE-LOOKUP.md), [도입 조사 정정](docs/BARCODE-PRODUCT-LOOKUP-RESEARCH.md)을 따른다. 설정이 없으면 로컬 전용, PT 오류면 확인 불가와 날짜가 있는 스냅샷을 표시한다. **2026-10-27 A25에서 두 시연 바코드의 PT 등록 표시·앞면 3D·오프라인 대체 표시를 사용자와 확인했다.** 작업 초반의 404/PGRST202는 이후 200/matched로 바뀌었다. 정상 OFF 분기와 반복·부하 시험의 수행 여부는 검증 기록을 따른다.
+PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조회하는 계층을 구현했다. [온라인 조회 설정·실행·중단 절차](docs/ONLINE-LOOKUP.md), [도입 조사 정정](docs/BARCODE-PRODUCT-LOOKUP-RESEARCH.md)을 따른다. 설정이 없으면 로컬 전용, PT 오류면 확인 불가와 날짜가 있는 스냅샷을 표시한다. **2026-10-27 A25에서 두 시연 바코드의 PT 등록 표시·테아닌 앞면 3D·오프라인 대체 표시를 사용자와 확인했다.** 작업 초반의 404/PGRST202는 이후 200/matched로 바뀌었다. 정상 OFF 분기와 반복·부하 시험의 수행 여부는 검증 기록을 따른다.
 
 바코드로 상품을 식별하고 사전 등록 이미지로 3D 위치를 추적하는 Android AR 카메라 앱이다.
 
@@ -18,7 +18,7 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 
 ## 사용 흐름
 
-- **앞면 경로:** 등록 이미지를 비추면 곧바로 상품의 3D 정보판을 표시하고 영양/가격 탭을 전환한다. 바코드가 없는 상품도 지원한다.
+- **앞면 경로:** 등록된 테아닌 포장의 두 크롭 중 하나를 FULL_TRACKING하면 3D 정보판을 표시하고 영양/가격 탭을 전환한다. 더단백 포장 앞면 AR은 현재 시연 대상에 포함하지 않는다.
 - **바코드 경로:** EAN-13을 3회 확인하면 독립적인 2D 정보판과 앞면 등록 여부 배지를 표시한다. 이미지가 없어도 사용할 수 있다.
 - 같은 상품의 복수 앞면은 허용한다. 다른 상품의 앞면이 동시에 보이거나 서로 다른 앞면/확정 바코드가 충돌하면 숨긴다.
 - 미등록 번호는 읽은 번호와 **로컬 카탈로그 스냅샷 날짜**를 표시한다. 운영 PriceTrace 전체의 미등록을 단정하지 않는다.
@@ -49,7 +49,7 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 
 ## 빌드·설치·남은 검증
 
-최신 앱은 **0.6.0 (7)**이며 2026-10-27 Galaxy A25에 동일 서명의 `-r`로 업데이트했다. 설치 APK 해시를 빌드 결과와 대조했다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
+제출 코드 버전은 **0.6.1 (8)**이다. Android 버전·권한은 ProjectBuilder 빌드 경로에서 설정한다. 버전별 A25 업데이트·설치 해시·확인/미수행 항목은 [검증 기록](docs/VALIDATION.md)을 따른다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
 
 - APK: `Builds/Android/ProductAR.apk` (생성 파일, Git 제외), 앱 이름 **상품정보 AR**, 패키지 `com.yeonsik.midtermar`.
 - 재빌드: `scripts/Build-Android.ps1`. 한글 경로 제한을 피하도록 영문 임시 복사본에서 빌드한다.
@@ -57,3 +57,15 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 - 씬·프리팹 재생성: Unity 메뉴 **Product AR → Prepare Project and Scene**. 생성 씬을 수동 수정했다면 재생성 전 내용을 보존한다.
 - 남은 실물 시험: [현재 이미지 정보판 체크리스트](docs/DEVICE-CHECKLIST.md). 포장 앞면 추적·회전·거리 변화·소실·재획득과 탭 터치를 확인해야 한다. 평면 배치는 [v2 체크리스트](docs/DEVICE-CHECKLIST-V2.md)에 보관한다.
 - 제출 준비: [중간보고서 초안](docs/REPORT-DRAFT.md) (v4 이미지 추적 기준, 2026-10-25). 배경 통계·공식 사례, 강의 적용·현재 구현·검증 수준·AI 활용을 반영했다. 실제 상품 기기 시험, 학번·이름·템플릿 Word·데모 영상은 남아 있다. 마감은 사용자 제공 **10월 29일**, 시각은 미확인이다.
+
+## 제출 기준 커밋과 키 없는 원본
+
+**제출 기준 커밋은 로컬 태그 `submission/v0.6.1-2026-10-29`가 가리키는 커밋**이다. 정확한 SHA는 `git rev-parse 'submission/v0.6.1-2026-10-29^{commit}'` 또는 원본 ZIP의 `SUBMISSION-MANIFEST.json`에서 확인한다. 앱 검증 소스는 `70d73e7545a103bca60954fc9132c3f2cd04fb49`이며 태그 커밋에는 후속 검증 문서도 포함한다.
+
+`Assets/Config/remote-lookup.local.json`이 없으면 **로컬 전용으로 동작**한다. 온라인 설정 생성 도구는 **`scripts/Initialize-RemoteLookup.ps1`**이다. 설정을 만든 뒤 씬을 갱신하고 재빌드한다. 키가 없는 제출 검토 환경에서는 설정 생성을 건너뛴다.
+
+```powershell
+./scripts/Export-Submission.ps1 -SourceRef submission/v0.6.1-2026-10-29
+```
+
+원본 압축은 Assets·Packages·ProjectSettings·docs·scripts·README와 관련 문서를 포함하고, Library·Temp·Logs·obj·Builds·artifacts·로컬 설정·키를 제외한다. ZIP 내부의 제외 경로와 키 패턴을 검사한다. [포함/제외·재검사·설정 생성·병합 승인 절차](docs/SUBMISSION.md)를 따른다. 브랜치 병합은 사용자 확인 후 `feat/barcode-online-lookup → feat/image-tracking-probe → feat/ar-foundation-m0-m3` 순서로 수행한다.

@@ -1,6 +1,6 @@
-# 바코드 온라인 조회 — 0.6.0 (7)
+# 바코드 온라인 조회 — 0.6.1 (8)
 
-기준 소스: `389f9e9837cb82d16b0695038705051e16f4ab56`, 브랜치 `feat/barcode-online-lookup`.
+기준 소스: `70d73e7545a103bca60954fc9132c3f2cd04fb49`, 브랜치 `feat/barcode-online-lookup`. 이전 0.6.0의 기록은 해당 검증 JSON에 보존한다.
 제출 마감은 2026-10-29다. **실물 시험·무음 데모 영상·보고서를 우선한다.**
 
 ## 동작
@@ -38,6 +38,10 @@ EAN-13의 서로 다른 프레임 3회 확인 후, 정확히 일치하는 로컬
 
 ## 요청·상태 경계
 
+0.6.1에서는 경로별 `DisplayProduct`·`DisplayProductKey`를 버튼 동작과 상품 변경 감지 기준으로 사용한다. 로컬에 없는 온라인 matched도 같은 동작을 하며 Selected에는 온라인 DTO를 넣지 않는다. 소실 시 현재 표시 상품·키는 해제하고, 숨긴 패널의 같은 상품 탭 재사용 규칙은 유지한다. `secondaryAction`은 현재 기본 버튼의 보조 스타일을 선택하는 플래그다.
+
+PT 확정 계약은 작업 중 `d7c1d33`에서 보완됐다. verified 식별자 충돌은 공개 여부 필터 전에 판정하며 비공개 후보가 섞이면 `conflict + []`로 가린다. 클라이언트는 빈 후보 conflict를 충돌로 처리하고, 후보 1개 conflict·잘못된 버전/봉투는 계속 거부한다. 충돌에서는 상품을 선택하거나 영양·OFF를 호출하지 않는다. 검토 근거는 PriceTrace `docs/contracts/PUBLIC_BARCODE_LOOKUP_V1.md`다.
+
 - HTTP 및 전체 조회에 5초 제한을 둔다. 자동 재시도 0회, 재스캔으로 명시적 재시도한다. 오류 뒤 같은 번호는 15초 동안 재호출을 억제한다.
 - 같은 번호의 진행 중 요청을 합치며 최대 동시 번호 4개다. OFF는 앱 전체의 60초 이동 구간당 15회 상한을 공유한다. 다른 앱·같은 IP의 트래픽까지 통제하지는 않는다.
 - matched/OFF 발견은 메모리 300초, 정상 미발견은 60초 캐시다. 최대 128개이며 앱 재시작 때 초기화한다. 오류·충돌은 미발견 캐시가 아니다.
@@ -46,14 +50,14 @@ EAN-13의 서로 다른 프레임 3회 확인 후, 정확히 일치하는 로컬
 
 ## 검증 경계
 
-EditMode **162/162 PASS**: 기존 105개 + 새 57개, 실패·건너뜀 0. 원문은 `artifacts/editmode/20261026-152229-e25f6a71/`이다. 첫 실행 159/162에서 기존 가격 문구 변경·배지 높이 3건을 발견해 수정했다.
+0.6.1 EditMode **172/172 PASS**: 기존 162개 유지 + 신규 10개, 실패·건너뜀 0. 원문은 `artifacts/editmode/20261026-160623-0906ab89/`이다. 0.6.0 초기 159/162에서 수정한 가격 문구·배지 높이 결과는 이전 검증 기록에 보존한다.
 
 2026-10-27 KST 초반 PC 읽기에서 PT 바코드 함수 404/PGRST202를 확인했다. **00:27 이후 A25·PC에서 200/matched로 바뀌었다.** 더단백·테아닌의 정확 PT ID가 일치하며 공개 가격은 null이어서 로컬 관측을 사용한다. Nutella `3017624010701`·시험 번호 `4006381333931`은 PT not_linked다. 공개 카탈로그 v4는 200/107개/테아닌 ID 존재, 더단백 영양은 200/1건, 테아닌 영양은 200/0건, OFF 더단백·Nutella는 200/product_found다. 사용자 제공 전일 카탈로그 기록은 200/102개다. 원격 함수는 이 작업에서 배포하거나 DB를 수정하지 않았다.
 
 개발 빌드에서만 ADB Intent `--ez productar.lookupProbe true`로 직접 클라이언트 검사를 실행할 수 있다. `--es productar.lookupBarcode <EAN>`으로 OFF 입력을 지정하며 기본은 더단백이다. 카메라 인식·선택 상태는 건드리지 않는다. 최종 APK의 A25 검사에서 PT matched·영양 found·OFF found·Android User-Agent **wire-match**를 확인했다. User-Agent echo에는 합성 연락처만 보낸다. 실제 OFF는 사용자가 승인한 연락처로 구성한다. Unity는 User-Agent 직접 설정을 일반적으로 권장하진 않으므로 기기 전송 결과를 확인했다([Unity API](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Networking.UnityWebRequest.SetRequestHeader.html)). 직접 클라이언트 검사를 실물 OFF E2E로 기록하지 않는다.
 
-사용자가 최종 APK의 두 시연 바코드 PT 등록 표시·테아닌 앞면 3D·소실, 비행기 모드의 확인 불가+스냅샷을 확인했다. 따라서 10/27 밤 이전 온라인 기기 확인 조건을 충족했으며 현재 로컬 플래그는 enabled=true다. 검증되지 않은 분기·제출물은 계속 별도로 기록한다.
+0.6.0에서 사용자가 두 시연 바코드 PT 등록 표시·테아닌 앞면 3D·소실, 비행기 모드의 확인 불가+스냅샷을 확인했다. 따라서 10/27 밤 이전 온라인 기기 확인 조건을 충족했으며 현재 로컬 플래그는 enabled=true다. 검증되지 않은 분기·제출물은 계속 별도로 기록한다.
 
-추가 실물 `8809037615025`의 PT not_linked→OFF 정상 미발견·연결 필요 안내·소실 시 해제도 사용자 확인했다. 최종 APK는 0.6.0 (7), SHA-256 `c6c12a607c4598de4c2d8b510e616ed6915dfb8554c88f53269267706660f6f4`다. 빌드 입력 소스 37개 대조·실제 설치 APK 해시 일치, 키·연락처 Git 후보 유출 0건을 확인했다. 생성한 전용 임시 디렉터리만 `Build-Android.ps1 -ReuseStage <temp-stage>`로 재사용할 수 있으며 저장소·외부 경로와 junction은 거부한다.
+추가 실물 `8809037615025`의 PT not_linked→OFF 정상 미발견·연결 필요 안내·소실 시 해제도 사용자 확인했다. 당시 APK는 0.6.0 (7), SHA-256 `c6c12a607c4598de4c2d8b510e616ed6915dfb8554c88f53269267706660f6f4`다. 빌드 입력 소스 37개 대조·실제 설치 APK 해시 일치, 키·연락처 Git 후보 유출 0건을 확인했다. 생성한 전용 임시 디렉터리만 `Build-Android.ps1 -ReuseStage <temp-stage>`로 재사용할 수 있으며 저장소·외부 경로와 junction은 거부한다.
 
-상세 [검증 기록](VALIDATION.md), [공개 검증 JSON](validation/barcode-online-lookup-2026-10-27.json)을 따른다. REPORT-DRAFT.md의 v5 재작성·제출 영상 제작은 이번 범위 밖이다.
+상세 [검증 기록](VALIDATION.md), [0.6.1 검증 JSON](validation/online-lookup-finish-2026-10-27.json)을 따른다. REPORT-DRAFT.md의 v5 재작성·제출 영상 제작은 이번 범위 밖이다.

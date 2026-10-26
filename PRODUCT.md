@@ -12,7 +12,7 @@ android
 
 ## Product Purpose
 
-앞면 이미지와 바코드가 독립적으로 상품을 식별한다. 앞면은 3D 위치·방향에 World Space 정보판, 바코드는 화면 2D 정보판을 표시한다. 같은 상품은 3D 우선, 다른 상품 충돌은 숨김으로 처리한다. 현재 기준은 docs/PRODUCT-RECOGNITION-V5.md다.
+앞면 AR은 테아닌 1종, 바코드 식별은 더단백·테아닌 2종이다. 두 경로는 독립적이며 앞면은 3D 위치·방향에 World Space 정보판, 바코드는 화면 2D 정보판을 표시한다. 같은 상품은 3D 우선, 서로 다른 상품이 동시에 보이면 숨긴다. 여러 상품의 동시 표시는 지원하지 않는다. 현재 기준은 docs/PRODUCT-RECOGNITION-V5.md다.
 
 ## Capabilities and Constraints
 
@@ -24,4 +24,4 @@ Unity 6000.3.22f1, AR Foundation·ARCore 6.3.5, 동일 AR 카메라와 ZXing.Net
 
 ## Evidence on Hand
 
-EditMode 162/162 통과(기존 105 + 신규 57).A25의 0.6.0 (7)에서 PT matched·승인 영양·OFF 직접 조회·Android User-Agent 전달을 확인했다. 사용자가 두 바코드 PT 등록 표시·테아닌 앞면 3D·소실·오프라인 대체 표시를 확인했다. 작업 초반 PT 404/PGRST202는 이후 200으로 바뀌었다. 코드·직접 클라이언트·실물 E2E 결과는 구분한다. 근거는 docs/VALIDATION.md, 설정과 남은 경계는 docs/ONLINE-LOOKUP.md를 따른다. 2026-10-29 제출물 우선이며 10/27 밤 이전 온라인 기기 확인 조건을 충족했다.
+0.6.1 보완 EditMode 172/172 통과(기존 162 유지 + 신규 10), 제출 압축 정책 시험 10/10 통과. 로컬에 없는 PT matched도 표시 상품 키·버튼·상품 변경 감지가 동작하며 Selected에는 온라인 DTO를 넣지 않는다. 이전 0.6.0 A25에서 두 바코드 PT 표시와 테아닌 앞면 3D·소실·오프라인 대체를 사용자 확인했다. 버전별 실제 기기 범위는 docs/VALIDATION.md, 최소 5회 미수행 실물 기록 양식은 docs/DEVICE-CHECKLIST.md, 원본·고정 커밋·병합 승인 경계는 docs/SUBMISSION.md를 따른다.

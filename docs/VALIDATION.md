@@ -1,5 +1,19 @@
 # 상품정보 AR 구현·검증 기록
 
+## 2026-10-27 온라인 표시 마무리·제출 원본·0.6.1
+
+**시연 범위는 테아닌 앞면 AR 1종과 더단백·테아닌 바코드 식별 2종이다.** 테아닌 두 크롭은 같은 상품이며, 더단백 포장 앞면 AR과 여러 상품의 동시 표시는 구현 범위가 아니다. 개발용 브이젤 카드는 별도 시험이다.
+
+- 검증 소스 `70d73e7545a103bca60954fc9132c3f2cd04fb49`. 온라인 DTO를 Selected에 넣지 않고 `DisplayProduct`·`DisplayProductKey`로 버튼 동작·상품 변경·패널 초기화를 결정한다. 소실 시 현재 표시 상태를 해제한다. 기존 같은 상품 탭 유지 규칙은 보존한다.
+- `scripts/Test-EditMode.ps1` **172/172 PASS**, 기존 162개 유지 + 신규 10개, 실패·건너뜀 0, Unity exit 0. 온라인 전용 상품 버튼·두 패널 초기화·loss/pause/rescan, 설정 에셋 없음의 실제 Awake·로컬 바코드, PT conflict 후보 0/1/2개와 후속 공급자 호출 차단을 확인했다. 근거: `artifacts/editmode/20261026-160623-0906ab89/summary.json`.
+- PT 계약은 초기 `835e281`에서 최종 `d7c1d33`으로 변경됐다. 최종 확정 계약은 `conflict + []`를 가려진 충돌로 허용하고 후보 1개는 허용하지 않는다. 파서가 새 규칙을 따르며 충돌에서 영양·OFF를 호출하지 않는다. 이 작업은 PT DB나 원격 함수를 변경하지 않았다.
+- `scripts/Test-SubmissionPackage.ps1` **10/10 PASS**. `53e3a3e`의 실제 후보 ZIP은 980개 파일·키 패턴 0건·제외 경로 0건으로 검사를 통과했다. 최종 제출 ZIP은 고정 태그에서 다시 생성·검사하며 ZIP의 SUBMISSION-MANIFEST가 정확한 커밋을 보존한다. [제출 절차](SUBMISSION.md).
+- 0.6.1 첫 APK `9828fe59…d8fcad4a`는 동일 서명의 `-r` 업데이트·버전 8·설치 해시 일치·카메라·인터넷 권한을 확인했다. 사용자는 더단백 상품정보·다른 상품 스캔 버튼·테아닌 앞면 3D가 정상이라고 확인했다. 기기 로그에서 Barcode2D→None·Image3D→None을 확인했고, 수집 구간의 NullReferenceException/NoSuchMethodError/FATAL EXCEPTION은 0건이다. 뒤이은 PT 계약 파서 보완 APK와 구분한다.
+- **최종 계약 보완 APK:** 0.6.1 (8), ARM64·IL2CPP, 빌드 Succeeded / errors=0 / exit=0, **62,727,523 bytes**, SHA-256 **`744f7c8ce22854a0e3fe764141f74cdb50d111f3cda275bb42bea051485e5280`**. A25에 동일 서명 `-r`로 업데이트하고 설치 APK를 다시 가져와 해시 일치를 확인했다. 앱 삭제·데이터 초기화 없음. 빌드 입력 소스·시험 44개 파일의 원본/복사본 해시 불일치 0건이다.
+- 최종 APK의 실제 클라이언트 진단은 **PT matched / 영양 found / OFF found / User-Agent wire-match**다(`artifacts/online-finish/final-device.log`). 최종 파서 보완 뒤의 재실물·온라인 전용 신규 상품·운영 redacted conflict는 미수행이다. 직전 같은 버전의 기본 실물 사용자 확인과 자동 시험을 구분한다.
+- **미수행:** 테아닌 앞면의 통제된 최소 5회 회전·거리·가림·재획득, 온라인 전용 새 상품의 실제 바코드, 가려진 충돌의 실제 운영 응답, 5분 부하·모든 추적 상태 조합. 자동 시험·이전 버전 사용자 확인을 새 반복 시험 결과로 채우지 않는다. [빈 기록 양식](DEVICE-CHECKLIST.md)을 준비했다.
+- 최신 빌드·설치·성공/미수행 상세: [online-lookup-finish-2026-10-27.json](validation/online-lookup-finish-2026-10-27.json). 이전 0.6.0 결과는 아래 역사 기록이다.
+
 ## 2026-10-27 바코드 온라인 조회
 
 구현 소스 `389f9e9837cb82d16b0695038705051e16f4ab56`, 브랜치 `feat/barcode-online-lookup`. 공개 조회 클라이언트·상태·캐시·설정·UI를 추가했다. 기존 EAN-13 3회 확인·최대 0.65초·실패 프레임 즉시 해제·독립 FULL_TRACKING 경로를 유지한다. [설정·실행·중단 절차](ONLINE-LOOKUP.md).

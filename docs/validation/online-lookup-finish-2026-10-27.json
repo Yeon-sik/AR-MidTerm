@@ -1,0 +1,117 @@
+{
+  "recordedDateKst": "2026-10-27",
+  "result": "FIXED_TESTED_DEVICE_UPDATED_REPEAT_TRIALS_NOT_RUN",
+  "sourceCommit": "70d73e7545a103bca60954fc9132c3f2cd04fb49",
+  "displayFixCommit": "bb94255",
+  "packagingCommit": "53e3a3e",
+  "submissionRef": "submission/v0.6.1-2026-10-29",
+  "sourceBranch": "feat/barcode-online-lookup",
+  "displayFix": {
+    "onlineDtoInjectedIntoSelected": false,
+    "displayProductAndKeyDriveActionsAndPanelReset": true,
+    "sameProductTabPreservationMaintained": true,
+    "currentDisplayClearedOnLossPauseRescan": true,
+    "secondaryActionMeaning": "Existing primary-button secondary style; product action visibility and style verified"
+  },
+  "ptContractReview": {
+    "source": "PriceTrace docs/contracts/PUBLIC_BARCODE_LOOKUP_V1.md",
+    "branch": "feat/public-barcode-lookup",
+    "initialCommit": "835e2815e13f4a7135def109f6e401634e167b89",
+    "finalCommit": "d7c1d33a74e8f47752b5e96516298c83434af570",
+    "contractChangedDuringThisTask": true,
+    "clientParserChanged": true,
+    "conflictWithZeroMatches": "Conflict with redacted candidates",
+    "conflictWithOneMatch": "Format error per confirmed contract",
+    "conflictWithTwoOrMorePublicMatches": "Conflict; no automatic selection",
+    "nutritionOrOffCalledForConflict": false,
+    "remoteDatabaseChangesByThisTask": false
+  },
+  "tests": {
+    "command": "scripts/Test-EditMode.ps1",
+    "total": 172,
+    "passed": 172,
+    "failed": 0,
+    "skipped": 0,
+    "existingTestsRetained": 162,
+    "added": 10,
+    "unityExitCode": 0,
+    "evidence": "artifacts/editmode/20261026-160623-0906ab89/summary.json",
+    "newCoverage": [
+      "Online-only PT matched product action visibility and secondary style without Selected injection",
+      "Different online PT identity resets both previously bound panels",
+      "Loss, pause and rescan release the displayed product and action",
+      "Actual Awake with missing local config still supports local barcode recognition",
+      "PT conflict cardinalities 0, 1 and 2",
+      "Redacted conflict does not select a product or call Nutrition/OFF"
+    ]
+  },
+  "sourcePackaging": {
+    "command": "scripts/Export-Submission.ps1 -SourceRef submission/v0.6.1-2026-10-29",
+    "manifest": "SUBMISSION-MANIFEST.json stores exact exported source commit",
+    "includes": ["Assets", "Packages", "ProjectSettings", "docs", "scripts", "README.md", "PRODUCT.md", "DESIGN.md", "ThirdParty", ".gitignore", ".gitattributes"],
+    "excludes": ["Library", "Temp", "Logs", "obj", "Builds", "artifacts", "UserSettings", ".git", ".aws", ".codex", ".serena", "*.local.json and metadata", ".env*", "signing/key files", "APK/AAB", "logs"],
+    "policyTestCommand": "scripts/Test-SubmissionPackage.ps1",
+    "policyTests": {"total": 10, "passed": 10, "failed": 0},
+    "actualCandidateVerified": {
+      "sourceCommit": "53e3a3e2d8dcad3de34bf044c7dff4936013fad1",
+      "files": 980,
+      "sha256": "dcebaaf1324fe1d53eaafc8490ace47efaf8c973158f5f37b2d8d1bb9b4de299",
+      "keyPatternMatches": 0,
+      "excludedPaths": 0
+    },
+    "finalArchiveProcedure": "Export the fixed submission tag and inspect its returned sourceCommit, SHA-256, zero key matches and zero excluded paths"
+  },
+  "build": {
+    "versionName": "0.6.1",
+    "versionCode": 8,
+    "package": "com.yeonsik.midtermar",
+    "backend": "IL2CPP",
+    "architecture": "ARM64",
+    "result": "Succeeded",
+    "errors": 0,
+    "unityExitCode": 0,
+    "apk": "Builds/Android/ProductAR.apk",
+    "sizeBytes": 62727523,
+    "sha256": "744f7c8ce22854a0e3fe764141f74cdb50d111f3cda275bb42bea051485e5280",
+    "sourceAndTestFilesCompared": 44,
+    "sourceHashMismatches": 0,
+    "evidence": "artifacts/android-build-summary.json"
+  },
+  "device": {
+    "model": "Samsung Galaxy A25 / SM-A256N",
+    "androidVersion": "16",
+    "updateMode": "compatible-update-r",
+    "sameSigningCertificate": true,
+    "installedApkHashMatches": true,
+    "uninstallOrDataClearPerformed": false,
+    "versionAndInternetPermissionVerified": true,
+    "basicPhysicalCheckBeforeFinalContractRepair": {
+      "result": "PASS_USER_CONFIRMED",
+      "apkSha256": "9828fe593d5165791de2b4e3b74d238cd9a4f8a35c6c93fd17952d95d8fcad4a",
+      "scope": "Product information, other-product scan button, theanine front 3D",
+      "evidence": "artifacts/online-finish/device-verified.log"
+    },
+    "finalApkChecks": [
+      {"case": "Compatible update, launch, installed hash and permissions", "result": "PASS_TOOL_VERIFIED"},
+      {"case": "PT, Nutrition, OFF direct clients and custom User-Agent", "result": "PASS_DEVICE_LOG", "evidence": "artifacts/online-finish/final-device.log"},
+      {"case": "Online-only physical product absent from local snapshot", "result": "NOT_RUN", "automation": "PASS_EDITMODE"},
+      {"case": "Redacted conflict from real operational data", "result": "NOT_RUN", "automation": "PASS_EDITMODE"},
+      {"case": "Physical checks repeated after final parser-only repair", "result": "NOT_RUN"},
+      {"case": "Controlled theanine rotation, distance, occlusion, reacquisition at least five times", "result": "NOT_RUN"},
+      {"case": "Five-minute load and all tracked-target state combinations", "result": "NOT_RUN"}
+    ]
+  },
+  "documentationCorrections": [
+    "Front-package AR: theanine only, two crops, approximately 58mm, quality 95/100, exact PT ID 18e83c5c-86a4-4e95-a131-411381789687",
+    "Barcode identification: theanine and protein bar",
+    "Protein bar package AR is not demonstrated by the development card mapping",
+    "Different simultaneous products hide the panel; no multi-product simultaneous display",
+    "Five physical trial rows are left blank",
+    "README states missing remote-lookup.local.json gives local-only mode and names Initialize-RemoteLookup.ps1",
+    "Fixed submission tag and commit manifest, source inclusion/exclusion and key-pattern verification documented"
+  ],
+  "physicalTrialForm": {"path": "docs/DEVICE-CHECKLIST.md", "blankRows": 5, "completedControlledTrialsThisTask": 0},
+  "mergePolicy": {"explicitUserConfirmationRequired": true, "mode": "ff-only", "chain": ["feat/barcode-online-lookup", "feat/image-tracking-probe", "feat/ar-foundation-m0-m3"]},
+  "reportDraftChanged": false,
+  "submissionDeadline": "2026-10-29"
+}
