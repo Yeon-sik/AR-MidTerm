@@ -70,6 +70,8 @@ namespace MidtermAR.Tests
                 Assert.DoesNotThrow(() => dev.ValidateLibrary(library));
                 var json = JObject.Parse(ImagesJson);
                 json["images"][0]["developmentOnly"] = false;
+                json["images"][0]["productWidthMetres"] = .063;
+                json["images"][0]["productWidthSource"] = "synthetic test input";
                 var production = new ProductImageCatalog(json.ToString(), Products());
                 Assert.Throws<FormatException>(() => production.ValidateLibrary(library));
                 library.SetSpecifySize(0, true);
@@ -99,7 +101,7 @@ namespace MidtermAR.Tests
             var panel = AssetDatabase.LoadAssetAtPath<WorldProductPanel>(ProjectBuilder.PanelPath);
             Assert.That(panel.GetComponent<Canvas>().renderMode, Is.EqualTo(RenderMode.WorldSpace));
             Assert.That(panel.GetComponent<GraphicRaycaster>(), Is.Not.Null);
-            Assert.That(panel.GetComponentsInChildren<Button>(true).Length, Is.EqualTo(3));
+            Assert.That(panel.GetComponentsInChildren<Button>(true).Length, Is.EqualTo(2));
         }
 
         [Test]
@@ -119,9 +121,11 @@ namespace MidtermAR.Tests
                 {
                     image.transform.SetPositionAndRotation(new Vector3(1, 2, 3), rotation);
                     Assert.That(presenter.TryApplyPose(image.transform, new Vector2(0.1f, 0.15f)), Is.True);
-                    Assert.That(Vector3.Distance(panel.transform.position, image.transform.TransformPoint(new Vector3(0, 0.008f, 0))), Is.LessThan(0.00001f));
-                    Assert.That(Quaternion.Angle(panel.transform.rotation, rotation * Quaternion.Euler(90, 0, 0)), Is.LessThan(0.001f));
-                    Assert.That(((RectTransform)panel.transform).rect.width * panel.transform.lossyScale.x, Is.EqualTo(0.096f).Within(0.00001f));
+                    var radians = 15 * Mathf.Deg2Rad;
+                    var expected = new Vector3(.05f + .012f + .08f * Mathf.Cos(radians), .008f + .08f * Mathf.Sin(radians), 0);
+                    Assert.That(Vector3.Distance(panel.transform.position, image.transform.TransformPoint(expected)), Is.LessThan(0.00001f));
+                    Assert.That(Quaternion.Angle(panel.transform.rotation, rotation * Quaternion.AngleAxis(15, Vector3.forward) * Quaternion.Euler(90, 0, 0)), Is.LessThan(0.001f));
+                    Assert.That(((RectTransform)panel.transform).rect.width * panel.transform.lossyScale.x, Is.EqualTo(0.16f).Within(0.00001f));
                 }
                 Assert.That(presenter.TryApplyPose(image.transform, new Vector2(float.NaN, 1)), Is.False);
                 Assert.That(presenter.TryApplyPose(image.transform, Vector2.zero), Is.False);
@@ -156,8 +160,8 @@ namespace MidtermAR.Tests
                 if (dataState == "missing") { product.price = null; product.nutrition = null; }
                 panel.Bind(product, Binding());
                 Click(root.transform.Find("Information Tabs/Price Tab").GetComponent<Button>());
-                Assert.That(panel.CurrentTab, Is.EqualTo(ProductInfoTab.Price));
-                Assert.That(root.transform.Find("Price Page").gameObject.activeSelf, Is.True);
+                Assert.That(panel.CurrentTab, Is.EqualTo(dataState == "missing" ? ProductInfoTab.None : ProductInfoTab.Price));
+                Assert.That(root.transform.Find("Price Page").gameObject.activeSelf, Is.EqualTo(dataState != "missing"));
                 Assert.That(root.transform.Find("Nutrition Page").gameObject.activeSelf, Is.False);
                 if (dataState == "missing")
                 {
@@ -169,14 +173,14 @@ namespace MidtermAR.Tests
                 else
                 {
                     Assert.That(Text(panel, "price"), Is.EqualTo(dataState == "partial" ? "0원" : "1,400원"));
-                    Assert.That(Text(panel, "priceSource"), Does.Contain(product.price.seller).And.Contain(product.price.observedAt).And.Contain(product.price.displaySource));
-                    Assert.That(Text(panel, "nutritionSource"), Does.Contain(product.nutrition.displaySource));
+                    Assert.That(Text(panel, "priceSource"), Does.Contain(product.price.seller).And.Contain(product.price.observedAt).And.Contain("PriceTrace 관측가"));
+                    Assert.That(Text(panel, "nutritionSource"), Is.EqualTo("PriceTrace 승인 영양자료"));
                     Assert.That(Text(panel, "nutrition"), Does.Contain(dataState == "partial" ? "당류 0g" : "당류 7g"));
                     Assert.That(Text(panel, "nutrition"), Does.Contain(dataState == "partial" ? "지방 정보 없음" : "지방 7g"));
                 }
                 Click(root.transform.Find("Information Tabs/Nutrition Tab").GetComponent<Button>());
-                Assert.That(panel.CurrentTab, Is.EqualTo(ProductInfoTab.Nutrition));
-                Assert.That(root.transform.Find("Nutrition Page").gameObject.activeSelf, Is.True);
+                Assert.That(panel.CurrentTab, Is.EqualTo(dataState == "missing" ? ProductInfoTab.None : ProductInfoTab.Nutrition));
+                Assert.That(root.transform.Find("Nutrition Page").gameObject.activeSelf, Is.EqualTo(dataState != "missing"));
                 panel.Bind(null);
                 foreach (var field in new[] { "productTitle", "specification", "price", "priceSource", "nutrition", "nutritionSource", "provenance" })
                     Assert.That(Text(panel, field), Is.Empty, field + " must clear on rescan.");
@@ -205,6 +209,7 @@ namespace MidtermAR.Tests
                     camera.transform.SetPositionAndRotation(new Vector3(0, 1, 0), Quaternion.Euler(90, 0, 0));
                 }
                 root.GetComponent<Canvas>().worldCamera = camera;
+                root.GetComponent<WorldProductPanel>().Bind(Product());
                 Canvas.ForceUpdateCanvases();
                 var button = root.transform.Find("Information Tabs/Price Tab").GetComponent<Button>();
                 EnableEditorClick(button);

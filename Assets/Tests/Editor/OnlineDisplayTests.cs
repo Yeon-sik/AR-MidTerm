@@ -103,7 +103,7 @@ namespace MidtermAR.Tests
             Assert.That(state.Selected, Is.Null);
             Assert.That(Field<string>(app, "lastDisplayedProductKey"), Is.EqualTo(IdB));
             Assert.That(imagePanel.Binding, Is.Null);
-            Assert.That(world.CurrentTab, Is.EqualTo(ProductInfoTab.Nutrition));
+            Assert.That(world.CurrentTab, Is.EqualTo(ProductInfoTab.None));
             Assert.That(Field<TMP_Text>(barcodePanel, "productTitle").text, Is.Empty);
         }
 

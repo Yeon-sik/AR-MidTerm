@@ -61,12 +61,10 @@ namespace MidtermAR
         private void OnEnable()
         {
             scanner.Observed += OnObserved;
-            imagePanel.RescanRequested += RestartScan;
         }
         private void OnDisable()
         {
             scanner.Observed -= OnObserved;
-            imagePanel.RescanRequested -= RestartScan;
             scanner.SetContinuous(false);
             recognition?.Suspend();
             imagePanel.InvalidatePose();
@@ -170,7 +168,7 @@ namespace MidtermAR
         {
             var step = "상품 인식";
             var title = "앞면이나 바코드를 비춰주세요";
-            var message = "앞면은 3D, 바코드는 2D로 정보를 표시합니다.";
+            var message = "상품을 화면 안에 선명하게 보여주세요.";
             var summary = "";
             var action = "다른 상품 스캔";
             var primary = recognition?.DisplayProduct != null || recognition?.ConfirmedBarcode != null;
@@ -189,25 +187,23 @@ namespace MidtermAR
             else if (recognition.Route == ProductDisplayRoute.Conflict)
             {
                 title = recognition.LookupResult?.Status == LookupStatus.Conflict ? "연결 확인 필요" : "인식 결과가 일치하지 않아요";
-                message = "정보판을 숨겼습니다. 한 상품만 비춰주세요.";
+                message = "한 상품만 비춰주세요.";
                 primary = true; attention = true;
             }
             else if (recognition.Route == ProductDisplayRoute.Image3D)
             {
                 step = "앞면 · 3D 정보";
                 title = imagePanel.HasVisibleTarget ? "앞면에 상품정보를 표시해요" : "앞면 위치를 확인하고 있어요";
-                message = "영양·가격 탭으로 정보를 바꿔보세요.";
-                if (string.IsNullOrEmpty(recognition.Selected.barcode)) message += "\n바코드 미연결";
-                if (imagePanel.Binding?.developmentOnly == true) message += "\n개발용 카드 연결 · 상품 포장 인식 아님";
+                message = ProductInfoFormatter.Honesty(recognition.Selected, imagePanel.Binding);
                 primary = true;
             }
             else if (recognition.Route == ProductDisplayRoute.Barcode2D)
             {
                 step = "바코드 · 2D 정보";
                 title = "바코드로 상품을 확인했어요";
-                message = recognition.SourceBadge + "\n" + recognition.BarcodeBadge(recognition.BarcodeDisplayProduct);
+                message = ProductInfoFormatter.CompactSource(recognition.SourceBadge) + "\n" + ProductInfoFormatter.FrontHint(recognition.BarcodeBadge(recognition.BarcodeDisplayProduct));
                 if (!string.IsNullOrEmpty(recognition.LookupResult?.Detail)) message += "\n" + recognition.LookupResult.Detail;
-                if (!barcodePanel.HasVisibleTarget) message += "\n화면 위치를 확인하려면 바코드를 유지해 주세요.";
+                if (!barcodePanel.HasVisibleTarget) message += "\n바코드를 선명하게 비춰주세요.";
                 primary = true;
             }
             else if (recognition.Route == ProductDisplayRoute.UnknownBarcode)

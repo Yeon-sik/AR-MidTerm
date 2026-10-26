@@ -207,7 +207,12 @@ namespace MidtermAR.Editor
         }
 
         [MenuItem("Product AR/Build Android APK")]
-        public static void BuildAndroid() // 지정 실행 씬을 Android APK로 빌드
+        public static void BuildAndroid() => BuildAndroidPlayer(false);
+
+        [MenuItem("Product AR/Build Android Release APK")]
+        public static void BuildAndroidRelease() => BuildAndroidPlayer(true);
+
+        private static void BuildAndroidPlayer(bool release)
         {
             if (!File.Exists(ScenePath)) PrepareProject();
             ConfigureAndroid();
@@ -217,7 +222,7 @@ namespace MidtermAR.Editor
                 scenes = new[] { ScenePath },
                 locationPathName = "Builds/Android/ProductAR.apk",
                 target = BuildTarget.Android,
-                options = BuildOptions.Development
+                options = release ? BuildOptions.None : BuildOptions.Development
             });
             Debug.Log($"[ProductAR Build] {report.summary.result}; bytes={report.summary.totalSize}; errors={report.summary.totalErrors}");
             if (report.summary.result != BuildResult.Succeeded) throw new Exception("Android APK build failed.");
@@ -255,8 +260,8 @@ namespace MidtermAR.Editor
             PlayerSettings.companyName = "Yeonsik";
             PlayerSettings.productName = "상품정보 AR";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
-            PlayerSettings.bundleVersion = "0.6.1";
-            PlayerSettings.Android.bundleVersionCode = 8;
+            PlayerSettings.bundleVersion = "0.6.2";
+            PlayerSettings.Android.bundleVersionCode = 9;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -330,7 +335,7 @@ namespace MidtermAR.Editor
             background.color = Paper;
             background.raycastTarget = false;
             var view = root.GetComponent<WorldProductPanel>();
-            Assign(view, "productTitle", Text(rect, "Title", "", font, 40, Ink, 24, 20, 592, 100));
+            Assign(view, "productTitle", Text(rect, "Title", "", font, 34, Ink, 24, 20, 592, 100));
             Assign(view, "specification", Text(rect, "Specification", "", font, 26, Ink, 24, 124, 592, 44));
             var tabs = Rect("Information Tabs", rect);
             tabs.anchorMin = new Vector2(0, 1); tabs.anchorMax = Vector2.one;
@@ -342,6 +347,7 @@ namespace MidtermAR.Editor
             nutritionButton.GetComponent<UnityEngine.UI.LayoutElement>().minHeight = 72;
             priceButton.GetComponent<UnityEngine.UI.LayoutElement>().minHeight = 72;
             Assign(view, "nutritionTab", nutritionButton); Assign(view, "priceTab", priceButton);
+            Assign(view, "tabs", tabs);
             UnityEventTools.AddPersistentListener(nutritionButton.onClick, view.ShowNutrition);
             UnityEventTools.AddPersistentListener(priceButton.onClick, view.ShowPrice);
             var nutritionPage = Rect("Nutrition Page", rect);
@@ -356,13 +362,13 @@ namespace MidtermAR.Editor
             Assign(view, "nutritionSource", Text(nutritionPage, "NutritionSource", "", font, 20, Ink, 24, 250, 592, 146));
             Text(pricePage, "PriceLabel", "관측 가격 · 개당", font, 26, Green, 24, 0, 592, 40);
             Assign(view, "price", Text(pricePage, "Price", "", font, 66, Ink, 24, 44, 592, 92));
-            Assign(view, "priceSource", Text(pricePage, "PriceSource", "", font, 21, Ink, 24, 146, 592, 250));
+            var source = Text(pricePage, "PriceSource", "", font, 21, Ink, 24, 146, 592, 36);
+            source.enableAutoSizing = true; source.fontSizeMin = 18; source.fontSizeMax = 21;
+            source.textWrappingMode = TextWrappingModes.NoWrap;
+            Assign(view, "priceSource", source);
+            Assign(view, "priceDisclaimer", Text(pricePage, "PriceDisclaimer", "", font, 23, Ink, 24, 190, 592, 36));
             Assign(view, "provenance", Text(rect, "Provenance", "", font, 23, Ink, 24, 696, 592, 120));
-            var rescan = Button(rect, "Rescan", "다른 상품 스캔", font, Ink, 1, out _);
-            var rescanRect = (RectTransform)rescan.transform;
-            rescanRect.anchorMin = new Vector2(0, 1); rescanRect.anchorMax = Vector2.one;
-            rescanRect.offsetMin = new Vector2(24, -936); rescanRect.offsetMax = new Vector2(-24, -840);
-            UnityEventTools.AddPersistentListener(rescan.onClick, view.RequestRescan);
+            Assign(view, "emptyInformation", Text(rect, "Empty Information", "", font, 26, Ink, 24, 184, 592, 44));
             var catalog = new ProductCatalog(File.ReadAllText("Assets/Data/demo-products.json"));
             catalog.TryFind("8801104671507", out var product);
             view.Bind(product);
@@ -465,6 +471,26 @@ namespace MidtermAR.Editor
             Assign(presenter, "cameraManager", camera.GetComponent<ARCameraManager>());
             Assign(presenter, "arCamera", camera);
             Assign(presenter, "panelPrefab", panel);
+            var oldVisuals = app.transform.Find("Tracking Visuals");
+            if (oldVisuals != null) UnityEngine.Object.DestroyImmediate(oldVisuals.gameObject);
+            var visuals = new GameObject("Tracking Visuals"); visuals.transform.SetParent(app.transform, false);
+            Directory.CreateDirectory("Assets/Materials");
+            const string linePath = "Assets/Materials/ProductTrackingLine.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(linePath);
+            if (material == null) { material = new Material(Shader.Find("Universal Render Pipeline/Unlit")); AssetDatabase.CreateAsset(material, linePath); }
+            material.SetColor("_BaseColor", new Color32(40, 205, 132, 255));
+            EditorUtility.SetDirty(material);
+            Assign(presenter, "cropOutline", Line("Crop Outline", 4, true, .0006f));
+            Assign(presenter, "connector", Line("Product Connector", 2, false, .0005f));
+            LineRenderer Line(string name, int points, bool loop, float width)
+            {
+                var go = new GameObject(name); go.transform.SetParent(visuals.transform, false);
+                var line = go.AddComponent<LineRenderer>(); line.sharedMaterial = material;
+                line.useWorldSpace = true; line.loop = loop; line.positionCount = points;
+                line.startWidth = line.endWidth = width;
+                line.shadowCastingMode = ShadowCastingMode.Off; line.receiveShadows = false; line.enabled = false;
+                return line;
+            }
             Assign(app, "imagePanel", presenter);
             Assign(app, "imageBindingsJson", json);
             // 파일이 없으면 null을 직렬화한다. 키를 포함한 예제 파일을 대신 사용하지 않는다.
@@ -580,34 +606,43 @@ namespace MidtermAR.Editor
             amount.alignment = TextAlignmentOptions.TopRight;
             amount.fontStyle = FontStyles.Bold;
             Assign(follow, "price", amount);
-            Assign(follow, "seller", Text(priceBlock, "Seller", "", font, 24, Ink, 16, 62, 640, 38));
+            var sellerSource = Text(priceBlock, "Seller", "", font, 22, Ink, 16, 62, 640, 38);
+            sellerSource.enableAutoSizing = true; sellerSource.fontSizeMin = 18; sellerSource.fontSizeMax = 22;
+            sellerSource.textWrappingMode = TextWrappingModes.NoWrap;
+            Assign(follow, "seller", sellerSource);
             Assign(follow, "observedAt", Text(priceBlock, "ObservedAt", "", font, 22, Ink, 16, 100, 640, 36));
+            Assign(follow, "priceSection", priceBlock);
+            var nutritionBlock = Rect("Nutrition Section", card);
+            Assign(follow, "nutritionSection", nutritionBlock);
 
-            var nutritionTitle = Text(card, "NutritionTitle", "영양정보", font, 32, Ink, 24, 266, 672, 50);
+            var nutritionTitle = Text(nutritionBlock, "NutritionTitle", "영양정보", font, 32, Ink, 0, 0, 672, 50);
             nutritionTitle.fontStyle = FontStyles.Bold;
             nutritionTitle.rectTransform.anchorMax = new Vector2(0.5f, 1);
-            var basis = Text(card, "NutritionBasis", "", font, 24, Ink, 24, 276, 672, 38);
+            var basis = Text(nutritionBlock, "NutritionBasis", "", font, 24, Ink, 0, 10, 672, 38);
             basis.rectTransform.anchorMin = new Vector2(0.5f, 1);
             basis.alignment = TextAlignmentOptions.TopRight;
             Assign(follow, "nutritionBasis", basis);
-            Rule(card, "Nutrition Top Rule", 320, 6, Ink);
+            Rule(nutritionBlock, "Nutrition Top Rule", 54, 6, Ink);
             NutritionRow("Calories", "열량", "calories", 328, 42, 27, true);
-            Rule(card, "Calories Rule", 372, 4, Ink);
+            Rule(nutritionBlock, "Calories Rule", 106, 4, Ink);
             NutritionRow("Sodium", "나트륨", "sodium", 378, 36);
             NutritionRow("Carbs", "탄수화물", "carbs", 414, 36);
             NutritionRow("Sugars", "당류", "sugars", 450, 36, indent: true);
             NutritionRow("Fat", "지방", "fat", 486, 36);
             NutritionRow("SaturatedFat", "포화지방", "saturatedFat", 522, 36, indent: true);
             NutritionRow("Protein", "단백질", "protein", 558, 36);
-            Rule(card, "Nutrition Bottom Rule", 596, 4, Ink);
-            Assign(follow, "provenance", Text(card, "Provenance", "시연용 연결 · 로컬 데이터", font, 20, Ink, 24, 606, 672, 56));
+            Rule(nutritionBlock, "Nutrition Bottom Rule", 330, 4, Ink);
+            Assign(follow, "nutritionSource", Text(nutritionBlock, "Nutrition Source", "", font, 21, Ink, 0, 340, 672, 34));
+            Assign(follow, "provenance", Text(card, "Provenance", "", font, 20, Ink, 24, 606, 672, 38));
             Assign(follow, "registrationStatus", Text(card, "Registration", "", font, 20, Ink, 24, 668, 672, 90));
+            Assign(follow, "emptyInformation", Text(card, "Empty Information", "", font, 24, Ink, 24, 116, 672, 52));
 
             void NutritionRow(string name, string label, string field, float y, float height, float size = 24, bool bold = false, bool indent = false)
             {
-                var row = Rect(name + " Row", card);
+                y -= 266;
+                var row = Rect(name + " Row", nutritionBlock);
                 row.anchorMin = new Vector2(0, 1); row.anchorMax = Vector2.one;
-                row.offsetMin = new Vector2(24, -y - height); row.offsetMax = new Vector2(-24, -y);
+                row.offsetMin = new Vector2(0, -y - height); row.offsetMax = new Vector2(0, -y);
                 var heading = Text(row, "Label", label, font, size, Ink, indent ? 20 : 0, 0, 672, height);
                 heading.rectTransform.anchorMax = new Vector2(0.6f, 1);
                 var value = Text(row, "Amount", "", font, size, Ink, 0, 0, 672, height);
@@ -616,7 +651,7 @@ namespace MidtermAR.Editor
                 value.alignment = TextAlignmentOptions.MidlineRight;
                 if (bold) heading.fontStyle = value.fontStyle = FontStyles.Bold;
                 Assign(follow, field, value);
-                if (!bold && name != "Protein") Rule(card, name + " Rule", y + height, 1, new Color32(183, 191, 187, 255));
+                if (!bold && name != "Protein") Rule(nutritionBlock, name + " Rule", y + height, 1, new Color32(183, 191, 187, 255));
             }
             var marker = Plate("Barcode Position", safe, Green);
             marker.anchorMin = marker.anchorMax = new Vector2(0.5f, 0.5f);

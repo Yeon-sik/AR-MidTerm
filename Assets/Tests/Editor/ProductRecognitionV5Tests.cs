@@ -51,7 +51,8 @@ namespace MidtermAR.Tests
         }
 
         private static JObject Link(string name, string id) => new JObject
-        { ["referenceImageName"] = name, ["catalogProductId"] = id, ["displayName"] = name, ["developmentOnly"] = true };
+        { ["referenceImageName"] = name, ["catalogProductId"] = id, ["displayName"] = name, ["developmentOnly"] = true,
+            ["productWidthMetres"] = .058, ["productWidthSource"] = "synthetic common width for tests" };
         private ProductSnapshot Product(string id) { Assert.That(products.TryFindById(id, out var product), Is.True); return product; }
         private void Confirm(string barcode, float start = 1)
         {
@@ -313,13 +314,15 @@ namespace MidtermAR.Tests
             {
                 images.TryFindByImage("a-top", out var top); images.TryFindByImage("a-bottom", out var bottom);
                 top.offsetZMetres = 0.03f; bottom.offsetZMetres = -0.03f;
+                Product(A).price = new PriceSnapshot { unitPriceKrw = 1, seller = "test", observedAt = "2026-10-26" };
                 foreach (var binding in new[] { top, bottom })
                 {
                     presenter.SetProduct(Product(A), binding);
                     var panel = Field<WorldProductPanel>(presenter, "panel");
                     input.transform.SetPositionAndRotation(center - rotation * new Vector3(0, 0, binding.offsetZMetres), rotation);
                     Assert.That(presenter.TryApplyPose(input.transform, new Vector2(0.058f, 0.06f)), Is.True);
-                    Assert.That(Vector3.Distance(panel.transform.position, center + rotation * new Vector3(0, 0.008f, 0)), Is.LessThan(0.00001f));
+                    var expected = new Vector3(.029f + .012f + .0464f * Mathf.Cos(15 * Mathf.Deg2Rad), .008f + .0464f * Mathf.Sin(15 * Mathf.Deg2Rad), 0);
+                    Assert.That(Vector3.Distance(panel.transform.position, center + rotation * expected), Is.LessThan(0.00001f));
                     if (binding == top) panel.ShowPrice();
                     else Assert.That(panel.CurrentTab, Is.EqualTo(ProductInfoTab.Price));
                 }
@@ -372,11 +375,12 @@ namespace MidtermAR.Tests
             try
             {
                 var panel = root.GetComponent<WorldProductPanel>();
+                Product(A).price = new PriceSnapshot { unitPriceKrw = 1, seller = "test", observedAt = "2026-10-26" };
                 images.TryFindByImage("a-top", out var top); images.TryFindByImage("a-bottom", out var bottom);
                 panel.Bind(Product(A), top); panel.ShowPrice(); panel.Bind(Product(A), bottom);
                 Assert.That(panel.CurrentTab, Is.EqualTo(ProductInfoTab.Price));
                 images.TryFindByImage("b", out var b); panel.Bind(Product(B), b);
-                Assert.That(panel.CurrentTab, Is.EqualTo(ProductInfoTab.Nutrition));
+                Assert.That(panel.CurrentTab, Is.EqualTo(ProductInfoTab.None));
                 Assert.That(Text(panel, "provenance"), Does.Contain("바코드 미연결"));
                 panel.Bind(null);
                 Assert.That(Text(panel, "provenance"), Is.Empty);
@@ -402,9 +406,11 @@ namespace MidtermAR.Tests
                 images.TryFindByImage("a-top", out var binding);
                 presenter.SetProduct(Product(A), binding);
                 var panel = Field<WorldProductPanel>(presenter, "panel");
-                var button = panel.transform.Find("Rescan").GetComponent<Button>();
-                button.onClick.SetPersistentListenerState(0, UnityEngine.Events.UnityEventCallState.EditorAndRuntime);
-                button.onClick.Invoke();
+                Assert.That(panel.transform.Find("Rescan"), Is.Null);
+                var button = Field<Button>(Object.FindFirstObjectByType<ProductScreenView>(), "primaryButton");
+                Assert.That(button.onClick.GetPersistentTarget(0), Is.SameAs(app));
+                Assert.That(button.onClick.GetPersistentMethodName(0), Is.EqualTo(nameof(ProductARApp.PrimaryAction)));
+                app.RestartScan(); // 카메라 없는 EditMode에서는 하단 연결과 동일한 재스캔 처리를 확인한다.
                 Assert.That(state.Selected, Is.Null); Assert.That(state.ConfirmedBarcode, Is.Null);
                 Assert.That(presenter.Binding, Is.Null); Assert.That(presenter.HasVisibleTarget, Is.False);
             }
@@ -419,6 +425,7 @@ namespace MidtermAR.Tests
         [Test]
         public void AppReleasesLostTargetButPreservesSameProductTabAndClearsForAnotherProduct()
         {
+            Product(A).price = new PriceSnapshot { unitPriceKrw = 1, seller = "test", observedAt = "2026-10-26" };
             EditorSceneManager.OpenScene(ProjectBuilder.ScenePath);
             var app = Object.FindFirstObjectByType<ProductARApp>();
             var presenter = Object.FindFirstObjectByType<TrackedImageProductPanel>();

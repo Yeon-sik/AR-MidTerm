@@ -15,6 +15,8 @@ namespace MidtermAR
         [SerializeField] private ARCameraManager cameraManager;
         [SerializeField] private Camera arCamera;
         [SerializeField] private WorldProductPanel panelPrefab;
+        [SerializeField] private LineRenderer cropOutline;
+        [SerializeField] private LineRenderer connector;
         private ProductImageState state;
         private readonly ARCoreImageObservation observation = new ARCoreImageObservation();
         private readonly HashSet<TrackableId> freshImages = new HashSet<TrackableId>();
@@ -23,7 +25,6 @@ namespace MidtermAR
         private ARTrackedImage selectedImage;
         private bool paused;
         private float lastCameraFrame = float.NegativeInfinity;
-        public event Action RescanRequested;
         public bool HasVisibleTarget => panel != null && panel.gameObject.activeSelf;
         public ProductImageBinding Binding { get; private set; }
         public ProductSnapshot CurrentProduct => state?.CanDisplay == true ? state.Product : null;
@@ -69,7 +70,6 @@ namespace MidtermAR
                 panel = Instantiate(panelPrefab);
                 panel.name = "Tracked Product Information";
                 panel.GetComponent<Canvas>().worldCamera = arCamera;
-                panel.RescanRequested += OnRescanRequested;
             }
             panel.Bind(product, binding);
             Hide();
@@ -101,6 +101,7 @@ namespace MidtermAR
             SetProduct(state.Product, state.Binding);
             if (!TryApplyPose(selectedImage.transform, selectedImage.size)) { Hide(); return; }
             panel.gameObject.SetActive(true);
+            cropOutline.enabled = connector.enabled = true;
         }
 
         public void InvalidatePose()
@@ -113,24 +114,29 @@ namespace MidtermAR
         }
         public void ResetSelection() { state?.Reset(); SetProduct(null, null); InvalidatePose(); }
 
-        // UI의 XY 면을 이미지의 XZ 면과 맞추고 크롭 중심에서 공통 원점까지의 오프셋을 반영한다.
+        // 공통 원점 오른쪽에 고정 배치한다. 카메라나 화면 경계는 위치 계산에 사용하지 않는다.
         public bool TryApplyPose(Transform image, Vector2 size)
         {
-            if (panel == null || image == null || size.x <= 0 || size.y <= 0
-                || float.IsNaN(size.x) || float.IsInfinity(size.x) || float.IsNaN(size.y) || float.IsInfinity(size.y)) return false;
+            if (panel == null || image == null || !ProductPanelLayout.TryCreate(Binding, size, out var layout)) return false;
             var rect = (RectTransform)panel.transform;
-            var width = Mathf.Clamp(size.x * 1.6f, 0.14f, 0.28f) * 0.6f; // 앞면 정보판만 기존 가로·세로의 60%로 표시한다.
-            rect.SetPositionAndRotation(image.TransformPoint(new Vector3(Binding?.offsetXMetres ?? 0, 0.008f, Binding?.offsetZMetres ?? 0)), image.rotation * Quaternion.Euler(90, 0, 0));
-            rect.localScale = Vector3.one * (width / rect.rect.width);
+            rect.SetPositionAndRotation(image.TransformPoint(layout.Center), image.rotation * ProductPanelLayout.Rotation);
+            rect.localScale = Vector3.one * (layout.Width / rect.rect.width);
+            connector.SetPositions(new[] { image.TransformPoint(layout.ConnectorStart), image.TransformPoint(layout.ConnectorEnd) });
+            var x = size.x * .5f; var z = size.y * .5f;
+            cropOutline.SetPositions(new[] { image.TransformPoint(new Vector3(-x, .001f, -z)), image.TransformPoint(new Vector3(x, .001f, -z)),
+                image.TransformPoint(new Vector3(x, .001f, z)), image.TransformPoint(new Vector3(-x, .001f, z)) });
             return true;
         }
-        private void Hide() { if (panel != null) panel.gameObject.SetActive(false); }
-        private void OnRescanRequested() { InvalidatePose(); RescanRequested?.Invoke(); }
+        private void Hide()
+        {
+            if (panel != null) panel.gameObject.SetActive(false);
+            if (cropOutline != null) cropOutline.enabled = false;
+            if (connector != null) connector.enabled = false;
+        }
         private void OnApplicationPause(bool value) { paused = value; InvalidatePose(); }
         private void OnDestroy()
         {
             if (panel == null) return;
-            panel.RescanRequested -= OnRescanRequested;
             Destroy(panel.gameObject);
         }
     }

@@ -22,6 +22,8 @@ namespace MidtermAR
         public bool developmentOnly;
         public float offsetXMetres; // 크롭 중심에서 상품 공통 원점까지의 이미지 로컬 오프셋
         public float offsetZMetres;
+        public float productWidthMetres; // 크롭 폭과 구분한 상품 공통 영역의 폭
+        public string productWidthSource;
     }
 
     // 참조 이미지 이름을 상품 ID에 연결한다. 같은 상품의 여러 크롭을 허용한다.
@@ -41,6 +43,7 @@ namespace MidtermAR
             if (products == null || document == null || document.schemaVersion != 2 || document.images == null)
                 throw new FormatException("상품 이미지 연결 데이터가 올바르지 않습니다.");
             var names = new HashSet<string>(StringComparer.Ordinal);
+            var widths = new Dictionary<string, float>(StringComparer.Ordinal);
             foreach (var image in document.images)
             {
                 if (image == null || !products.TryFindById(image.catalogProductId, out _)
@@ -48,6 +51,12 @@ namespace MidtermAR
                     || !names.Add(image.referenceImageName) || !Finite(image.offsetXMetres) || !Finite(image.offsetZMetres))
                     throw new FormatException("상품 이미지의 상품 ID·이름·오프셋이 없거나 중복되었습니다.");
                 images.Add(image.referenceImageName, image);
+                if (!Finite(image.productWidthMetres) || image.productWidthMetres < 0
+                    || !image.developmentOnly && (image.productWidthMetres <= 0 || string.IsNullOrWhiteSpace(image.productWidthSource)))
+                    throw new FormatException("상품 공통 폭과 실측 근거가 필요합니다.");
+                if (widths.TryGetValue(image.catalogProductId, out var width) && width != image.productWidthMetres)
+                    throw new FormatException("같은 상품의 크롭은 같은 공통 폭을 사용해야 합니다.");
+                widths[image.catalogProductId] = image.productWidthMetres;
             }
         }
 

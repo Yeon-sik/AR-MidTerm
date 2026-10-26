@@ -26,6 +26,10 @@ namespace MidtermAR
         [SerializeField] private TMP_Text protein;
         [SerializeField] private TMP_Text registrationStatus;
         [SerializeField] private TMP_Text provenance;
+        [SerializeField] private RectTransform priceSection;
+        [SerializeField] private RectTransform nutritionSection;
+        [SerializeField] private TMP_Text nutritionSource;
+        [SerializeField] private TMP_Text emptyInformation;
         private readonly BarcodeFollowState target = new BarcodeFollowState();
         private bool cameraReady;
         public bool HasVisibleTarget { get; private set; }
@@ -37,11 +41,11 @@ namespace MidtermAR
             var changedProduct = product == null || boundProductId == null || boundProductId != key;
             boundProductId = key;
             if (changedProduct) { target.Select(product?.barcode); Hide(); }
-            if (provenance != null) provenance.text = product == null ? "" : (sourceBadge ?? "시연용 연결 · 로컬 데이터").Replace(" · PT 스냅샷", "\nPT 스냅샷");
-            if (registrationStatus != null) registrationStatus.text = (badge ?? "").Replace(" · 앞면을", "\n앞면을")
-                + (product?.mapping?.catalogIdentityVerification == "LOCAL_DEMO_REMOTE_ID_UNVERIFIED" ? "\n로컬 시연 · PriceTrace ID 확인 대기" : "");
-            if (registrationStatus != null && product != null && sourceBadge != null)
-                registrationStatus.text += "\n" + (detail ?? (product.nutrition != null ? "영양: PT 승인 자료 · 포장 대조 전" : "확인된 영양자료 없음"));
+            provenance.text = product == null ? "" : ProductInfoFormatter.CompactSource(sourceBadge ?? "PriceTrace");
+            registrationStatus.text = product == null ? "" : ProductInfoFormatter.FrontHint(badge);
+            nutritionSource.text = ProductInfoFormatter.NutritionSource(product);
+            emptyInformation.text = product == null ? "" : ProductInfoFormatter.EmptyInformation;
+            LayoutContent(product);
             if (product == null)
             {
                 foreach (var text in new[] { productTitle, specification, price, seller, observedAt, nutritionBasis, calories, sodium, carbs, sugars, fat, saturatedFat, protein }) text.text = "";
@@ -50,16 +54,12 @@ namespace MidtermAR
             productTitle.text = product.name;
             foreach (var text in new[] { productTitle, specification, seller, observedAt, registrationStatus, provenance })
                 if (text != null) text.richText = false;
-            specification.text = string.IsNullOrEmpty(product.brand) ? product.specification ?? "" : product.brand
-                + (string.IsNullOrEmpty(product.specification) ? "" : " · " + product.specification);
+            specification.text = ProductInfoFormatter.Specification(product);
             price.text = ProductInfoFormatter.Price(product);
             if (priceLabel != null) priceLabel.text = product.price?.kind == "listed" ? "게시 가격" : "관측 가격";
             var hasPrice = product.price?.unitPriceKrw.HasValue == true;
-            seller.text = hasPrice ? "판매처  " + product.price.seller : "확인된 가격 관측이 없습니다.";
-            observedAt.text = hasPrice ? product.price.observedAt.Substring(0, 10)
-                + (product.price.kind == "listed" ? " 게시 · 개당 가격" : " 관측 · 개당 가격")
-                + (sourceBadge == null ? "" : " · " + (product.price.kind == null ? "PT 스냅샷" : product.price.displaySource))
-                : "판매처·관측일 정보 없음";
+            seller.text = hasPrice ? ProductInfoFormatter.PriceSource(product) : "확인된 가격 관측이 없습니다.";
+            observedAt.text = hasPrice ? ProductInfoFormatter.PriceDisclaimer : "판매처·관측일 정보 없음";
             if (hasPrice) { observedAt.enableAutoSizing = true; observedAt.fontSizeMin = 18; observedAt.fontSizeMax = 22; }
             var n = product.nutrition;
             nutritionBasis.text = n == null ? "기준량 정보 없음" : ProductInfoFormatter.Number(n.basisAmount, n.basisUnit) + " 기준";
@@ -71,6 +71,29 @@ namespace MidtermAR
             saturatedFat.text = ProductInfoFormatter.Number(n?.saturatedFatGrams, " g");
             protein.text = ProductInfoFormatter.Number(n?.proteinGrams, " g");
         }
+
+        private void LayoutContent(ProductSnapshot product)
+        {
+            var hasPrice = ProductInfoFormatter.HasPrice(product);
+            var hasNutrition = ProductInfoFormatter.HasNutrition(product);
+            priceSection.gameObject.SetActive(hasPrice);
+            nutritionSection.gameObject.SetActive(hasNutrition);
+            emptyInformation.gameObject.SetActive(product != null && !hasPrice && !hasNutrition);
+            var hasSpecification = !string.IsNullOrEmpty(ProductInfoFormatter.Specification(product));
+            specification.gameObject.SetActive(hasSpecification);
+            var cursor = hasSpecification ? 116f : 72f;
+            if (hasPrice) { Position(priceSection, cursor, 140); cursor += 152; }
+            if (hasNutrition) { Position(nutritionSection, cursor, 376); cursor += 388; }
+            if (product != null && !hasPrice && !hasNutrition) { Position(emptyInformation.rectTransform, cursor, 52); cursor += 64; }
+            Position(provenance.rectTransform, cursor, 38); cursor += 40;
+            registrationStatus.gameObject.SetActive(!string.IsNullOrEmpty(registrationStatus.text));
+            Position(registrationStatus.rectTransform, cursor, 34);
+            if (!string.IsNullOrEmpty(registrationStatus.text)) cursor += 38;
+            card.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cursor + 16);
+        }
+
+        private static void Position(RectTransform rect, float top, float height)
+        { rect.anchorMin = new Vector2(0, 1); rect.anchorMax = Vector2.one; rect.offsetMin = new Vector2(24, -top - height); rect.offsetMax = new Vector2(-24, -top); }
 
         public void Observe(BarcodeReadResult result, BarcodeViewportTransform transform, float capturedAt)
         {

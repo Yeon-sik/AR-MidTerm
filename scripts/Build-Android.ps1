@@ -1,6 +1,7 @@
 param(
     [string]$UnityEditor = 'C:\Program Files\Unity\Hub\Editor\6000.3.22f1\Editor\Unity.exe',
-    [string]$ReuseStage
+    [string]$ReuseStage,
+    [switch]$Release
 )
 
 $ErrorActionPreference = 'Stop'
@@ -31,7 +32,8 @@ foreach ($taskDirectory in @('Assets', 'Packages', 'ProjectSettings', 'ThirdPart
 $taskArtifacts = Join-Path $taskRoot 'artifacts'
 New-Item -ItemType Directory -Path $taskArtifacts -Force | Out-Null
 $taskLog = Join-Path $taskArtifacts 'android-build-ascii.log'
-$taskArgs = @('-batchmode', '-nographics', '-quit', '-buildTarget', 'Android', '-projectPath', ('"' + $taskStage + '"'), '-executeMethod', 'MidtermAR.Editor.ProjectBuilder.BuildAndroid', '-logFile', ('"' + $taskLog + '"'))
+$taskMethod = if ($Release) { 'MidtermAR.Editor.ProjectBuilder.BuildAndroidRelease' } else { 'MidtermAR.Editor.ProjectBuilder.BuildAndroid' }
+$taskArgs = @('-batchmode', '-nographics', '-quit', '-buildTarget', 'Android', '-projectPath', ('"' + $taskStage + '"'), '-executeMethod', $taskMethod, '-logFile', ('"' + $taskLog + '"'))
 Write-Output "Building isolated source copy: $taskStage"
 $taskProcess = Start-Process -FilePath $UnityEditor -ArgumentList $taskArgs -WindowStyle Hidden -PassThru
 $taskProcess.WaitForExit()
@@ -51,6 +53,7 @@ $taskRecord = [ordered]@{
     sha256 = (Get-FileHash -LiteralPath $taskApk -Algorithm SHA256).Hash.ToLowerInvariant()
     sizeBytes = (Get-Item -LiteralPath $taskApk).Length
     result = 'BUILD_SUCCEEDED_DEVICE_NOT_VERIFIED'
+    buildType = if ($Release) { 'release' } else { 'development' }
 }
 $taskRecord | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskArtifacts 'android-build-summary.json') -Encoding UTF8
 Write-Output "APK: $taskApk"

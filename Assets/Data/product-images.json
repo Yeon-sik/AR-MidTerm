@@ -9,6 +9,8 @@
     },
     {
       "referenceImageName": "theanine-top",
+      "productWidthMetres": 0.058,
+      "productWidthSource": "2026-10-26 사용자 제공 테아닌 포장 공통 폭 약 58mm",
       "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
       "displayName": "테아닌 밀크씨슬 · 상단",
       "developmentOnly": false,
@@ -16,6 +18,8 @@
     },
     {
       "referenceImageName": "theanine-bottom",
+      "productWidthMetres": 0.058,
+      "productWidthSource": "2026-10-26 사용자 제공 테아닌 포장 공통 폭 약 58mm",
       "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
       "displayName": "테아닌 밀크씨슬 · 하단",
       "developmentOnly": false,
