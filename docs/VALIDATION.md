@@ -1,5 +1,21 @@
 # 상품정보 AR 구현·검증 기록
 
+## 2026-10-27 바코드 온라인 조회
+
+구현 소스 `389f9e9837cb82d16b0695038705051e16f4ab56`, 브랜치 `feat/barcode-online-lookup`. 공개 조회 클라이언트·상태·캐시·설정·UI를 추가했다. 기존 EAN-13 3회 확인·최대 0.65초·실패 프레임 즉시 해제·독립 FULL_TRACKING 경로를 유지한다. [설정·실행·중단 절차](ONLINE-LOOKUP.md).
+
+- `scripts/Test-EditMode.ps1`: **162/162 PASS**, 실패·건너뜀 0, Unity exit 0. 기존 105개 + 신규 57개. 근거: `artifacts/editmode/20261026-152229-e25f6a71/{results.xml,editor.log,summary.json}`. 최초 159/162의 기존 가격 문구·배지 높이 문제 3건을 수정한 뒤 전체 통과했다.
+- 가짜 응답: PT 연결/not_linked/conflict/invalid, 401·429·404·5xx·취소/시간초과·계약 오류, OFF 발견/미발견/오류와 캐시 의미, A→B·소실·pause·재스캔·캐시·요청 합치기, 앞면과 온라인 PT ID 일치/불일치, 설정 없음·로컬 즉시 표시 후 갱신을 확인했다.
+- PC 읽기: 초반 PT 바코드 함수는 **404/PGRST202**였고, **00:27 이후 A25·PC에서 200/matched로 바뀌었다.** 두 시연 EAN의 정확 PT ID가 일치한다. 공개 가격은 null이며 로컬 관측을 사용한다. 공개 카탈로그 v4 **200/107개**·테아닌 PT ID 존재, 더단백 영양 **200/1건**, 테아닌 영양 **200/0건**, OFF v3 더단백·Nutella **200/product_found**. 사용자 제공 전일 카탈로그 200/102개와 시점을 구분한다. 키·연락처는 검증 기록에 저장하지 않는다.
+- 사용자 동일 상품 확인에 따라 테아닌 ID·두 크롭 연결·관련 시험을 갱신했다. 관측 revision `e6e6315772fcfc71`에서 2026-05-08 바다마을마트(low)·2026-07-14 와마트 일산점(user_verified)의 13,210원 두 건을 확인했다. 대표 가격은 후자이며 현재가로 표현하지 않는다. 영양은 비워 뒀다.
+- Android ARM64·IL2CPP 빌드 **Succeeded / errors=0 / exit 0**, 버전 **0.6.0 (7)**, 인터넷 권한 Require. 최종 APK **66,425,752 bytes**, SHA-256 **`c6c12a607c4598de4c2d8b510e616ed6915dfb8554c88f53269267706660f6f4`**. Galaxy A25 / SM-A256N / Android 16에 동일 서명의 `install --user 0 -r`로 업데이트하고, 설치 APK를 다시 가져와 해시 일치를 확인했다. 앱 삭제·데이터 초기화 없음. 실행·Editor·데이터 소스 37개와 빌드 복사본의 해시 불일치 0건.
+- 초기 개발 진단은 Intent.removeExtra의 잘못된 JNI 반환형으로 실패했다. 최종 `389f9e9`에서 void 호출로 고치고 캐시 재빌드·호환 업데이트했다. 이전 진단 실패 APK `b1d9c571…891d7f6c`와 최종 APK를 구분한다. 최종 A25 검사: **PT matched / 영양 found / OFF 더단백 found / Android User-Agent wire-match**. HTTPS echo는 합성 연락처를 사용했다. 직접 클라이언트 검사이며 실물 OFF 발견 E2E와 구분한다. 근거: `artifacts/online-lookup/device-online-final.log`.
+- **실물 사용자 확인 PASS:** 최종 APK에서 더단백·테아닌 바코드의 PT 등록 표시와 테아닌 앞면 3D. 초기 APK에서도 흰색 상품정보판·영양/가격 표·소실 시 숨김을 확인했다. 최종 로그는 Barcode2D→None과 Image3D→None을 기록했다.
+- **비행기 모드 사용자 확인 PASS:** 새 프로세스에서 더단백의 PT 확인 불가+스냅샷 날짜·로컬 상품정보. 직접 클라이언트는 네트워크 unavailable을 기록했다. 시험 뒤 비행기 모드 0·Wi-Fi 0·모바일 데이터 1로 원상 복구했다. Home/복귀에서 센서 해제·재등록과 앱 복귀도 확인했다. 근거: `device-offline.log`, `device-lifecycle.log`, `network-{before-offline,restored}.json`.
+- **정상 OFF 미발견 실물 사용자 확인 PASS:** `8809037615025`의 PT 200/not_linked → OFF 404/product_not_found를 PC에서 대조했고, 앱에서 읽은 번호·상품정보 미발견·PT 바코드 연결 필요·소실 시 해제를 확인했다. 근거: `off-physical-product.json`, `device-off-path.log`.
+- **미수행:** 별도 미연결 실물의 OFF 상품명 발견 화면, 의도적으로 지연한 네트워크의 A→B/동시 앞면 충돌 실물 시험, 추적 대상이 보이는 상태의 pause·재스캔 전체 조합, 10회 반복·5분 부하·정량 성능 측정. 해당 경합은 자동 시험으로 확인했으며 모든 실기기 조합 PASS를 주장하지 않는다. 원격 함수 배포·DB 쓰기와 보고서 초안 재작성은 이 작업에서 수행하지 않았다.
+- 공개 요약: [barcode-online-lookup-2026-10-27.json](validation/barcode-online-lookup-2026-10-27.json). 10/27 밤 이전 온라인 기기 확인 조건은 충족했으며 기능 플래그는 켜 둔다. 제출물 우선순위는 유지한다.
+
 ## 2026-10-26 v5 정보판 60%·소실 후 자동 스캔 복귀
 
 - 사용자는 앞면·바코드가 정상 동작한다고 보고했고, 갤러리의 `Screenshot_20261026_140652_ AR.jpg`에서 테아닌 3D 정보판이 화면 대부분을 차지하는 것을 확인했다. 원본은 `artifacts/v5-rescan-fix/user-before.jpg`에 보존했다.

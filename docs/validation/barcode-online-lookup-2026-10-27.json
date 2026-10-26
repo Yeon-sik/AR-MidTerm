@@ -1,0 +1,123 @@
+{
+  "recordedDateKst": "2026-10-27",
+  "result": "IMPLEMENTED_CORE_DEVICE_VERIFIED_WITH_LIMITATIONS",
+  "branch": "feat/barcode-online-lookup",
+  "sourceCommit": "389f9e9837cb82d16b0695038705051e16f4ab56",
+  "implementationCommit": "6b5f506418f3f78f1eefc20686128e39c0b24041",
+  "baseBranch": "feat/image-tracking-probe",
+  "baseCommitShort": "e18a463",
+  "changedFileGroups": {
+    "lookup": ["Assets/Scripts/Lookup/RemoteLookupConfig.cs", "Assets/Scripts/Lookup/ProductLookup.cs", "Assets/Scripts/Lookup/LookupCoordinator.cs", "Assets/Scripts/Lookup/RemoteLookupClients.cs", "Assets/Scripts/Lookup/DevelopmentLookupCheck.cs"],
+    "recognitionAndUi": ["Assets/Scripts/App/ProductRecognitionState.cs", "Assets/Scripts/App/ProductARApp.cs", "Assets/Scripts/UI/BarcodeProductPanel.cs", "Assets/Scripts/Data/ProductCatalog.cs"],
+    "dataAndAssets": ["Assets/Data/demo-products.json", "Assets/Data/product-images.json", "Assets/Scenes/ProductAR.unity", "Assets/Prefabs/ProductInfoPanel.prefab", "Assets/Fonts/Generated/NotoSansKR SDF.asset"],
+    "configurationAndBuild": [".gitignore", "Assets/Config/remote-lookup.example.json", "Assets/Editor/ProjectBuilder.cs", "scripts/Build-Android.ps1", "scripts/Initialize-RemoteLookup.ps1"],
+    "tests": ["Assets/Tests/Editor/OnlineLookupTests.cs", "Assets/Tests/Editor/ProductRecognitionV5Tests.cs"],
+    "documentation": ["README.md", "PRODUCT.md", "DESIGN.md", "docs/ONLINE-LOOKUP.md", "docs/BARCODE-PRODUCT-LOOKUP-RESEARCH.md", "docs/VALIDATION.md", "docs/DEVICE-CHECKLIST.md", "docs/WORKLOG.md", "docs/validation/barcode-online-lookup-2026-10-27.json"]
+  },
+  "tests": {
+    "command": "scripts/Test-EditMode.ps1",
+    "platform": "Unity 6000.3.22f1 EditMode",
+    "total": 162,
+    "passed": 162,
+    "failed": 0,
+    "skipped": 0,
+    "existing": 105,
+    "added": 57,
+    "unityExitCode": 0,
+    "evidence": "artifacts/editmode/20261026-152229-e25f6a71/summary.json",
+    "coverage": [
+      "PT matched, not_linked, conflict, invalid",
+      "PT 401, 429, 404, 500, 503, cancellation, timeout, malformed contract",
+      "OFF found, structured not_found, error without negative caching",
+      "A response during B scan, loss, expiry, pause, rescan, cache without resurrection",
+      "Request coalescing, cache expiry, timeout, error cooldown, OFF rate limit",
+      "Front image same/different PT ID, loading/unlinked conflict",
+      "Missing config local-only, immediate local snapshot then online update",
+      "Nutrition snake_case contract, exact approved catalog ID, null versus zero"
+    ]
+  },
+  "build": {
+    "command": "scripts/Build-Android.ps1; guarded ReuseStage for diagnostic repair",
+    "result": "Succeeded",
+    "errors": 0,
+    "unityExitCode": 0,
+    "backend": "IL2CPP",
+    "architecture": "ARM64",
+    "versionName": "0.6.0",
+    "versionCode": 7,
+    "package": "com.yeonsik.midtermar",
+    "internetAccess": "Require",
+    "apk": "Builds/Android/ProductAR.apk",
+    "sizeBytes": 66425752,
+    "sha256": "c6c12a607c4598de4c2d8b510e616ed6915dfb8554c88f53269267706660f6f4",
+    "sourceFilesCompared": 37,
+    "sourceHashMismatches": 0,
+    "evidence": ["artifacts/android-build-summary.json", "artifacts/online-lookup/build-source-inventory.json"]
+  },
+  "device": {
+    "model": "Samsung Galaxy A25 / SM-A256N",
+    "androidVersion": "16",
+    "installation": "compatible-update-r",
+    "installedApkHashMatches": true,
+    "sameSigningCertificate": true,
+    "uninstallOrDataClearPerformed": false,
+    "internetPermissionGranted": true,
+    "networkSettingsRestored": true,
+    "evidence": ["artifacts/install/result.json", "artifacts/online-lookup/installed-and-network.json", "artifacts/online-lookup/network-restored.json"]
+  },
+  "remoteChecks": {
+    "initialPtBarcode": {"httpStatus": 404, "code": "PGRST202"},
+    "latestPtBarcode": [
+      {"barcode": "8801104671507", "httpStatus": 200, "status": "matched", "catalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0", "publicPrice": null},
+      {"barcode": "8809375984692", "httpStatus": 200, "status": "matched", "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687", "publicPrice": null},
+      {"barcode": "3017624010701", "httpStatus": 200, "status": "not_linked"},
+      {"barcode": "8809037615025", "httpStatus": 200, "status": "not_linked"}
+    ],
+    "publicCatalogV4": {"httpStatus": 200, "productCount": 107, "containsTheaninePtId": true},
+    "userProvidedPriorCatalog": {"date": "2026-10-26", "httpStatus": 200, "productCount": 102, "independentlyRecheckedAtThatTime": false},
+    "publicNutrition": {"theProteinBarRows": 1, "theanineRows": 0, "theanineNutritionLeftEmpty": true},
+    "offPc": [
+      {"barcode": "8801104671507", "httpStatus": 200, "result": "product_found"},
+      {"barcode": "3017624010701", "httpStatus": 200, "result": "product_found"},
+      {"barcode": "8809037615025", "httpStatus": 404, "result": "product_not_found"}
+    ],
+    "remoteDatabaseWriteOrFunctionDeploymentPerformedByThisTask": false
+  },
+  "deviceChecks": [
+    {"case": "Android direct PT, nutrition and OFF clients", "result": "PASS_LOG_VERIFIED", "detail": "matched / nutrition found / OFF found for 8801104671507", "evidence": "artifacts/online-lookup/device-online-final.log"},
+    {"case": "Android UnityWebRequest custom User-Agent", "result": "PASS_WIRE_ECHO", "detail": "Synthetic contact used for HTTPS echo; exact header matched. User-provided contact used only for OFF.", "evidence": "artifacts/online-lookup/device-online-final.log"},
+    {"case": "Physical PT matched barcodes", "result": "PASS_USER_CONFIRMED", "detail": "8801104671507 and 8809375984692 both show PT registered"},
+    {"case": "Physical theanine front image 3D", "result": "PASS_USER_CONFIRMED_AND_ROUTE_LOG", "detail": "Front 3D remains functional; loss hides panel", "evidence": "artifacts/online-lookup/device-online-final.log"},
+    {"case": "White product panel with nutrition and price table", "result": "PASS_USER_CONFIRMED", "detail": "Confirmed on initial 0.6.0 APK; production panel code is unchanged in final diagnostic repair"},
+    {"case": "Airplane mode and local fallback", "result": "PASS_USER_CONFIRMED_AND_LOG", "detail": "Fresh process: PT unavailable plus local product and snapshot date; client requests unavailable; original network state restored", "evidence": "artifacts/online-lookup/device-offline.log"},
+    {"case": "Home pause/resume", "result": "PASS_LIFECYCLE_LOG", "detail": "App resumes; motion sampling stops and registers again. Tracked-target combinations not all performed.", "evidence": "artifacts/online-lookup/device-lifecycle.log"},
+    {"case": "Physical PT not_linked to OFF not_found", "result": "PASS_USER_CONFIRMED_AND_ROUTE_LOG", "detail": "8809037615025: barcode, information not found, PT barcode link required; loss clears message", "evidence": "artifacts/online-lookup/device-off-path.log"},
+    {"case": "Separate unlinked physical food with OFF product-name discovery", "result": "NOT_RUN", "detail": "Positive OFF response tested directly on Android and through fakes; selected unlinked physical food is a genuine OFF miss"},
+    {"case": "Controlled delayed network and all tracked-target pause/rescan/conflict combinations", "result": "AUTOMATED_PASS_PHYSICAL_NOT_RUN"},
+    {"case": "Ten repetitions, five-minute load and quantitative performance", "result": "NOT_RUN"}
+  ],
+  "theanineData": {
+    "identityChangeUserConfirmed": true,
+    "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
+    "observationRevision": "e6e6315772fcfc71",
+    "observationIds": ["2ca8f6e026827bee", "b88e89f58a6c9737"],
+    "confidence": ["low", "user_verified"],
+    "representativeObservedPriceKrw": 13210,
+    "nutrition": null
+  },
+  "configuration": {
+    "onlineEnabled": true,
+    "missingFileDisablesOnline": true,
+    "localFileGitIgnored": true,
+    "onlyPublishableKeysUsed": true,
+    "keysOrUserContactInGitCandidates": 0,
+    "keyValuesLogged": false
+  },
+  "submission": {
+    "deadline": "2026-10-29",
+    "onlineDeviceConditionBeforeOct27NightMet": true,
+    "reportDraftChanged": false,
+    "demoVideoCreatedByThisTask": false,
+    "priority": "Physical validation, silent demo video and report remain higher priority than extension work"
+  }
+}

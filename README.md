@@ -2,13 +2,15 @@
 
 **현재 구현: v5 독립 상품 인식 (2026-10-26).** 앞면 이미지와 바코드는 서로를 기다리지 않고 정보를 표시한다. 앞면은 3D, 바코드는 2D 정보판이며 같은 상품은 3D를 우선한다. 목표·등록 상태 4종·데이터 모델은 [v5 상품 인식 구조](docs/PRODUCT-RECOGNITION-V5.md)를 따른다.
 
-테아닌 밀크씨슬 박스는 사용자 제공 바코드 `8809375984692`·약 58mm 폭과 `iphone-t1`의 상단 95점·하단 100점 크롭을 등록했다. 원격 PriceTrace ID는 확인하지 못해 **로컬 시연 UUID**로 구분했고 가격·영양값은 비워 뒀다. 브이젤 카드와 더단백의 개발용 연결은 계속 구분 표시한다.
+테아닌 밀크씨슬 박스는 사용자 제공 바코드 `8809375984692`·약 58mm 폭과 상단·하단 크롭을 등록했다. 2026-10-27 사용자 동일 상품 확인 후 PT ID `18e83c5c-86a4-4e95-a131-411381789687`로 연결하고 13,210원 관측 2건의 출처·신뢰도를 보존했다. 공개 영양 결과는 없어 비워 둔다. 브이젤 카드와 더단백의 개발용 연결은 계속 구분 표시한다.
 
-**EditMode 105/105 PASS**, 실패·건너뜀 0。사용자가 초기 v5의 앞면·바코드 정상 동작을 보고했고 갤러리의 3D 출력 화면을 확인했다. 앞면 정보판을 60%로 줄이고 소실 후 새 상품 인식으로 자동 복귀하도록 수정해 Galaxy A25에 `0.5.1 (6)`을 호환 업데이트했다. 카메라·SessionTracking·대기 화면과 설치 APK 해시는 확인했으며, 업데이트 후 실물 재시험은 남아 있다. [검증 기록](docs/VALIDATION.md), [최신 검증 요약](docs/validation/v5-rescan-panel-fix-2026-10-26.json). 이전 바코드 선행 흐름은 [v4 구현](docs/PRODUCT-IMAGE-TRACKING.md)에 보존한다.
+**온라인 조회 추가 후 EditMode 162/162 PASS**, 실패·건너뜀 0. 기존 105개와 새 조회·늦은 응답 시험 57개를 포함한다. 앞면 3D 우선·실패 프레임 즉시 해제·최대 0.65초 유효 규칙은 유지한다. 빌드·실기기 결과는 [검증 기록](docs/VALIDATION.md)을 따른다. 기존 `0.5.1 (6)`의 카메라·SessionTracking·설치 해시 확인을 새 온라인 E2E 성공으로 해석하지 않는다. 이전 바코드 선행 흐름은 [v4 구현](docs/PRODUCT-IMAGE-TRACKING.md)에 보존한다.
+
+최신 공개 결과는 [0.6.0 온라인 조회 검증 JSON](docs/validation/barcode-online-lookup-2026-10-27.json)에 기록했다. PT 정상 연결·로컬 대체와 OFF 정상 미발견의 실물 확인, 직접 클라이언트 검사, 미수행 항목을 구분한다.
 
 상품마다 추가 마커를 붙이지 않는 확장은 [바코드 마커 기술 조사 보고서](docs/BARCODE-MARKER-RESEARCH.md)에 정리했다. ZXing·OpenCV 등 공개 구현, 2D 검출과 3D 자세 추정의 차이, 과제 적합성과 후속 검증 범위를 비교한다.
 
-외부 API로 상품명을 찾고 PT 등록·연결 상태를 표시하는 방안은 [바코드 상품 검색·PT 연결 도입 보고서](docs/BARCODE-PRODUCT-LOOKUP-RESEARCH.md)를 따른다. Open Food Facts·식품안전나라·네이버 쇼핑의 역할과 한계, PT 식별자 모델, 늦은 응답·조회 실패 처리를 제안한다. 외부 검색과 PT 실시간 연결은 아직 구현하지 않았다.
+PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조회하는 계층을 구현했다. [온라인 조회 설정·실행·중단 절차](docs/ONLINE-LOOKUP.md), [도입 조사 정정](docs/BARCODE-PRODUCT-LOOKUP-RESEARCH.md)을 따른다. 설정이 없으면 로컬 전용, PT 오류면 확인 불가와 날짜가 있는 스냅샷을 표시한다. **2026-10-27 A25에서 두 시연 바코드의 PT 등록 표시·앞면 3D·오프라인 대체 표시를 사용자와 확인했다.** 작업 초반의 404/PGRST202는 이후 200/matched로 바뀌었다. 정상 OFF 분기와 반복·부하 시험의 수행 여부는 검증 기록을 따른다.
 
 바코드로 상품을 식별하고 사전 등록 이미지로 3D 위치를 추적하는 Android AR 카메라 앱이다.
 
@@ -47,7 +49,7 @@
 
 ## 빌드·설치·남은 검증
 
-2026-10-26 v5 `0.5.0 (5)` 새 설치 후 `0.5.1 (6)`로 호환 업데이트했다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
+최신 앱은 **0.6.0 (7)**이며 2026-10-27 Galaxy A25에 동일 서명의 `-r`로 업데이트했다. 설치 APK 해시를 빌드 결과와 대조했다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
 
 - APK: `Builds/Android/ProductAR.apk` (생성 파일, Git 제외), 앱 이름 **상품정보 AR**, 패키지 `com.yeonsik.midtermar`.
 - 재빌드: `scripts/Build-Android.ps1`. 한글 경로 제한을 피하도록 영문 임시 복사본에서 빌드한다.
