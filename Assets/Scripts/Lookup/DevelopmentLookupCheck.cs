@@ -31,7 +31,7 @@ namespace MidtermAR
             // 연락처를 제삼자 echo 서버에 전송하지 않는다. 합성 UA로 Android 헤더 전달만 확인한다.
             await Check("android-user-agent", async cancellation =>
             {
-                const string syntheticAgent = "ProductAR/0.6.0 (probe@example.invalid)";
+                var syntheticAgent = "ProductAR/" + Application.version + " (probe@example.invalid)";
                 var reply = await http.Send("https://httpbin.org/user-agent", null, null, syntheticAgent, cancellation);
                 return reply.Status == 200 && (string)JObject.Parse(reply.Body)["user-agent"] == syntheticAgent ? "wire-match" : "wire-mismatch";
             });

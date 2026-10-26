@@ -386,7 +386,11 @@ namespace MidtermAR.Tests
                 var iterator = new SerializedObject(component).GetIterator();
                 while (iterator.NextVisible(true))
                     if (iterator.propertyType == SerializedPropertyType.ObjectReference)
+                    {
+                        // 제출 원본에는 로컬 키 파일이 없다. 이 연결만 선택 사항이며 나머지는 필수다.
+                        if (component is ProductARApp && iterator.propertyPath == "remoteLookupJson") continue;
                         Assert.That(iterator.objectReferenceValue, Is.Not.Null, component.name + ": " + iterator.propertyPath);
+                    }
             }
         }
 

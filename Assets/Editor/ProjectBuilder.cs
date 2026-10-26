@@ -255,8 +255,8 @@ namespace MidtermAR.Editor
             PlayerSettings.companyName = "Yeonsik";
             PlayerSettings.productName = "상품정보 AR";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
-            PlayerSettings.bundleVersion = "0.6.0";
-            PlayerSettings.Android.bundleVersionCode = 7;
+            PlayerSettings.bundleVersion = "0.6.1";
+            PlayerSettings.Android.bundleVersionCode = 8;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);

@@ -265,6 +265,22 @@ namespace MidtermAR.Tests
             Assert.That(result.Product.price.kind, Is.EqualTo("listed"));
         }
 
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public void ConflictCardinalityFollowsCurrentlyPublishedPtV1Contract(int count)
+        {
+            var json = PtJson(); json["status"] = "conflict";
+            var matches = (JArray)json["matches"];
+            if (count == 0) matches.Clear();
+            if (count == 2)
+            {
+                var second = matches[0].DeepClone(); second["catalogProductId"] = OtherId; matches.Add(second);
+            }
+            if (count < 2) Assert.Throws<FormatException>(() => PtBarcodeClient.Parse(json.ToString(), A));
+            else Assert.That(PtBarcodeClient.Parse(json.ToString(), A).Status, Is.EqualTo("conflict"));
+        }
+
         [Test]
         public void OffV3PrefersKoreanAndHasNoInventedPriceNutritionOrPtId()
         {

@@ -23,6 +23,10 @@ namespace MidtermAR
         // 온라인 DTO는 Selected에 넣지 않는다. 현재 확정 바코드의 화면 데이터만 별도로 제공한다.
         public ProductSnapshot BarcodeDisplayProduct => LookupResult?.Product
             ?? (LookupResult == null || LookupResult.Status == LookupStatus.Loading || LookupResult.Status == LookupStatus.PtUnavailable ? barcodeProduct : null);
+        // 화면 동작은 실제 표시 경로를 따른다. Selected는 로컬/앞면 선택 상태로 유지한다.
+        public ProductSnapshot DisplayProduct => Route == ProductDisplayRoute.Image3D ? Selected
+            : Route == ProductDisplayRoute.Barcode2D ? BarcodeDisplayProduct : null;
+        public string DisplayProductKey => DisplayProduct?.catalogProductId ?? DisplayProduct?.barcode;
         public string SourceBadge => (LookupResult?.Badge ?? "")
             + (BarcodeDisplayProduct == barcodeProduct && barcodeProduct != null ? (LookupResult == null ? "" : " · ") + "PT 스냅샷 " + SnapshotDate : "");
         public string LookupMessage => SourceBadge + (string.IsNullOrEmpty(LookupResult?.Detail) ? "" : "\n" + LookupResult.Detail)

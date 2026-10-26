@@ -17,7 +17,7 @@ namespace MidtermAR
         [SerializeField] private BarcodeProductPanel barcodePanel;
         private ProductRecognitionState recognition;
         private bool paused;
-        private string lastProductId;
+        private string lastDisplayedProductKey;
         private float nextRefresh;
         private BarcodeReadResult lastRead;
         private BarcodeViewportTransform lastTransform;
@@ -77,7 +77,7 @@ namespace MidtermAR
         {
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
-                if (recognition?.Selected != null || recognition?.ConfirmedBarcode != null) RestartScan();
+                if (recognition?.DisplayProduct != null || recognition?.ConfirmedBarcode != null) RestartScan();
                 else Application.Quit();
             }
             scanner.SetContinuous(recognition != null && !paused && readiness.CameraReady && scanner.HasCameraFrame);
@@ -121,9 +121,10 @@ namespace MidtermAR
         private void Present()
         {
             // 선택은 소실 즉시 해제하되, 숨긴 정보판의 탭은 같은 상품 재획득 때 재사용한다.
-            if (recognition.Selected != null && lastProductId != recognition.Selected.catalogProductId)
+            var displayedKey = recognition.DisplayProductKey;
+            if (displayedKey != null && lastDisplayedProductKey != displayedKey)
             {
-                lastProductId = recognition.Selected?.catalogProductId;
+                lastDisplayedProductKey = displayedKey;
                 imagePanel.SetProduct(null, null);
                 barcodePanel.SetProduct(null);
             }
@@ -152,7 +153,7 @@ namespace MidtermAR
             recognition?.Reset();
             imagePanel.ResetSelection();
             barcodePanel.SetProduct(null);
-            lastProductId = null;
+            lastDisplayedProductKey = null;
             lastRead = null;
             lastCapturedAt = float.NegativeInfinity;
             nextRefresh = 0;
@@ -162,12 +163,17 @@ namespace MidtermAR
         private void Refresh()
         {
             var ready = readiness.CameraReady && scanner.HasCameraFrame && !paused;
+            RefreshScreen(ready);
+        }
+
+        private void RefreshScreen(bool ready)
+        {
             var step = "상품 인식";
             var title = "앞면이나 바코드를 비춰주세요";
             var message = "앞면은 3D, 바코드는 2D로 정보를 표시합니다.";
             var summary = "";
             var action = "다른 상품 스캔";
-            var primary = recognition?.Selected != null || recognition?.ConfirmedBarcode != null;
+            var primary = recognition?.DisplayProduct != null || recognition?.ConfirmedBarcode != null;
             var error = false;
             var attention = false;
             if (recognition == null)
@@ -214,7 +220,7 @@ namespace MidtermAR
             else if (recognition.ConfirmationCount > 0)
             { title = "바코드를 확인하고 있어요"; message = "같은 번호를 3회 확인할 때까지 유지해 주세요."; }
             screen.Show(step, title, message, summary, action, primary, false, false, error, attention,
-                secondaryAction: recognition?.Selected != null && ready);
+                secondaryAction: recognition?.DisplayProduct != null && ready);
         }
 
         private void OnApplicationPause(bool value)
