@@ -277,8 +277,22 @@ namespace MidtermAR.Tests
             {
                 var second = matches[0].DeepClone(); second["catalogProductId"] = OtherId; matches.Add(second);
             }
-            if (count < 2) Assert.Throws<FormatException>(() => PtBarcodeClient.Parse(json.ToString(), A));
+            if (count == 1) Assert.Throws<FormatException>(() => PtBarcodeClient.Parse(json.ToString(), A));
             else Assert.That(PtBarcodeClient.Parse(json.ToString(), A).Status, Is.EqualTo("conflict"));
+        }
+
+        [Test]
+        public async Task RedactedConflictNeverSelectsAProductOrCallsNutritionOrOff()
+        {
+            var json = PtJson(); json["status"] = "conflict"; json["matches"] = new JArray();
+            var config = new RemoteLookupConfig { ptUrl = "https://example.invalid", ptPublishableKey = "sb_publishable_test" };
+            var http = new FakeHttp { Reply = new LookupHttpReply { Status = 200, Body = json.ToString() } };
+            var off = new FakeOff(); var nutrition = new FakeNutrition();
+            var result = await new ProductLookup(new PtBarcodeClient(config, http), off, nutrition, products).Lookup(A, CancellationToken.None);
+            Assert.That(result.Status, Is.EqualTo(LookupStatus.Conflict));
+            Assert.That(result.Product, Is.Null);
+            Assert.That(off.Calls, Is.Zero);
+            Assert.That(nutrition.Calls, Is.Zero);
         }
 
         [Test]
@@ -389,7 +403,10 @@ namespace MidtermAR.Tests
             { Calls++; return Error ? Task.FromException<ProductSnapshot>(new IOException()) : Task.FromResult(Product); }
         }
         private sealed class FakeNutrition : IPublicNutritionClient
-        { public NutritionSnapshot Snapshot; public Task<NutritionSnapshot> Lookup(string id, CancellationToken cancellation) => Task.FromResult(Snapshot); }
+        {
+            public NutritionSnapshot Snapshot; public int Calls;
+            public Task<NutritionSnapshot> Lookup(string id, CancellationToken cancellation) { Calls++; return Task.FromResult(Snapshot); }
+        }
         private sealed class FakeHttp : ILookupHttp
         {
             public LookupHttpReply Reply; public int Calls; public string Url, UserAgent, Body;

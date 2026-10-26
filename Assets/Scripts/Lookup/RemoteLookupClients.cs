@@ -94,6 +94,8 @@ namespace MidtermAR
                 if (matches.Count != 0) throw new FormatException("PT status/count mismatch");
                 return new PtBarcodeReply { Status = status };
             }
+            // PT v1은 비공개/비활성 연결이 섞인 충돌의 후보를 모두 가린다.
+            if (status == "conflict" && matches.Count == 0) return new PtBarcodeReply { Status = status };
             if (status != "matched" && status != "conflict" || status == "matched" && matches.Count != 1
                 || status == "conflict" && matches.Count < 2) throw new FormatException("PT status/count mismatch");
             var ids = new HashSet<string>();
