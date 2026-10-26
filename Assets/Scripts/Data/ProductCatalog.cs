@@ -26,6 +26,7 @@ namespace MidtermAR
         public string barcodeFormat;
         public MappingEvidence mapping; // 시연용 연결의 범위와 근거
         public PriceSnapshot price;
+        public PriceSnapshot[] priceObservations; // 로컬 시연에 사용한 복수 관측의 근거. 대표 가격과 구분한다.
         public NutritionSnapshot nutrition;
     }
 
@@ -48,6 +49,7 @@ namespace MidtermAR
         public string displaySource;
         public string confidence;
         public string observationId;
+        public string kind; // 온라인 observed/listed를 구분한다. 로컬 관측은 null.
     }
 
     [Preserve, Serializable]

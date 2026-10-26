@@ -13,6 +13,7 @@ namespace MidtermAR
         [SerializeField] private TMP_Text productTitle;
         [SerializeField] private TMP_Text specification;
         [SerializeField] private TMP_Text price;
+        [SerializeField] private TMP_Text priceLabel;
         [SerializeField] private TMP_Text seller;
         [SerializeField] private TMP_Text observedAt;
         [SerializeField] private TMP_Text nutritionBasis;
@@ -24,29 +25,42 @@ namespace MidtermAR
         [SerializeField] private TMP_Text saturatedFat;
         [SerializeField] private TMP_Text protein;
         [SerializeField] private TMP_Text registrationStatus;
+        [SerializeField] private TMP_Text provenance;
         private readonly BarcodeFollowState target = new BarcodeFollowState();
         private bool cameraReady;
         public bool HasVisibleTarget { get; private set; }
 
         private string boundProductId;
-        public void SetProduct(ProductSnapshot product, string badge = null)
+        public void SetProduct(ProductSnapshot product, string badge = null, string sourceBadge = null, string detail = null)
         {
-            var changedProduct = product == null || boundProductId == null || boundProductId != product.catalogProductId;
-            boundProductId = product?.catalogProductId;
+            var key = product?.catalogProductId ?? product?.barcode;
+            var changedProduct = product == null || boundProductId == null || boundProductId != key;
+            boundProductId = key;
             if (changedProduct) { target.Select(product?.barcode); Hide(); }
+            if (provenance != null) provenance.text = product == null ? "" : (sourceBadge ?? "시연용 연결 · 로컬 데이터").Replace(" · PT 스냅샷", "\nPT 스냅샷");
             if (registrationStatus != null) registrationStatus.text = (badge ?? "").Replace(" · 앞면을", "\n앞면을")
                 + (product?.mapping?.catalogIdentityVerification == "LOCAL_DEMO_REMOTE_ID_UNVERIFIED" ? "\n로컬 시연 · PriceTrace ID 확인 대기" : "");
+            if (registrationStatus != null && product != null && sourceBadge != null)
+                registrationStatus.text += "\n" + (detail ?? (product.nutrition != null ? "영양: PT 승인 자료 · 포장 대조 전" : "확인된 영양자료 없음"));
             if (product == null)
             {
                 foreach (var text in new[] { productTitle, specification, price, seller, observedAt, nutritionBasis, calories, sodium, carbs, sugars, fat, saturatedFat, protein }) text.text = "";
                 return;
             }
             productTitle.text = product.name;
-            specification.text = product.brand + " · " + product.specification;
+            foreach (var text in new[] { productTitle, specification, seller, observedAt, registrationStatus, provenance })
+                if (text != null) text.richText = false;
+            specification.text = string.IsNullOrEmpty(product.brand) ? product.specification ?? "" : product.brand
+                + (string.IsNullOrEmpty(product.specification) ? "" : " · " + product.specification);
             price.text = ProductInfoFormatter.Price(product);
+            if (priceLabel != null) priceLabel.text = product.price?.kind == "listed" ? "게시 가격" : "관측 가격";
             var hasPrice = product.price?.unitPriceKrw.HasValue == true;
             seller.text = hasPrice ? "판매처  " + product.price.seller : "확인된 가격 관측이 없습니다.";
-            observedAt.text = hasPrice ? product.price.observedAt + " 관측 · 개당 가격" : "판매처·관측일 정보 없음";
+            observedAt.text = hasPrice ? product.price.observedAt.Substring(0, 10)
+                + (product.price.kind == "listed" ? " 게시 · 개당 가격" : " 관측 · 개당 가격")
+                + (sourceBadge == null ? "" : " · " + (product.price.kind == null ? "PT 스냅샷" : product.price.displaySource))
+                : "판매처·관측일 정보 없음";
+            if (hasPrice) { observedAt.enableAutoSizing = true; observedAt.fontSizeMin = 18; observedAt.fontSizeMax = 22; }
             var n = product.nutrition;
             nutritionBasis.text = n == null ? "기준량 정보 없음" : ProductInfoFormatter.Number(n.basisAmount, n.basisUnit) + " 기준";
             calories.text = ProductInfoFormatter.Number(n?.caloriesKcal, " kcal");

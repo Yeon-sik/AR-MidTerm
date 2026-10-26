@@ -9,6 +9,7 @@ namespace MidtermAR
     {
         [SerializeField] private TextAsset catalogJson;
         [SerializeField] private TextAsset imageBindingsJson;
+        [SerializeField] private TextAsset remoteLookupJson;
         [SerializeField] private ARReadiness readiness;
         [SerializeField] private ARBarcodeScanner scanner;
         [SerializeField] private ProductScreenView screen;
@@ -21,6 +22,7 @@ namespace MidtermAR
         private BarcodeReadResult lastRead;
         private BarcodeViewportTransform lastTransform;
         private float lastCapturedAt = float.NegativeInfinity;
+        private LookupCoordinator lookup;
 
         private void Awake()
         {
@@ -34,6 +36,19 @@ namespace MidtermAR
                 images.ValidateLibrary(imagePanel.ReferenceLibrary);
                 imagePanel.Configure(catalog, images);
                 recognition = new ProductRecognitionState(catalog, images);
+                var config = RemoteLookupConfig.Parse(remoteLookupJson != null ? remoteLookupJson.text : null);
+                if (config.PtReady)
+                {
+                    var http = new UnityLookupHttp();
+                    lookup = new LookupCoordinator(new ProductLookup(new PtBarcodeClient(config, http),
+                        new OffProductClient(config, http, Application.version, () => Time.realtimeSinceStartupAsDouble),
+                        new PublicNutritionClient(config, http), catalog));
+                    recognition.EnableOnlineLookup();
+                }
+                Debug.Log("[ProductAR Lookup] mode=" + (lookup == null ? "local-only" : "online"));
+#if DEVELOPMENT_BUILD && UNITY_ANDROID && !UNITY_EDITOR
+                DevelopmentLookupCheck.RunIfRequested(config);
+#endif
                 Debug.Log("[ProductAR v5] Local catalog loaded: " + catalog.Count + "; snapshot=" + catalog.SnapshotDate);
             }
             catch (Exception error)
@@ -86,6 +101,11 @@ namespace MidtermAR
                 imagePanel.SampleFrame();
                 var previousRoute = recognition.Route;
                 recognition.Resolve(imagePanel.CurrentProduct, imagePanel.HasImageConflict, Time.unscaledTime);
+                if (!paused)
+                {
+                    lookup?.Tick(recognition, Time.realtimeSinceStartupAsDouble);
+                    recognition.Resolve(imagePanel.CurrentProduct, imagePanel.HasImageConflict, Time.unscaledTime);
+                }
                 if (previousRoute != recognition.Route)
                 {
                     nextRefresh = 0; // 추적 소실 안내는 정기 갱신을 기다리지 않고 같은 프레임에 반영한다.
@@ -112,7 +132,8 @@ namespace MidtermAR
             var barcodeAllowed = ready && recognition.Route == ProductDisplayRoute.Barcode2D;
             if (barcodeAllowed)
             {
-                barcodePanel.SetProduct(recognition.Selected, recognition.BarcodeBadge(recognition.Selected));
+                var product = recognition.BarcodeDisplayProduct;
+                barcodePanel.SetProduct(product, recognition.BarcodeBadge(product), recognition.SourceBadge, recognition.LookupResult?.Detail);
                 barcodePanel.SetCameraReady(true);
                 barcodePanel.Observe(lastRead, lastTransform, lastCapturedAt);
             }
@@ -161,7 +182,7 @@ namespace MidtermAR
             }
             else if (recognition.Route == ProductDisplayRoute.Conflict)
             {
-                title = "인식 결과가 일치하지 않아요";
+                title = recognition.LookupResult?.Status == LookupStatus.Conflict ? "연결 확인 필요" : "인식 결과가 일치하지 않아요";
                 message = "정보판을 숨겼습니다. 한 상품만 비춰주세요.";
                 primary = true; attention = true;
             }
@@ -178,14 +199,17 @@ namespace MidtermAR
             {
                 step = "바코드 · 2D 정보";
                 title = "바코드로 상품을 확인했어요";
-                message = recognition.BarcodeBadge(recognition.Selected);
+                message = recognition.SourceBadge + "\n" + recognition.BarcodeBadge(recognition.BarcodeDisplayProduct);
+                if (!string.IsNullOrEmpty(recognition.LookupResult?.Detail)) message += "\n" + recognition.LookupResult.Detail;
                 if (!barcodePanel.HasVisibleTarget) message += "\n화면 위치를 확인하려면 바코드를 유지해 주세요.";
                 primary = true;
             }
             else if (recognition.Route == ProductDisplayRoute.UnknownBarcode)
             {
-                step = "상품 등록 확인"; title = "등록이 필요한 제품";
-                message = recognition.UnknownMessage; primary = true; attention = true;
+                step = "상품 등록 확인";
+                title = recognition.OnlineEnabled ? recognition.LookupResult?.Badge ?? "PT 조회 중…" : "등록이 필요한 제품";
+                message = recognition.OnlineEnabled ? recognition.LookupMessage : recognition.UnknownMessage;
+                primary = true; attention = true;
             }
             else if (recognition.ConfirmationCount > 0)
             { title = "바코드를 확인하고 있어요"; message = "같은 번호를 3회 확인할 때까지 유지해 주세요."; }
@@ -204,5 +228,6 @@ namespace MidtermAR
             lastCapturedAt = float.NegativeInfinity;
             nextRefresh = 0;
         }
+        private void OnDestroy() { lookup?.Dispose(); }
     }
 }

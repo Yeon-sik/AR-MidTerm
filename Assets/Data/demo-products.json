@@ -41,7 +41,7 @@
       }
     },
     {
-      "catalogProductId": "b4fb86ad-f8a3-57b5-afdf-f9747a0a1402",
+      "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
       "name": "테아닌과 밀크씨슬 활력솔루션",
       "brand": "Dr.Elizabeth’s",
       "specification": "1,000 mg × 60정 (60 g)",
@@ -49,11 +49,39 @@
       "barcodeFormat": "EAN_13",
       "mapping": {
         "scope": "demo-only",
-        "source": "2026-10-26 사용자 제공 실물 바코드 8809375984692와 앞면 사진의 제품명·규격. catalogProductId는 로컬 시연용 UUID이며 PriceTrace 원격 상품 ID 및 운영 매핑은 UNVERIFIED. 연결 계정에 프로젝트 없음, 공개 API 조회 401.",
+        "source": "2026-10-27 사용자 동일 상품 확인. PT 공개 카탈로그 v4의 정확 규격 ID와 실물 바코드·앞면 사진을 연결한 로컬 시연 매핑. 운영 바코드 연결은 공개 함수 배포 전으로 UNVERIFIED.",
         "physicalDecodeVerification": "PENDING_DEVICE_TEST",
-        "catalogIdentityVerification": "LOCAL_DEMO_REMOTE_ID_UNVERIFIED"
+        "catalogIdentityVerification": "PT_PUBLIC_CATALOG_USER_CONFIRMED"
       },
-      "price": null,
+      "price": {
+        "unitPriceKrw": 13210,
+        "seller": "와마트 일산점",
+        "observedAt": "2026-07-14",
+        "source": "PriceTrace public product-observations.v3 snapshot revision e6e6315772fcfc71; sourceProductCode 190077; not verified current/global-latest price",
+        "confidence": "user_verified",
+        "displaySource": "PriceTrace 관측 기록",
+        "observationId": "b88e89f58a6c9737"
+      },
+      "priceObservations": [
+        {
+          "unitPriceKrw": 13210,
+          "seller": "국군복지단 바다마을마트",
+          "observedAt": "2026-05-08",
+          "source": "PriceTrace public product-observations.v3 snapshot revision e6e6315772fcfc71; sourceProductCode 190077",
+          "confidence": "low",
+          "displaySource": "PriceTrace 관측 기록 · 신뢰도 낮음",
+          "observationId": "2ca8f6e026827bee"
+        },
+        {
+          "unitPriceKrw": 13210,
+          "seller": "와마트 일산점",
+          "observedAt": "2026-07-14",
+          "source": "PriceTrace public product-observations.v3 snapshot revision e6e6315772fcfc71; sourceProductCode 190077",
+          "confidence": "user_verified",
+          "displaySource": "PriceTrace 관측 기록",
+          "observationId": "b88e89f58a6c9737"
+        }
+      ],
       "nutrition": null
     }
   ],

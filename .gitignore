@@ -46,3 +46,7 @@
 /Assets/AddressableAssetsData/*/*.bin*
 sysinfo.txt
 crashlytics-build.properties
+
+# Publishable keys are supplied locally and embedded only in the local player build.
+/Assets/Config/remote-lookup.local.json
+/Assets/Config/remote-lookup.local.json.meta

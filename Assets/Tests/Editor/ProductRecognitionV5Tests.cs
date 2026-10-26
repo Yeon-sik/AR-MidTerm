@@ -342,7 +342,7 @@ namespace MidtermAR.Tests
             panel.SetProduct(product, "앞면 이미지 등록됨 · 앞면을 비추면 3D로 표시");
             var text = (TMP_Text)new SerializedObject(panel).FindProperty("registrationStatus").objectReferenceValue;
             Canvas.ForceUpdateCanvases();
-            Assert.That(text.text, Does.Contain("앞면 이미지 등록됨").And.Contain("PriceTrace ID 확인 대기"));
+            Assert.That(text.text, Does.Contain("앞면 이미지 등록됨").And.Not.Contain("PriceTrace ID 확인 대기"));
             Assert.That(text.GetPreferredValues(text.text, text.rectTransform.rect.width, Mathf.Infinity).y,
                 Is.LessThanOrEqualTo(text.rectTransform.rect.height + 1));
             panel.SetProduct(null);

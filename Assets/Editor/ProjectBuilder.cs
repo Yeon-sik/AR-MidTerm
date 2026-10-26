@@ -255,8 +255,8 @@ namespace MidtermAR.Editor
             PlayerSettings.companyName = "Yeonsik";
             PlayerSettings.productName = "상품정보 AR";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
-            PlayerSettings.bundleVersion = "0.5.1";
-            PlayerSettings.Android.bundleVersionCode = 6;
+            PlayerSettings.bundleVersion = "0.6.0";
+            PlayerSettings.Android.bundleVersionCode = 7;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -268,7 +268,7 @@ namespace MidtermAR.Editor
             PlayerSettings.allowedAutorotateToLandscapeLeft = false;
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
-            PlayerSettings.Android.forceInternetPermission = false;
+            PlayerSettings.Android.forceInternetPermission = true;
             PlayerSettings.runInBackground = false;
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
         }
@@ -467,6 +467,8 @@ namespace MidtermAR.Editor
             Assign(presenter, "panelPrefab", panel);
             Assign(app, "imagePanel", presenter);
             Assign(app, "imageBindingsJson", json);
+            // 파일이 없으면 null을 직렬화한다. 키를 포함한 예제 파일을 대신 사용하지 않는다.
+            Assign(app, "remoteLookupJson", AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Config/remote-lookup.local.json"));
             Assign(app, "barcodePanel", UnityEngine.Object.FindFirstObjectByType<BarcodeProductPanel>());
             var scannerSettings = new SerializedObject(app.GetComponent<ARBarcodeScanner>());
             scannerSettings.FindProperty("captureViewportCoordinates").boolValue = true;
@@ -571,6 +573,7 @@ namespace MidtermAR.Editor
             priceBlock.offsetMin = new Vector2(24, -256); priceBlock.offsetMax = new Vector2(-24, -116);
             priceBlock.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
             var priceLabel = Text(priceBlock, "PriceLabel", "관측 가격", font, 24, Green, 16, 12, 640, 40);
+            Assign(follow, "priceLabel", priceLabel);
             priceLabel.rectTransform.anchorMax = new Vector2(0.45f, 1);
             var amount = Text(priceBlock, "Price", "", font, 40, Ink, 16, 0, 640, 66);
             amount.rectTransform.anchorMin = new Vector2(0.45f, 1);
@@ -597,8 +600,8 @@ namespace MidtermAR.Editor
             NutritionRow("SaturatedFat", "포화지방", "saturatedFat", 522, 36, indent: true);
             NutritionRow("Protein", "단백질", "protein", 558, 36);
             Rule(card, "Nutrition Bottom Rule", 596, 4, Ink);
-            Text(card, "Provenance", "시연용 연결 · 로컬 데이터", font, 22, Ink, 24, 606, 672, 36);
-            Assign(follow, "registrationStatus", Text(card, "Registration", "", font, 23, Ink, 24, 646, 672, 112));
+            Assign(follow, "provenance", Text(card, "Provenance", "시연용 연결 · 로컬 데이터", font, 20, Ink, 24, 606, 672, 56));
+            Assign(follow, "registrationStatus", Text(card, "Registration", "", font, 20, Ink, 24, 668, 672, 90));
 
             void NutritionRow(string name, string label, string field, float y, float height, float size = 24, bool bold = false, bool indent = false)
             {
