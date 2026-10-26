@@ -1,5 +1,7 @@
 # 이미지 추적 상품정보 AR — 현재 작업 범위와 마일스톤
 
+> 2026-10-26 현재는 [v5 독립 인식 구조](PRODUCT-RECOGNITION-V5.md)가 우선한다. 코드·씬·두 크롭 등록, EditMode 105/105와 `0.5.1 (6)` 호환 업데이트를 완료했다. 초기 v5의 앞면·바코드 동작은 사용자 보고이며, 수정 후 실물 재시험·원격 데이터 확인·영상 제출은 남아 있다. [최신 기기 기록](validation/v5-rescan-panel-fix-2026-10-26.json), [커밋 전 재검증](validation/branch-delivery-2026-10-26.json)을 따른다. 아래는 v4 계획과 이력이다.
+
 최신화: **2026-10-25 KST**. 마감: **10월 29일**(사용자 제공, 시각 미확인).
 강의 원문 판단은 [COURSE-ALIGNED-PLAN.md](COURSE-ALIGNED-PLAN.md), 구현은 [PRODUCT-IMAGE-TRACKING.md](PRODUCT-IMAGE-TRACKING.md), 결과는 [VALIDATION.md](VALIDATION.md)를 따른다.
 

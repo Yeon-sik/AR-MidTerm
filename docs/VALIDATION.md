@@ -1,5 +1,38 @@
 # 상품정보 AR 구현·검증 기록
 
+## 2026-10-26 v5 정보판 60%·소실 후 자동 스캔 복귀
+
+- 사용자는 앞면·바코드가 정상 동작한다고 보고했고, 갤러리의 `Screenshot_20261026_140652_ AR.jpg`에서 테아닌 3D 정보판이 화면 대부분을 차지하는 것을 확인했다. 원본은 `artifacts/v5-rescan-fix/user-before.jpg`에 보존했다.
+- 앞면 정보판의 가로·세로를 초기 v5의 **60%**로 줄였다. 약 58mm 참조 폭에서 정보판 폭은 **140mm → 84mm**다. 이미지 기준 위치·회전·크롭 오프셋과 바코드 2D 창 레이아웃은 유지했다.
+- 인식이 끊기면 선택 상품·확정 번호를 해제한다. 바코드는 다음 판독 실패·다른 번호에서 해제하고, 입력 자체가 없으면 마지막 입력으로부터 **0.65초** 뒤 만료한다. 미등록 번호 안내도 만료한다. 앞면은 현재 FULL_TRACKING 소실 시 해제하며, 다른 경로가 계속 보이면 그 경로는 독립적으로 유지한다. 충돌은 현재 관측으로 재계산해 대상이 사라지면 자동 복구한다. 같은 상품 재획득의 탭 선택은 숨긴 정보판에 보존한다.
+- Unity EditMode **105/105 PASS**, 실패·건너뜀 0, exit 0. 원시 결과: `artifacts/editmode/20261026-051505-38a83625/`. 판독 실패·무입력 만료·미등록 소실·다른 번호의 3회 확인·앞면 소실·다른 앞면 전환·충돌 해제·같은 상품 탭 유지와 60% 폭을 포함한다.
+- Android 빌드 **Succeeded / errors=0 / exit=0**, **0.5.1 (6)** APK **66,314,660 bytes**, SHA-256 `86d3566e13fec5b2a3aeb40fa9959d95b16403209fb9ed3cd3960a60c3b06adc`. 격리 빌드 입력 **924개**를 해시로 대조했고 원본 입력도 빌드 후 동일했다.
+- Galaxy A25에 동일 패키지·서명을 확인한 `-r` 업데이트를 완료했다. 최초 설치 시각은 유지됐다. 설치 APK를 다시 받아 해시 일치, 카메라 영상·권한, 상품 2개 로딩, SessionTracking과 스캔 대기 화면을 확인했다. 수집한 앱 PID 로그의 검사 대상 예외 패턴은 0건이다. **업데이트 후 실제 상품을 비춘 크기·소실·전환 시험은 아직 미실행**이다.
+
+[검증 요약](validation/v5-rescan-panel-fix-2026-10-26.json). 원시 근거: `artifacts/v5-rescan-fix/`의 `tests.json`, `build.log`, `build-inputs.json`, `install-result.json`, `after-launch.log`, `after-screen.png`.
+
+## 2026-10-26 v5 실기기 삭제 후 새 설치 — 실행 확인
+
+- 사용자의 기존 앱 삭제·재설치 요청에 따라 `com.yeonsik.midtermar`만 uninstall했고, 패키지 부재를 확인한 뒤 새 설치했다. 기존 앱 데이터 초기화가 허용된 작업이다.
+- Android 빌드 **Succeeded / errors=0 / exit=0**, APK **62,531,798 bytes**, 버전 **0.5.0 (5)**. 설치된 APK를 다시 받아 빌드 SHA-256 `eade0d7cac4d1e00868b2e3d9339bd842a65f724e9aa1ba1d4122f43d5c1f036`과 일치함을 확인했다. 원본 빌드 입력 145개는 그대로이며 격리 빌드 복사본의 코드·데이터 등 121개도 일치한다.
+- Galaxy A25 **SM-A256N / Android 16**에서 카메라 권한·영상, v5 상품 2개와 참조 이미지 3개 로딩, 1920×1080 CPU 입력, `SessionTracking` 진입을 확인했다. 수집한 앱 PID 로그에서 검사한 FATAL EXCEPTION·NullReferenceException·DllNotFoundException·EntryPointNotFoundException·AndroidJavaException 패턴은 0건이다.
+- **실물 테아닌 앞면·바코드 인식, 상하단 전환 정합, 정보판 탭 터치는 미검증**이다. 실행 성공을 실물 인식 성공으로 해석하지 않는다. 테아닌 가격·영양·원격 ID 확인 대기도 유지한다.
+
+[새 설치 검증 요약](validation/product-recognition-v5-device-2026-10-26.json). 원시 근거: `artifacts/v5-device-reinstall/`의 `uninstall.txt`, `install-result.json`, `after-package.txt`, `device-launch.log`, `device-screen.png`, `build.log`.
+
+## 2026-10-26 v5 독립 인식 — 코드·씬·데이터 검증
+
+- 기준은 [v5 상품 인식 구조](PRODUCT-RECOGNITION-V5.md)다. 앞면은 바코드 선택 없이 3D 상품정보판을, 바코드는 앞면 없이 2D 정보판을 표시하도록 연결했다. 동일 상품은 3D를 우선하고, 서로 다른 상품의 동시 앞면·확정 바코드 충돌에서는 두 정보판을 숨긴다.
+- 상품 ID 조회·선택적 EAN·필수 스냅샷 날짜, 이미지 연결 스키마 v2·동일 상품 복수 크롭, 바코드 미연결/앞면 미등록 배지, 로컬 기준 미등록 번호 안내를 구현했다. ②와 ④는 모르는 EAN에서 구분하지 않으며 상품명 추정으로 연결하지 않는다.
+- 별도 프레임의 EAN 체크섬·3회 확인·오래된 결과 거부를 공통 판정기에 적용했다. 스캐너에 연속 관측 모드를 추가했으며 기존 단발 스캔·디코더·카메라/작업 스레드 경계는 유지한다. 이미지 소실·LAST_KNOWN_POSE·pause 숨김, 동일 상품 재획득·크롭 전환의 탭 유지, 상품 변경·재스캔 초기화를 검사했다.
+- `iphone-t1` 상단 95점·하단 100점의 기존 크롭을 바이트 그대로 복사하고 약 58mm 폭을 설정했다. 반분 경계와 픽셀 비율에서 공통 상품 중심까지의 Z 오프셋을 계산했다. 다른 사진인 `iphone-t2` 100점은 대안으로 보존했다. [이미지 입력 근거](validation/v5-image-inputs-2026-10-26.json)
+- 사용자 제공 EAN `8809375984692`는 체크섬 PASS다. PriceTrace 연결 프로젝트를 찾지 못했고 공개 조회가 401로 실패해 실제 원격 상품 ID는 미확인이다. 테아닌 항목은 로컬 시연 UUID로 명시하고 화면에도 ID 확인 대기를 표시한다. 가격·영양 객체는 null이며 실물 기능성·영양 수치나 가격을 만들지 않았다.
+- 최종 Unity EditMode **97/97 PASS**, 실패·건너뜀 **0**, Unity exit **0**. 등록 상태 4종은 시험 전용 데이터로 검증했다. 실제 앱의 관측 이벤트→확정→재스캔, 복수 크롭 공통 원점, 중복 ID·EAN·날짜 오류, 미확정 번호 거부, 연속 스캔 시간 제한 제외, 2D 등록 배지 레이아웃을 포함한다. 기존 v4의 선택 선행 시험은 v5 독립 경로 시험으로 대체했다.
+- 첫 실행은 88개 중 2개가 실패했다. 2D 정보판 캐시가 같은 상품의 값 변경을 갱신하지 못한 회귀를 수정했다. 다음 96개 중 배지 높이 1개가 실패해 표시 영역을 조정한 뒤 최종 97개를 통과했다.
+- 씬·프리팹 준비는 `PrepareImageTrackingScene`이며 **앱 빌드·APK 생성·설치·실물 박스 시험은 수행하지 않았다.** 기존 Android 설정과 probe 씬·probe 라이브러리는 유지했다. 점수·코드 시험으로 실제 박스 인식률·상하단 전환 정합·화면 가독성·휴대폰 터치를 보장하지 않는다.
+
+최종 원시 결과: `artifacts/editmode/20261025-152255-18ada5fe/results.xml`, `editor.log`, `summary.json`. 씬 준비: `artifacts/v5/prepare-delivery.log`, exit 0. [공개 시험 요약과 입력 해시](validation/product-recognition-v5-2026-10-26.json). 커밋·push는 수행하지 않았다.
+
 ## 2026-10-25 이미지 추적 World Space 정보판 — 코드 기능 검증
 
 - `ProductAR.unity`를 바코드 상품 선택 → 등록 이미지의 3D 자세에 정보판 표시 흐름으로 연결했다. 바코드가 사라져도 선택을 유지하며 이미지 FULL_TRACKING에서만 표시한다. 소실·제한·마지막 자세·다른 이미지·다른 바코드·pause에서는 숨긴다.

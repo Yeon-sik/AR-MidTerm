@@ -1,0 +1,39 @@
+{
+  "selectedReason": "같은 앞면 원본의 상·하단으로 공통 원점 정합. 상단95점/하단100점. iphone-t2 100점은 대안으로 보존하고 실제 등록은 반분 경계가 확정된 한 원본을 사용.",
+  "images": [
+    {
+      "asset": "Assets/Images/theanine-top.jpg",
+      "sourceFile": "iphone-t1_top.jpg",
+      "sourceOriginal": "iphone-t1.jpg",
+      "cropPixels": [
+        0,
+        0,
+        1208,
+        1212
+      ],
+      "sha256": "af2d377182d6963e5edc3352c0beee862942fa99292b6e7a6a7081fbf52ee860",
+      "widthMetres": 0.058,
+      "widthEvidence": "사용자 약 5.8cm, 실제 추적의 크기·원점 정합은 미검증",
+      "offsetZMetres": 0.029120033,
+      "catalogProductId": "b4fb86ad-f8a3-57b5-afdf-f9747a0a1402",
+      "identityScope": "LOCAL_DEMO_REMOTE_PRICETRACE_ID_UNVERIFIED"
+    },
+    {
+      "asset": "Assets/Images/theanine-bottom.jpg",
+      "sourceFile": "iphone-t1_bottom.jpg",
+      "sourceOriginal": "iphone-t1.jpg",
+      "cropPixels": [
+        0,
+        1212,
+        1208,
+        2425
+      ],
+      "sha256": "96ee06dfa3148fcdb2d42222012250bcd1993db9faf9d8c46dfae5275ba04582",
+      "widthMetres": 0.058,
+      "widthEvidence": "사용자 약 5.8cm, 실제 추적의 크기·원점 정합은 미검증",
+      "offsetZMetres": -0.029096026,
+      "catalogProductId": "b4fb86ad-f8a3-57b5-afdf-f9747a0a1402",
+      "identityScope": "LOCAL_DEMO_REMOTE_PRICETRACE_ID_UNVERIFIED"
+    }
+  ]
+}
