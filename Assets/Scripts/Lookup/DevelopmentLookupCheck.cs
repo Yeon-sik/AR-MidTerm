@@ -12,19 +12,22 @@ namespace MidtermAR
     {
         public static async void RunIfRequested(RemoteLookupConfig config)
         {
+            string barcode;
             using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
             using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
             using (var intent = activity.Call<AndroidJavaObject>("getIntent"))
             {
                 if (!intent.Call<bool>("getBooleanExtra", "productar.lookupProbe", false)) return;
-                intent.Call<AndroidJavaObject>("removeExtra", "productar.lookupProbe")?.Dispose();
+                barcode = intent.Call<string>("getStringExtra", "productar.lookupBarcode");
+                intent.Call("removeExtra", "productar.lookupProbe");
             }
+            if (!BarcodeIdentity.TryNormalizeEan13(barcode, out barcode)) barcode = "8801104671507";
             if (!config.PtReady) { Debug.Log("[ProductAR LookupCheck] disabled-config"); return; }
             var http = new UnityLookupHttp();
             await Check("pt-barcode", async cancellation => (await new PtBarcodeClient(config, http).Lookup("8801104671507", cancellation)).Status);
             await Check("nutrition", async cancellation => (await new PublicNutritionClient(config, http).Lookup("1516c3eb-3dfb-4e11-8040-d23fadcdaad0", cancellation)) == null ? "empty" : "found");
             await Check("off-v3", async cancellation => (await new OffProductClient(config, http, Application.version,
-                () => Time.realtimeSinceStartupAsDouble).Lookup("3017624010701", cancellation)) == null ? "not_found" : "found");
+                () => Time.realtimeSinceStartupAsDouble).Lookup(barcode, cancellation)) == null ? "not_found" : "found");
             // 연락처를 제삼자 echo 서버에 전송하지 않는다. 합성 UA로 Android 헤더 전달만 확인한다.
             await Check("android-user-agent", async cancellation =>
             {
