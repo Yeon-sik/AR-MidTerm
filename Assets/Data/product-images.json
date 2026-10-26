@@ -1,11 +1,25 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "images": [
     {
-      "barcode": "8801104671507",
       "referenceImageName": "test-card",
       "displayName": "브이젤 카드 · 개발용",
-      "developmentOnly": true
+      "developmentOnly": true,
+      "catalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0"
+    },
+    {
+      "referenceImageName": "theanine-top",
+      "catalogProductId": "b4fb86ad-f8a3-57b5-afdf-f9747a0a1402",
+      "displayName": "테아닌 밀크씨슬 · 상단",
+      "developmentOnly": false,
+      "offsetZMetres": 0.029120033
+    },
+    {
+      "referenceImageName": "theanine-bottom",
+      "catalogProductId": "b4fb86ad-f8a3-57b5-afdf-f9747a0a1402",
+      "displayName": "테아닌 밀크씨슬 · 하단",
+      "developmentOnly": false,
+      "offsetZMetres": -0.029096026
     }
   ]
 }

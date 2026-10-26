@@ -21,10 +21,13 @@ namespace MidtermAR
         [SerializeField] private Button nutritionTab;
         [SerializeField] private Button priceTab;
         public ProductInfoTab CurrentTab { get; private set; }
+        private string boundProductId;
         public event Action RescanRequested;
 
         public void Bind(ProductSnapshot product, ProductImageBinding binding = null)
         {
+            var changedProduct = boundProductId != product?.catalogProductId || product == null;
+            boundProductId = product?.catalogProductId;
             productTitle.text = product?.name ?? "";
             specification.text = product == null ? "" : product.brand + " · " + product.specification;
             price.text = product == null ? "" : ProductInfoFormatter.Price(product);
@@ -37,7 +40,10 @@ namespace MidtermAR
                 ? "개발용 카드 마커 · 상품 포장 인식 아님\n시연용 상품 연결 · 로컬 데이터\n추적 이미지의 위치·방향에 표시합니다."
                 : binding != null ? "시연용 상품 연결 · 로컬 데이터\n추적 이미지의 위치·방향에 표시합니다."
                 : "시연용 상품 연결 · 로컬 데이터\n정보판은 배치한 공간에 고정됩니다.";
-            ShowNutrition();
+            if (product != null && binding != null && string.IsNullOrEmpty(product.barcode)) provenance.text += "\n바코드 미연결";
+            if (product?.mapping?.catalogIdentityVerification == "LOCAL_DEMO_REMOTE_ID_UNVERIFIED")
+                provenance.text += "\n로컬 시연 항목 · PriceTrace ID 확인 대기";
+            if (changedProduct) ShowNutrition();
         }
 
         public void ShowNutrition() => ShowTab(ProductInfoTab.Nutrition);

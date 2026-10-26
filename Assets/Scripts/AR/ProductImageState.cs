@@ -2,42 +2,38 @@ using UnityEngine.XR.ARSubsystems;
 
 namespace MidtermAR
 {
-    // 카메라/네이티브 API 없이 검증하는 표시 정책. 바코드 소실 타이머를 사용하지 않는다.
+    // 바코드 선택과 독립적으로 현재 프레임의 이미지를 상품 ID에 연결한다.
     public sealed class ProductImageState
     {
+        private readonly ProductCatalog products;
+        private readonly ProductImageCatalog images;
+        private string preferredImage;
         public ProductImageBinding Binding { get; private set; }
-        public string ConflictingBarcode { get; private set; }
+        public ProductSnapshot Product { get; private set; }
         public bool HasImageConflict { get; private set; }
-        public bool HasCurrentImage { get; private set; }
         public bool Ready { get; private set; }
-        public bool CanDisplay => Binding != null && Ready && HasCurrentImage && !HasImageConflict && ConflictingBarcode == null;
+        public bool CanDisplay => Ready && Product != null && !HasImageConflict;
 
-        public void Select(ProductImageBinding binding)
-        {
-            Binding = binding;
-            ConflictingBarcode = null;
-            BeginFrame(false);
-        }
+        public ProductImageState(ProductCatalog products, ProductImageCatalog images)
+        { this.products = products; this.images = images; }
 
         public void BeginFrame(bool ready)
         {
             Ready = ready;
-            HasCurrentImage = false;
+            Product = null;
+            Binding = null;
             HasImageConflict = false;
         }
 
         public void ObserveImage(string name, TrackingState state, int method)
         {
-            if (Binding == null || !Ready || !ImageTrackingPolicy.CanDisplay(true, false, state, method, true)) return;
-            if (name == Binding.referenceImageName) HasCurrentImage = true;
-            else HasImageConflict = true;
+            if (!ImageTrackingPolicy.CanDisplay(Ready, false, state, method, true)
+                || !images.TryFindByImage(name, out var binding) || !products.TryFindById(binding.catalogProductId, out var product)) return;
+            if (Product != null && Product.catalogProductId != product.catalogProductId) HasImageConflict = true;
+            if (Binding == null || name == preferredImage) { Binding = binding; Product = product; }
         }
 
-        public void ObserveBarcode(BarcodeReadResult result)
-        {
-            if (Binding != null && result != null && result.Format == "EAN_13"
-                && BarcodeIdentity.TryNormalizeEan13(result.Text, out var normalized) && normalized != Binding.barcode)
-                ConflictingBarcode = normalized; // 다른 상품을 읽으면 명시적 재스캔 전까지 표시하지 않는다.
-        }
+        public void EndFrame() { if (CanDisplay) preferredImage = Binding.referenceImageName; }
+        public void Reset() { preferredImage = null; BeginFrame(false); }
     }
 }

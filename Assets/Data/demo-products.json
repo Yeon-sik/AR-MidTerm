@@ -39,6 +39,23 @@
         "displaySource": "PriceTrace 승인 영양자료 · 포장 표기 대조 전",
         "sourceCatalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0"
       }
+    },
+    {
+      "catalogProductId": "b4fb86ad-f8a3-57b5-afdf-f9747a0a1402",
+      "name": "테아닌과 밀크씨슬 활력솔루션",
+      "brand": "Dr.Elizabeth’s",
+      "specification": "1,000 mg × 60정 (60 g)",
+      "barcode": "8809375984692",
+      "barcodeFormat": "EAN_13",
+      "mapping": {
+        "scope": "demo-only",
+        "source": "2026-10-26 사용자 제공 실물 바코드 8809375984692와 앞면 사진의 제품명·규격. catalogProductId는 로컬 시연용 UUID이며 PriceTrace 원격 상품 ID 및 운영 매핑은 UNVERIFIED. 연결 계정에 프로젝트 없음, 공개 API 조회 401.",
+        "physicalDecodeVerification": "PENDING_DEVICE_TEST",
+        "catalogIdentityVerification": "LOCAL_DEMO_REMOTE_ID_UNVERIFIED"
+      },
+      "price": null,
+      "nutrition": null
     }
-  ]
+  ],
+  "snapshotDate": "2026-10-26"
 }

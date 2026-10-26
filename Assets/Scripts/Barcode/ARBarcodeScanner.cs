@@ -42,6 +42,7 @@ namespace MidtermAR
         private bool coordinateErrorLogged;
         private bool coordinateMappingLogged;
         private bool conversionErrorLogged;
+        private bool continuous;
         private float lastFrameTime = float.NegativeInfinity;
         private bool configurationAttempted; // 카메라 해상도 설정의 반복 적용 방지
         private Vector2Int lastImageSize;
@@ -63,6 +64,7 @@ namespace MidtermAR
 
         public void SetScanning(bool value)
         {
+            continuous = false;
             if (IsScanning == value && FollowingBarcode == null) return;
             IsScanning = value;
             FollowingBarcode = null;
@@ -71,8 +73,17 @@ namespace MidtermAR
             if (value) { scanStarted = Time.unscaledTime; nextCapture = scanStarted; scanFrames = 0; }
         }
 
+        // 두 인식 경로가 서로를 기다리지 않도록 시간 제한 없이 관측한다.
+        public void SetContinuous(bool value)
+        {
+            if (continuous && value && IsScanning) return;
+            SetScanning(value);
+            continuous = value;
+        }
+
         public void SetFollowing(string barcode)
         {
+            continuous = false;
             if (FollowingBarcode == barcode && !IsScanning) return;
             IsScanning = false;
             FollowingBarcode = barcode;
@@ -106,7 +117,7 @@ namespace MidtermAR
                     Observed?.Invoke(result, sameViewport ? pendingTransform : default, pendingCapturedAt);
                 }
             }
-            if (IsScanning && Time.unscaledTime - scanStarted >= timeoutSeconds)
+            if (IsScanning && !continuous && Time.unscaledTime - scanStarted >= timeoutSeconds)
             {
                 SetScanning(false);
                 TimedOut?.Invoke();

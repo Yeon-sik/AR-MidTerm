@@ -27,3 +27,23 @@ MonoBehaviour:
     m_SpecifySize: 0
     m_Name: test-card
     m_Texture: {fileID: 0}
+  - m_SerializedGuid:
+      m_GuidLow: 5624258446550012536
+      m_GuidHigh: 9014563133980299919
+    m_SerializedTextureGuid:
+      m_GuidLow: 397511446418649459
+      m_GuidHigh: 5504212468394504571
+    m_Size: {x: 0.058, y: 0.058}
+    m_SpecifySize: 1
+    m_Name: theanine-top
+    m_Texture: {fileID: 0}
+  - m_SerializedGuid:
+      m_GuidLow: 4812856953232682817
+      m_GuidHigh: 2101013507506879649
+    m_SerializedTextureGuid:
+      m_GuidLow: 2829525056459950382
+      m_GuidHigh: 16638335860138303242
+    m_Size: {x: 0.058, y: 0.058}
+    m_SpecifySize: 1
+    m_Name: theanine-bottom
+    m_Texture: {fileID: 0}

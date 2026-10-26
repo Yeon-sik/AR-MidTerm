@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 
 namespace MidtermAR
 {
+    // 두 인식 경로의 결과를 메인 스레드에서 합쳐 한 종류의 정보판만 표시한다.
     public sealed class ProductARApp : MonoBehaviour
     {
         [SerializeField] private TextAsset catalogJson;
@@ -12,10 +13,14 @@ namespace MidtermAR
         [SerializeField] private ARBarcodeScanner scanner;
         [SerializeField] private ProductScreenView screen;
         [SerializeField] private TrackedImageProductPanel imagePanel;
-        private ProductWorkflow workflow;
-        private ProductImageCatalog imageCatalog;
-        private float nextRefresh;
+        [SerializeField] private BarcodeProductPanel barcodePanel;
+        private ProductRecognitionState recognition;
         private bool paused;
+        private string lastProductId;
+        private float nextRefresh;
+        private BarcodeReadResult lastRead;
+        private BarcodeViewportTransform lastTransform;
+        private float lastCapturedAt = float.NegativeInfinity;
 
         private void Awake()
         {
@@ -25,71 +30,94 @@ namespace MidtermAR
             try
             {
                 var catalog = new ProductCatalog(catalogJson.text);
-                imageCatalog = new ProductImageCatalog(imageBindingsJson.text, catalog);
-                imageCatalog.ValidateLibrary(imagePanel.ReferenceLibrary);
-                workflow = new ProductWorkflow(catalog);
-                Debug.Log("[ProductAR] Local demo catalog loaded: " + catalog.Count + ", mapping: demo-only");
+                var images = new ProductImageCatalog(imageBindingsJson.text, catalog);
+                images.ValidateLibrary(imagePanel.ReferenceLibrary);
+                imagePanel.Configure(catalog, images);
+                recognition = new ProductRecognitionState(catalog, images);
+                Debug.Log("[ProductAR v5] Local catalog loaded: " + catalog.Count + "; snapshot=" + catalog.SnapshotDate);
             }
             catch (Exception error)
             {
-                workflow = new ProductWorkflow(null);
-                Debug.LogError("[ProductAR] Catalog load: " + error.Message);
+                recognition = null;
+                Debug.LogError("[ProductAR v5] Catalog load: " + error.Message);
             }
         }
 
         private void OnEnable()
         {
-            scanner.Decoded += OnDecoded;
-            scanner.TimedOut += OnScanTimedOut;
             scanner.Observed += OnObserved;
             imagePanel.RescanRequested += RestartScan;
         }
-
         private void OnDisable()
         {
-            scanner.Decoded -= OnDecoded;
-            scanner.TimedOut -= OnScanTimedOut;
             scanner.Observed -= OnObserved;
             imagePanel.RescanRequested -= RestartScan;
-            scanner.SetScanning(false);
+            scanner.SetContinuous(false);
+            recognition?.Suspend();
             imagePanel.InvalidatePose();
+            barcodePanel.SetCameraReady(false);
         }
 
         private void Update()
         {
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
-                if (workflow.Selected != null) RestartScan();
+                if (recognition?.Selected != null || recognition?.ConfirmedBarcode != null) RestartScan();
                 else Application.Quit();
+            }
+            scanner.SetContinuous(recognition != null && !paused && readiness.CameraReady && scanner.HasCameraFrame);
+        }
+
+        private void OnObserved(BarcodeReadResult result, BarcodeViewportTransform transform, float capturedAt)
+        {
+            if (paused || recognition == null || float.IsNaN(capturedAt) || float.IsInfinity(capturedAt)
+                || capturedAt > Time.unscaledTime || Time.unscaledTime - capturedAt > BarcodeFollowState.MaxAgeSeconds
+                || capturedAt <= lastCapturedAt) return;
+            recognition.ObserveBarcode(result, capturedAt, Time.unscaledTime);
+            lastRead = result;
+            lastTransform = transform;
+            lastCapturedAt = capturedAt;
+        }
+
+        private void LateUpdate()
+        {
+            if (recognition != null)
+            {
+                imagePanel.SampleFrame();
+                var previousRoute = recognition.Route;
+                recognition.Resolve(imagePanel.CurrentProduct, imagePanel.HasImageConflict, Time.unscaledTime);
+                if (previousRoute != recognition.Route)
+                {
+                    nextRefresh = 0; // 추적 소실 안내는 정기 갱신을 기다리지 않고 같은 프레임에 반영한다.
+                    Debug.Log("[ProductAR v5] Route: " + previousRoute + " -> " + recognition.Route);
+                }
+                Present();
             }
             if (Time.unscaledTime < nextRefresh) return;
             nextRefresh = Time.unscaledTime + 0.15f;
             Refresh();
         }
 
-        private void OnDecoded(BarcodeReadResult result)
+        private void Present()
         {
-            if (result.Format != "EAN_13" || !workflow.AcceptBarcode(result.Text)) return;
-            ProductImageBinding binding = null;
-            if (workflow.Selected != null) imageCatalog.TryFind(workflow.Selected, out binding);
-            imagePanel.SetProduct(workflow.Selected, binding);
-            if (workflow.Selected != null)
+            // 선택은 소실 즉시 해제하되, 숨긴 정보판의 탭은 같은 상품 재획득 때 재사용한다.
+            if (recognition.Selected != null && lastProductId != recognition.Selected.catalogProductId)
             {
-                workflow.FollowImage();
-                scanner.SetFollowing(workflow.Selected.barcode);
+                lastProductId = recognition.Selected?.catalogProductId;
+                imagePanel.SetProduct(null, null);
+                barcodePanel.SetProduct(null);
             }
-            else scanner.SetScanning(false);
-            Debug.Log("[ProductAR] Barcode decoded: " + result.Text + ", phase: " + workflow.Phase);
-            Refresh();
+            var ready = !paused && readiness.CameraReady && scanner.HasCameraFrame;
+            imagePanel.Present(ready && recognition.Route == ProductDisplayRoute.Image3D);
+            var barcodeAllowed = ready && recognition.Route == ProductDisplayRoute.Barcode2D;
+            if (barcodeAllowed)
+            {
+                barcodePanel.SetProduct(recognition.Selected, recognition.BarcodeBadge(recognition.Selected));
+                barcodePanel.SetCameraReady(true);
+                barcodePanel.Observe(lastRead, lastTransform, lastCapturedAt);
+            }
+            else barcodePanel.SetCameraReady(false);
         }
-
-        private void OnObserved(BarcodeReadResult result, BarcodeViewportTransform transform, float capturedAt)
-        {
-            // 화면 좌표·바코드 소실은 이미지의 3D 자세를 무효화하지 않는다.
-            if (!paused && workflow.Phase == ProductPhase.TrackingImage
-                && capturedAt <= Time.unscaledTime && Time.unscaledTime - capturedAt <= 1f) imagePanel.ObserveBarcode(result);
-        }
-        private void OnScanTimedOut() { workflow.ScanTimedOut(); Refresh(); }
 
         public void PrimaryAction()
         {
@@ -97,102 +125,83 @@ namespace MidtermAR
             if (!readiness.CameraReady || !scanner.HasCameraFrame) { readiness.Retry(); return; }
             RestartScan();
         }
-
         public void RestartScan()
         {
-            scanner.SetScanning(false);
-            imagePanel.SetProduct(null, null);
-            workflow.StartScan();
+            scanner.SetContinuous(false);
+            recognition?.Reset();
+            imagePanel.ResetSelection();
+            barcodePanel.SetProduct(null);
+            lastProductId = null;
+            lastRead = null;
+            lastCapturedAt = float.NegativeInfinity;
+            nextRefresh = 0;
             Refresh();
         }
 
         private void Refresh()
         {
-            var cameraReady = readiness.CameraReady && scanner.HasCameraFrame && !paused;
-            if (cameraReady && workflow.Phase == ProductPhase.TrackingImage) scanner.SetFollowing(workflow.Selected.barcode);
-            else scanner.SetScanning(cameraReady && workflow.Phase == ProductPhase.Scanning);
-            var step = "1 / 2 · 바코드 스캔";
-            var title = "바코드를 비춰주세요";
-            var message = "바코드 전체가 선명하게 보이도록\n휴대폰을 잠시 멈춰주세요.";
-            var action = "다시 스캔";
+            var ready = readiness.CameraReady && scanner.HasCameraFrame && !paused;
+            var step = "상품 인식";
+            var title = "앞면이나 바코드를 비춰주세요";
+            var message = "앞면은 3D, 바코드는 2D로 정보를 표시합니다.";
             var summary = "";
+            var action = "다른 상품 스캔";
+            var primary = recognition?.Selected != null || recognition?.ConfirmedBarcode != null;
             var error = false;
             var attention = false;
-            var primary = false;
-            if (workflow.Phase == ProductPhase.DataUnavailable)
-            { step = "준비 오류"; title = "상품정보를 불러올 수 없어요"; message = "앱을 종료한 뒤 다시 실행해 주세요."; error = true; }
-            else if (!cameraReady)
+            if (recognition == null)
+            { title = "상품정보를 불러올 수 없어요"; message = "앱을 종료한 뒤 다시 실행해 주세요."; error = true; primary = false; }
+            else if (!ready)
             {
-                step = readiness.PermissionBlocked ? "카메라 권한 필요" : "카메라 준비 중";
                 title = readiness.PermissionBlocked ? "카메라 사용을 허용해 주세요" : "카메라를 준비하고 있어요";
-                message = readiness.CameraReady && !scanner.HasCameraFrame ? "카메라 영상을 기다리고 있어요.\n계속되면 다시 확인을 눌러주세요." : readiness.Status;
+                message = readiness.Status;
                 action = readiness.PermissionBlocked ? "설정 열기" : "다시 확인";
-                error = readiness.PermissionBlocked;
-                attention = !error;
                 primary = !paused && !readiness.IsInitializing;
+                error = readiness.PermissionBlocked;
             }
-            else if (workflow.Phase == ProductPhase.UnknownBarcode)
-            { step = "1 / 2 · 상품 확인 필요"; title = "시연 데이터에 없는 상품이에요"; message = "읽은 번호: " + workflow.LastBarcode + "\n포장의 번호를 확인하고 다시 스캔해 주세요."; error = true; primary = true; }
-            else if (workflow.Phase == ProductPhase.ScanFailed)
-            { step = "1 / 2 · 스캔 시간 초과"; title = "바코드를 읽지 못했어요"; message = "반사와 초점을 확인하고\n바코드 전체가 보이도록 다시 시도해 주세요."; error = true; primary = true; }
-            else if (workflow.Phase == ProductPhase.TrackingImage)
+            else if (recognition.Route == ProductDisplayRoute.Conflict)
             {
-                var visible = imagePanel.HasVisibleTarget;
-                step = visible ? "2 / 2 · 이미지 추적 중" : "2 / 2 · 상품 이미지 찾는 중";
-                title = visible ? "이미지 위에 상품정보를 표시해요" : "선택한 상품의 앞면을 비춰주세요";
-                message = visible ? "영양·가격 버튼으로 정보를 바꿔보세요."
-                    : "바코드가 안 보여도 선택은 유지됩니다.\n등록한 포장 앞면 전체를 비춰주세요.";
-                summary = visible ? "" : workflow.Selected.name + " · " + workflow.Selected.specification;
-                action = "다른 상품 스캔";
-                primary = true;
-                attention = !visible;
-                if (imagePanel.Binding == null)
-                {
-                    title = "등록된 상품 이미지가 없어요";
-                    message = "이 상품의 포장 이미지를 등록한 뒤\n다시 스캔해 주세요.";
-                    error = true;
-                }
-                else if (imagePanel.ConflictingBarcode != null)
-                {
-                    title = "다른 상품의 바코드가 보였어요";
-                    message = "정보판을 숨겼습니다.\n다른 상품 스캔을 눌러 다시 선택해 주세요.";
-                    error = true;
-                }
-                else if (imagePanel.HasImageConflict)
-                {
-                    title = "선택한 상품과 다른 이미지예요";
-                    message = "정보판을 숨겼습니다.\n선택한 상품의 등록 이미지만 비춰주세요.";
-                }
-                else if (!readiness.IsReady)
-                {
-                    title = "이미지 위치를 확인하고 있어요";
-                    message = readiness.TrackingGuidance;
-                }
-                else if (imagePanel.TrackingMethodUnavailable)
-                {
-                    title = "이미지 추적 상태를 확인할 수 없어요";
-                    message = "정보판을 숨겼습니다.\n잠시 후 다시 확인해 주세요.";
-                }
-                else if (!visible && imagePanel.Binding.developmentOnly)
-                {
-                    title = "개발용 카드 마커를 비춰주세요";
-                    message = imagePanel.Binding.displayName + "\n상품 포장 인식은 아직 검증하지 않았습니다.";
-                }
+                title = "인식 결과가 일치하지 않아요";
+                message = "정보판을 숨겼습니다. 한 상품만 비춰주세요.";
+                primary = true; attention = true;
             }
-            else if (scanner.ConfirmationCount > 0)
-            { step = "1 / 2 · 바코드 확인 중"; title = "상품을 확인하고 있어요"; message = "바코드가 보이도록 잠시 유지해 주세요."; }
+            else if (recognition.Route == ProductDisplayRoute.Image3D)
+            {
+                step = "앞면 · 3D 정보";
+                title = imagePanel.HasVisibleTarget ? "앞면에 상품정보를 표시해요" : "앞면 위치를 확인하고 있어요";
+                message = "영양·가격 탭으로 정보를 바꿔보세요.";
+                if (string.IsNullOrEmpty(recognition.Selected.barcode)) message += "\n바코드 미연결";
+                if (imagePanel.Binding?.developmentOnly == true) message += "\n개발용 카드 연결 · 상품 포장 인식 아님";
+                primary = true;
+            }
+            else if (recognition.Route == ProductDisplayRoute.Barcode2D)
+            {
+                step = "바코드 · 2D 정보";
+                title = "바코드로 상품을 확인했어요";
+                message = recognition.BarcodeBadge(recognition.Selected);
+                if (!barcodePanel.HasVisibleTarget) message += "\n화면 위치를 확인하려면 바코드를 유지해 주세요.";
+                primary = true;
+            }
+            else if (recognition.Route == ProductDisplayRoute.UnknownBarcode)
+            {
+                step = "상품 등록 확인"; title = "등록이 필요한 제품";
+                message = recognition.UnknownMessage; primary = true; attention = true;
+            }
+            else if (recognition.ConfirmationCount > 0)
+            { title = "바코드를 확인하고 있어요"; message = "같은 번호를 3회 확인할 때까지 유지해 주세요."; }
             screen.Show(step, title, message, summary, action, primary, false, false, error, attention,
-                secondaryAction: workflow.Selected != null && cameraReady);
+                secondaryAction: recognition?.Selected != null && ready);
         }
 
         private void OnApplicationPause(bool value)
         {
             paused = value;
-            if (value && workflow != null)
-            {
-                scanner.SetScanning(false);
-                imagePanel.InvalidatePose();
-            }
+            recognition?.Suspend();
+            scanner.SetContinuous(false);
+            imagePanel.InvalidatePose();
+            barcodePanel.SetCameraReady(false);
+            lastRead = null;
+            lastCapturedAt = float.NegativeInfinity;
             nextRefresh = 0;
         }
     }

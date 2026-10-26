@@ -255,8 +255,8 @@ namespace MidtermAR.Editor
             PlayerSettings.companyName = "Yeonsik";
             PlayerSettings.productName = "상품정보 AR";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
-            PlayerSettings.bundleVersion = "0.1.0";
-            PlayerSettings.Android.bundleVersionCode = 1;
+            PlayerSettings.bundleVersion = "0.5.1";
+            PlayerSettings.Android.bundleVersionCode = 6;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -290,20 +290,23 @@ namespace MidtermAR.Editor
         private static TMP_FontAsset EnsureFont()
         {
             const string path = "Assets/Fonts/Generated/NotoSansKR SDF.asset";
-            var existing = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
-            if (existing != null) return existing;
-            var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NotoSansCJKkr-Regular.otf");
-            if (font == null) throw new InvalidOperationException("Korean font is missing.");
-            var asset = TMP_FontAsset.CreateFontAsset(font, 60, 6, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
-            asset.name = "NotoSansKR SDF";
-            AssetDatabase.CreateAsset(asset, path);
+            var asset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+            if (asset == null)
+            {
+                var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NotoSansCJKkr-Regular.otf");
+                if (font == null) throw new InvalidOperationException("Korean font is missing.");
+                asset = TMP_FontAsset.CreateFontAsset(font, 60, 6, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
+                asset.name = "NotoSansKR SDF";
+                AssetDatabase.CreateAsset(asset, path);
+            }
             var source = string.Join("\n", Directory.GetFiles("Assets/Scripts", "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText))
                 + File.ReadAllText("Assets/Data/demo-products.json")
+                + File.ReadAllText("Assets/Data/product-images.json")
                 + string.Concat(Enumerable.Range(32, 95).Select(x => (char)x));
             var characters = new string(source.Where(c => !char.IsControl(c)).Distinct().ToArray());
             asset.TryAddCharacters(characters, out var missing);
             if (!string.IsNullOrEmpty(missing)) Debug.LogWarning("[ProductAR Build] Font missing chars: " + missing);
-            AssetDatabase.AddObjectToAsset(asset.material, asset);
+            if (!AssetDatabase.Contains(asset.material)) AssetDatabase.AddObjectToAsset(asset.material, asset);
             foreach (var texture in asset.atlasTextures)
             {
                 texture.name = "NotoSansKR Atlas";
@@ -443,6 +446,8 @@ namespace MidtermAR.Editor
                 EditorUtility.SetDirty(library);
             }
             var json = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Data/product-images.json");
+            RegisterPackageCrop(library, "theanine-top", "Assets/Images/theanine-top.jpg", 0.058f);
+            RegisterPackageCrop(library, "theanine-bottom", "Assets/Images/theanine-bottom.jpg", 0.058f);
             var catalog = new ProductImageCatalog(json.text, new ProductCatalog(File.ReadAllText("Assets/Data/demo-products.json")));
             catalog.ValidateLibrary(library);
             var origin = UnityEngine.Object.FindFirstObjectByType<XROrigin>();
@@ -462,9 +467,24 @@ namespace MidtermAR.Editor
             Assign(presenter, "panelPrefab", panel);
             Assign(app, "imagePanel", presenter);
             Assign(app, "imageBindingsJson", json);
+            Assign(app, "barcodePanel", UnityEngine.Object.FindFirstObjectByType<BarcodeProductPanel>());
             var scannerSettings = new SerializedObject(app.GetComponent<ARBarcodeScanner>());
-            scannerSettings.FindProperty("captureViewportCoordinates").boolValue = false;
+            scannerSettings.FindProperty("captureViewportCoordinates").boolValue = true;
             scannerSettings.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void RegisterPackageCrop(XRReferenceImageLibrary library, string name, string path, float width)
+        {
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (texture == null) throw new InvalidOperationException("상품 크롭 이미지가 없습니다: " + path);
+            var index = -1;
+            for (var i = 0; i < library.count; i++) if (library[i].name == name) index = i;
+            if (index < 0) { library.Add(); index = library.count - 1; }
+            library.SetName(index, name);
+            library.SetTexture(index, texture, false);
+            library.SetSpecifySize(index, true);
+            library.SetSize(index, new Vector2(width, width * texture.height / texture.width));
+            EditorUtility.SetDirty(library);
         }
 
         private static GameObject CreatePlanePrefab()
@@ -510,7 +530,7 @@ namespace MidtermAR.Editor
             var follow = canvasObject.AddComponent<BarcodeProductPanel>();
             Assign(follow, "safeArea", safe); Assign(follow, "header", top); Assign(follow, "footer", bottom);
             CreateFollowingCard(font, safe, follow);
-            follow.enabled = false; // 이전 2D 표시기는 비교용으로만 보존한다.
+            follow.enabled = true; // 바코드 단독 인식 경로의 화면 정보판
             Assign(view, "statusStep", Text(top, "Step", "카메라 준비 중", font, 27, new Color(1f, 0.82f, 0.43f), 24, 14, 940, 40));
             Assign(view, "statusTitle", Text(top, "Status", "카메라를 준비하고 있어요", font, 38, Color.white, 24, 58, 940, 56));
             Assign(view, "statusMessage", Text(bottom, "Instruction", "주변을 천천히 비춰주세요.", font, 30, Color.white, 24, 20, 940, 76));
@@ -540,7 +560,7 @@ namespace MidtermAR.Editor
             var card = Plate("Barcode Product", safe, Paper);
             card.anchorMin = card.anchorMax = new Vector2(0.5f, 0.5f);
             card.pivot = Vector2.zero;
-            card.sizeDelta = new Vector2(720, 648);
+            card.sizeDelta = new Vector2(720, 770);
             card.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
             Assign(follow, "card", card);
             Assign(follow, "productTitle", Text(card, "ProductTitle", "", font, 32, Ink, 24, 12, 672, 54));
@@ -578,6 +598,7 @@ namespace MidtermAR.Editor
             NutritionRow("Protein", "단백질", "protein", 558, 36);
             Rule(card, "Nutrition Bottom Rule", 596, 4, Ink);
             Text(card, "Provenance", "시연용 연결 · 로컬 데이터", font, 22, Ink, 24, 606, 672, 36);
+            Assign(follow, "registrationStatus", Text(card, "Registration", "", font, 23, Ink, 24, 646, 672, 112));
 
             void NutritionRow(string name, string label, string field, float y, float height, float size = 24, bool bold = false, bool indent = false)
             {

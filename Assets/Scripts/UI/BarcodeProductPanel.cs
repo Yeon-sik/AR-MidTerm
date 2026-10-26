@@ -23,15 +23,24 @@ namespace MidtermAR
         [SerializeField] private TMP_Text fat;
         [SerializeField] private TMP_Text saturatedFat;
         [SerializeField] private TMP_Text protein;
+        [SerializeField] private TMP_Text registrationStatus;
         private readonly BarcodeFollowState target = new BarcodeFollowState();
         private bool cameraReady;
         public bool HasVisibleTarget { get; private set; }
 
-        public void SetProduct(ProductSnapshot product)
+        private string boundProductId;
+        public void SetProduct(ProductSnapshot product, string badge = null)
         {
-            target.Select(product?.barcode);
-            Hide();
-            if (product == null) return;
+            var changedProduct = product == null || boundProductId == null || boundProductId != product.catalogProductId;
+            boundProductId = product?.catalogProductId;
+            if (changedProduct) { target.Select(product?.barcode); Hide(); }
+            if (registrationStatus != null) registrationStatus.text = (badge ?? "").Replace(" · 앞면을", "\n앞면을")
+                + (product?.mapping?.catalogIdentityVerification == "LOCAL_DEMO_REMOTE_ID_UNVERIFIED" ? "\n로컬 시연 · PriceTrace ID 확인 대기" : "");
+            if (product == null)
+            {
+                foreach (var text in new[] { productTitle, specification, price, seller, observedAt, nutritionBasis, calories, sodium, carbs, sugars, fat, saturatedFat, protein }) text.text = "";
+                return;
+            }
             productTitle.text = product.name;
             specification.text = product.brand + " · " + product.specification;
             price.text = ProductInfoFormatter.Price(product);

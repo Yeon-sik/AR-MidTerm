@@ -16,13 +16,15 @@ namespace MidtermAR
     [Preserve, Serializable]
     public sealed class ProductImageBinding
     {
-        public string barcode;
+        public string catalogProductId;
         public string referenceImageName;
         public string displayName;
         public bool developmentOnly;
+        public float offsetXMetres; // 크롭 중심에서 상품 공통 원점까지의 이미지 로컬 오프셋
+        public float offsetZMetres;
     }
 
-    // 상품 식별은 EAN, 자세는 Reference Image Library가 담당한다.
+    // 참조 이미지 이름을 상품 ID에 연결한다. 같은 상품의 여러 크롭을 허용한다.
     public sealed class ProductImageCatalog
     {
         private readonly Dictionary<string, ProductImageBinding> images = new Dictionary<string, ProductImageBinding>(StringComparer.Ordinal);
@@ -36,24 +38,35 @@ namespace MidtermAR
                     new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Error });
             }
             catch (JsonException error) { throw new FormatException("상품 이미지 연결 JSON을 확인해 주세요.", error); }
-            if (products == null || document == null || document.schemaVersion != 1 || document.images == null || document.images.Length == 0)
+            if (products == null || document == null || document.schemaVersion != 2 || document.images == null)
                 throw new FormatException("상품 이미지 연결 데이터가 올바르지 않습니다.");
             var names = new HashSet<string>(StringComparer.Ordinal);
             foreach (var image in document.images)
             {
-                if (image == null || !products.TryFind(image.barcode, out var product) || product.barcode != image.barcode
+                if (image == null || !products.TryFindById(image.catalogProductId, out _)
                     || string.IsNullOrWhiteSpace(image.referenceImageName) || string.IsNullOrWhiteSpace(image.displayName)
-                    || images.ContainsKey(image.barcode) || !names.Add(image.referenceImageName))
-                    throw new FormatException("상품 이미지의 바코드·이름이 없거나 중복되었습니다.");
-                images.Add(image.barcode, image);
+                    || !names.Add(image.referenceImageName) || !Finite(image.offsetXMetres) || !Finite(image.offsetZMetres))
+                    throw new FormatException("상품 이미지의 상품 ID·이름·오프셋이 없거나 중복되었습니다.");
+                images.Add(image.referenceImageName, image);
             }
         }
 
         public bool TryFind(ProductSnapshot product, out ProductImageBinding binding)
         {
             binding = null;
-            return product != null && images.TryGetValue(product.barcode, out binding);
+            if (product == null) return false;
+            foreach (var image in images.Values)
+                if (image.catalogProductId == product.catalogProductId) { binding = image; return true; }
+            return false;
         }
+
+        public bool TryFindByImage(string name, out ProductImageBinding binding)
+        {
+            binding = null;
+            return name != null && images.TryGetValue(name, out binding);
+        }
+
+        private static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
         public void ValidateLibrary(IReferenceImageLibrary library)
         {

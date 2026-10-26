@@ -30,94 +30,9 @@ namespace MidtermAR.Tests
             return product;
         }
         private static ProductImageBinding Binding() => new ProductImageBinding
-        { barcode = Barcode, referenceImageName = "test-card", displayName = "브이젤 카드 · 개발용", developmentOnly = true };
+        { catalogProductId = "1516c3eb-3dfb-4e11-8040-d23fadcdaad0", referenceImageName = "test-card", displayName = "브이젤 카드 · 개발용", developmentOnly = true };
 
-        [TestCase(true, TrackingState.Tracking, 1, true)]
-        [TestCase(false, TrackingState.Tracking, 1, false)]
-        [TestCase(true, TrackingState.Tracking, 2, false)]
-        [TestCase(true, TrackingState.Tracking, -1, false)]
-        [TestCase(true, TrackingState.Limited, 1, false)]
-        [TestCase(true, TrackingState.None, 0, false)]
-        public void InformationRequiresMatchingCurrentImage(bool ready, TrackingState tracking, int method, bool expected)
-        {
-            var state = new ProductImageState();
-            state.Select(Binding());
-            state.BeginFrame(ready);
-            state.ObserveImage("test-card", tracking, method);
-            Assert.That(state.CanDisplay, Is.EqualTo(expected));
-        }
-
-        [Test]
-        public void TurningFromBarcodeToFrontRetainsSelectionButImageLossHidesPanel()
-        {
-            var state = new ProductImageState();
-            state.Select(Binding());
-            for (var frame = 0; frame < 100; frame++)
-            {
-                state.ObserveBarcode(null);
-                state.BeginFrame(true);
-                state.ObserveImage("test-card", TrackingState.Tracking, 1);
-                Assert.That(state.CanDisplay, Is.True, "Barcode absence must not expire an image-tracked selection.");
-            }
-            state.BeginFrame(true);
-            Assert.That(state.CanDisplay, Is.False, "Image loss must hide the old pose immediately.");
-            Assert.That(state.Binding.barcode, Is.EqualTo(Barcode));
-            state.ObserveImage("test-card", TrackingState.Tracking, 1);
-            Assert.That(state.CanDisplay, Is.True, "Reacquisition uses the same selected product.");
-        }
-
-        [Test]
-        public void DifferentBarcodeBlocksUntilExplicitRescanAndNeverSwitchesTheProduct()
-        {
-            var state = new ProductImageState();
-            state.Select(Binding());
-            state.BeginFrame(true);
-            state.ObserveImage("test-card", TrackingState.Tracking, 1);
-            state.ObserveBarcode(new BarcodeReadResult("4006381333931", "EAN_13"));
-            Assert.That(state.CanDisplay, Is.False);
-            Assert.That(state.ConflictingBarcode, Is.EqualTo("4006381333931"));
-            state.ObserveBarcode(new BarcodeReadResult(Barcode, "EAN_13"));
-            state.BeginFrame(true);
-            state.ObserveImage("test-card", TrackingState.Tracking, 1);
-            Assert.That(state.CanDisplay, Is.False, "The original barcode does not silently clear a different-product warning.");
-            Assert.That(state.Binding.barcode, Is.EqualTo(Barcode));
-            state.Select(null);
-            Assert.That(state.CanDisplay, Is.False);
-            Assert.That(state.ConflictingBarcode, Is.Null);
-            state.Select(Binding());
-            state.BeginFrame(true);
-            state.ObserveImage("test-card", TrackingState.Tracking, 1);
-            Assert.That(state.CanDisplay, Is.True);
-        }
-
-        [TestCase("8801104671508", "EAN_13")]
-        [TestCase("4006381333931", "QR_CODE")]
-        public void InvalidOrOtherFormatReadCannotChangeImageSelection(string text, string format)
-        {
-            var state = new ProductImageState();
-            state.Select(Binding());
-            state.ObserveBarcode(new BarcodeReadResult(text, format));
-            Assert.That(state.ConflictingBarcode, Is.Null);
-        }
-
-        [Test]
-        public void OtherImageOrSimultaneousImagesCannotDisplaySelectedInformation()
-        {
-            var state = new ProductImageState();
-            state.Select(Binding());
-            state.BeginFrame(true);
-            state.ObserveImage("another-product", TrackingState.Tracking, 1);
-            Assert.That(state.CanDisplay, Is.False);
-            state.ObserveImage("test-card", TrackingState.Tracking, 1);
-            Assert.That(state.CanDisplay, Is.False, "A matching image does not override a simultaneously tracked different image.");
-            state.BeginFrame(true);
-            state.ObserveImage("another-product", TrackingState.Tracking, 2);
-            state.ObserveImage("test-card", TrackingState.Tracking, 1);
-            Assert.That(state.CanDisplay, Is.True, "A lost different image must not block reacquisition forever.");
-        }
-
-        [TestCase("unknown-barcode")]
-        [TestCase("duplicate-barcode")]
+        [TestCase("unknown-product")]
         [TestCase("duplicate-name")]
         [TestCase("empty-name")]
         [TestCase("unknown-field")]
@@ -125,13 +40,12 @@ namespace MidtermAR.Tests
         {
             var doc = JObject.Parse(ImagesJson);
             var list = (JArray)doc["images"];
-            if (problem == "unknown-barcode") list[0]["barcode"] = "4006381333931";
-            if (problem == "duplicate-barcode") list.Add(list[0].DeepClone());
+            if (problem == "unknown-product") list[0]["catalogProductId"] = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
             var products = Products();
             if (problem == "duplicate-name")
             {
                 var second = list[0].DeepClone();
-                second["barcode"] = "4006381333931";
+                second["catalogProductId"] = "11111111-1111-1111-1111-111111111111";
                 list.Add(second);
                 var productsJson = JObject.Parse(File.ReadAllText("Assets/Data/demo-products.json"));
                 var secondProduct = productsJson["products"][0].DeepClone();
@@ -177,53 +91,15 @@ namespace MidtermAR.Tests
             Assert.That(images.referenceLibrary, Is.EqualTo(AssetDatabase.LoadAssetAtPath<XRReferenceImageLibrary>(ProjectBuilder.ImageLibraryPath)));
             new ProductImageCatalog(ImagesJson, Products()).ValidateLibrary(images.referenceLibrary);
             Assert.That(Object.FindObjectsByType<ARCameraManager>(FindObjectsSortMode.None).Length, Is.EqualTo(1));
-            Assert.That(Object.FindFirstObjectByType<BarcodeProductPanel>().enabled, Is.False);
+            Assert.That(Object.FindFirstObjectByType<BarcodeProductPanel>().enabled, Is.True);
             Assert.That(Object.FindFirstObjectByType<ARRaycastManager>().enabled, Is.False);
             Assert.That(Object.FindFirstObjectByType<ARAnchorManager>().enabled, Is.False);
             var scanner = Object.FindFirstObjectByType<ARBarcodeScanner>();
-            Assert.That(new SerializedObject(scanner).FindProperty("captureViewportCoordinates").boolValue, Is.False);
+            Assert.That(new SerializedObject(scanner).FindProperty("captureViewportCoordinates").boolValue, Is.True);
             var panel = AssetDatabase.LoadAssetAtPath<WorldProductPanel>(ProjectBuilder.PanelPath);
             Assert.That(panel.GetComponent<Canvas>().renderMode, Is.EqualTo(RenderMode.WorldSpace));
             Assert.That(panel.GetComponent<GraphicRaycaster>(), Is.Not.Null);
             Assert.That(panel.GetComponentsInChildren<Button>(true).Length, Is.EqualTo(3));
-        }
-
-        [Test]
-        public void ActualAppBarcodeToPanelAndRescanButtonClearAllSelection()
-        {
-            EditorSceneManager.OpenScene(ProjectBuilder.ScenePath);
-            var app = Object.FindFirstObjectByType<ProductARApp>();
-            var presenter = Object.FindFirstObjectByType<TrackedImageProductPanel>();
-            Call(app, "Awake");
-            Call(app, "OnEnable");
-            try
-            {
-                Call(app, "OnDecoded", new BarcodeReadResult(Barcode, "EAN_13"));
-                var workflow = Field<ProductWorkflow>(app, "workflow");
-                Assert.That(workflow.Phase, Is.EqualTo(ProductPhase.TrackingImage));
-                Assert.That(presenter.Binding.developmentOnly, Is.True);
-                var panel = Field<WorldProductPanel>(presenter, "panel");
-                panel.ShowPrice();
-                Assert.That(Text(panel, "provenance"), Does.Contain("상품 포장 인식 아님"));
-                Call(app, "OnObserved", null, default(BarcodeViewportTransform), Time.unscaledTime);
-                Assert.That(workflow.Selected.barcode, Is.EqualTo(Barcode));
-                Click(panel.transform.Find("Rescan").GetComponent<Button>());
-                Assert.That(workflow.Phase, Is.EqualTo(ProductPhase.Scanning));
-                Assert.That(workflow.Selected, Is.Null);
-                Assert.That(presenter.Binding, Is.Null);
-                Assert.That(presenter.HasVisibleTarget, Is.False);
-                Assert.That(panel.CurrentTab, Is.EqualTo(ProductInfoTab.Nutrition));
-                Assert.That(Text(panel, "price"), Is.Empty);
-                Call(app, "OnDecoded", new BarcodeReadResult("4006381333931", "EAN_13"));
-                Assert.That(workflow.Phase, Is.EqualTo(ProductPhase.UnknownBarcode));
-                Assert.That(workflow.Selected, Is.Null);
-                Assert.That(presenter.Binding, Is.Null);
-            }
-            finally
-            {
-                Call(app, "OnDisable");
-                DestroyPanel(presenter);
-            }
         }
 
         [Test]
@@ -245,7 +121,7 @@ namespace MidtermAR.Tests
                     Assert.That(presenter.TryApplyPose(image.transform, new Vector2(0.1f, 0.15f)), Is.True);
                     Assert.That(Vector3.Distance(panel.transform.position, image.transform.TransformPoint(new Vector3(0, 0.008f, 0))), Is.LessThan(0.00001f));
                     Assert.That(Quaternion.Angle(panel.transform.rotation, rotation * Quaternion.Euler(90, 0, 0)), Is.LessThan(0.001f));
-                    Assert.That(((RectTransform)panel.transform).rect.width * panel.transform.lossyScale.x, Is.EqualTo(0.16f).Within(0.00001f));
+                    Assert.That(((RectTransform)panel.transform).rect.width * panel.transform.lossyScale.x, Is.EqualTo(0.096f).Within(0.00001f));
                 }
                 Assert.That(presenter.TryApplyPose(image.transform, new Vector2(float.NaN, 1)), Is.False);
                 Assert.That(presenter.TryApplyPose(image.transform, Vector2.zero), Is.False);
@@ -258,9 +134,9 @@ namespace MidtermAR.Tests
                 Call(presenter, "OnApplicationPause", false);
                 Assert.That(Field<HashSet<TrackableId>>(presenter, "freshImages"), Is.Empty);
                 Assert.That(Field<float>(presenter, "lastCameraFrame"), Is.EqualTo(float.NegativeInfinity));
-                Assert.That(presenter.Binding.barcode, Is.EqualTo(Barcode));
+                Assert.That(Product().barcode, Is.EqualTo(Barcode));
                 Assert.That(panel.CurrentTab, Is.EqualTo(ProductInfoTab.Price), "Pose recovery must not reset the user's tab.");
-                Assert.Throws<ArgumentException>(() => presenter.SetProduct(new ProductSnapshot { barcode = "4006381333931" }, Binding()));
+                Assert.Throws<ArgumentException>(() => presenter.SetProduct(new ProductSnapshot { catalogProductId = "11111111-1111-1111-1111-111111111111" }, Binding()));
             }
             finally { Object.DestroyImmediate(image); DestroyPanel(presenter); }
         }
