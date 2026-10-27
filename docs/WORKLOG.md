@@ -1,5 +1,23 @@
 # 작업 기록
 
+## 2026-10-27~28 0.6.3 리뷰 보완 — A단계
+
+`feat/ui-p0-video`에서 윤곽선 **2.5mm**·연결선 **2mm**를 ProjectBuilder 상수로 관리한다. 약 40cm 거리 영상에서 4~6px를 목표로 잡은 시작값이며 측정값이 아니다. LineAlignment.View와 모서리 정점 4개, 연결선 끝 정점 4개를 명시한다. 닫힌 윤곽선은 끝 정점 0개다. 표시·좌표 갱신에도 숨김과 동일한 null 검사를 적용했다.
+
+선 중심·이미지 평면 위 1mm·정보판 12mm 간격·15° 기울기는 유지한다. 실제 등록된 58×58mm 두 크롭의 경계와 중심선이 일치하는 기하를 시험했다. 정면 평면 계산의 안쪽 침범은 한쪽 1.25mm(폭의 약 2.16%)이고 중앙 55.5×55.5mm는 선의 경계 띠 밖이다. 실제 인쇄 가림과 영상 픽셀 폭의 합격 판정은 사용자 확인 전까지 미수행이다. 인식·조회·충돌·소실 규칙과 데이터는 변경하지 않았다.
+
+`scripts/Test-EditMode.ps1` **199/199 PASS**, 실패·건너뜀 0, Unity exit 0. 기존 194개 시험 이름을 모두 유지하고 5개를 추가했다. 두께 상수, 생성 씬의 두 LineRenderer 참조·두께·정렬·둥근 모서리/끝·실제 크롭 중심선, 윤곽/연결선/양쪽 참조 누락의 표시·숨김·초기화를 확인한다. 근거는 `artifacts/editmode/20261027-144217-3c90620f/summary.json`과 `artifacts/ui-p0/review-0.6.3/test-comparison.json`이다.
+
+**릴리스 0.6.3 (10)**, ARM64·IL2CPP·BuildOptions.None, 오류 0·Unity exit 0, **52,907,804 bytes**. APK SHA-256은 **`3e755f3f4247a9443a1cb288ee4b8df7b2979839c69c81488987c90ce73b8b8c`**다. APK manifest의 개발 플래그와 IL2CPP metadata의 개발 진단 타입이 없고 온라인 설정 TextAsset은 포함돼 있다. 빌드 로그의 실제 키·연락처 일치 0건이다. 재사용 임시 캐시의 누락 파일과 긴 메타 경로에서 생긴 컴파일 오류 뒤, 패키지 버전을 유지한 짧은 `C:\Temp` 격리 사본에서 정상 빌드했다. 해당 빌드 프로세스의 TEMP/TMP만 바꾸고 `scripts/Build-Android.ps1 -Release`를 사용했으며 시스템 환경 설정은 변경하지 않았다. 소스/빌드 입력 117개 해시 불일치 0건이다.
+
+A25에 기존 0.6.2 (9)와 같은 인증서로 **compatible-update-r** 업데이트·Activity 시작 응답 ok를 확인했다. 설치 APK를 다시 읽어 위 해시와 일치하고 버전 0.6.3 (10)·DEBUGGABLE 부재를 확인했다. 앱 삭제·데이터 초기화는 하지 않았다. 수집한 시작 로그에서 NullReferenceException·NoSuchMethodError·FATAL EXCEPTION과 실제 키·연락처 일치 각각 0건이며, 이를 지속 안정성이나 실물 표시 성공으로 간주하지 않는다. 빌드·릴리스·설치·시작 로그 근거는 `artifacts/ui-p0/review-0.6.3/`에 분리해 보존한다.
+
+변경 파일은 `Assets/Editor/ProjectBuilder.cs`, `Assets/Scripts/AR/TrackedImageProductPanel.cs`, `Assets/Tests/Editor/UiP0ReviewTests.cs`와 meta, ProjectBuilder가 재생성한 `Assets/Scenes/ProductAR.unity`·`Assets/Prefabs/ProductInfoPanel.prefab`·`Assets/Materials/ProductTrackingLine.mat`, `DESIGN.md`, 이 작업 기록이다.
+
+이번 A단계는 로컬 커밋 후 실물 확인 목록을 전달하고 멈춘다. 원격 push·브랜치 병합·태그 생성/이동/삭제는 하지 않는다. 새 최종 검증 JSON, README·VALIDATION·DEVICE-CHECKLIST·SUBMISSION의 제출 기준 갱신, 새 태그와 ZIP은 사용자 실물 확인 뒤 B단계에서 수행한다. 기존 0.6.2 검증 JSON은 역사 기록으로 보존한다.
+
+정면·30°·20/50cm·가격 탭·가림·더단백 바코드·워터마크 시각 확인은 모두 **NOT_RUN / 사용자 확인 대기**다. 캡처는 기존 JSON의 `artifacts/ui-p0/theanine-front.png`, `theanine-tilt-30.png`, `theanine-near-20cm.png`, `theanine-far-50cm.png`, `theanine-price.png`, `theanine-occluded.png`, `protein-barcode.png` 경로를 사용한다. 선 두께 조정 피드백을 받으면 A단계를 한 번만 반복한다.
+
 ## 2026-10-27 영상 촬영 전 UI P0
 
 새 브랜치 **feat/ui-p0-video**의 **b79fc63**에서 상품을 덮던 정보판을 공통 원점 오른쪽으로 옮겼다. 테아닌 기존 폭 약 58mm를 사용하고 12mm 간격·고정 15°·92.8mm 폭을 적용한다. 크롭 크기의 녹색 윤곽과 짧은 연결선은 정보판과 동일한 표시 조건을 쓴다. 카메라 추종 회전이나 화면 빈 공간 이동은 추가하지 않았다.

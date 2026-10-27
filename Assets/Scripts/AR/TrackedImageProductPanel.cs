@@ -101,7 +101,8 @@ namespace MidtermAR
             SetProduct(state.Product, state.Binding);
             if (!TryApplyPose(selectedImage.transform, selectedImage.size)) { Hide(); return; }
             panel.gameObject.SetActive(true);
-            cropOutline.enabled = connector.enabled = true;
+            if (cropOutline != null) cropOutline.enabled = true;
+            if (connector != null) connector.enabled = true;
         }
 
         public void InvalidatePose()
@@ -121,9 +122,9 @@ namespace MidtermAR
             var rect = (RectTransform)panel.transform;
             rect.SetPositionAndRotation(image.TransformPoint(layout.Center), image.rotation * ProductPanelLayout.Rotation);
             rect.localScale = Vector3.one * (layout.Width / rect.rect.width);
-            connector.SetPositions(new[] { image.TransformPoint(layout.ConnectorStart), image.TransformPoint(layout.ConnectorEnd) });
+            if (connector != null) connector.SetPositions(new[] { image.TransformPoint(layout.ConnectorStart), image.TransformPoint(layout.ConnectorEnd) });
             var x = size.x * .5f; var z = size.y * .5f;
-            cropOutline.SetPositions(new[] { image.TransformPoint(new Vector3(-x, .001f, -z)), image.TransformPoint(new Vector3(x, .001f, -z)),
+            if (cropOutline != null) cropOutline.SetPositions(new[] { image.TransformPoint(new Vector3(-x, .001f, -z)), image.TransformPoint(new Vector3(x, .001f, -z)),
                 image.TransformPoint(new Vector3(x, .001f, z)), image.TransformPoint(new Vector3(-x, .001f, z)) });
             return true;
         }

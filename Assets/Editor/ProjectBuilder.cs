@@ -28,6 +28,9 @@ namespace MidtermAR.Editor
         public const string PanelPath = "Assets/Prefabs/ProductInfoPanel.prefab";
         public const string ImageLibraryPath = "Assets/Images/ProductImageLibrary.asset";
         public const string PackageId = "com.yeonsik.midtermar";
+        // 영상에서 약 40cm 거리 4~6px 목표, 측정값 아님. 최종 두께는 실물·영상 확인 후 결정한다.
+        public const float OutlineWidthMetres = 0.0025f;
+        public const float ConnectorWidthMetres = 0.002f;
         private static readonly Color Ink = new Color32(18, 34, 43, 255);
         private static readonly Color Paper = new Color32(249, 248, 241, 255);
         private static readonly Color Green = new Color32(37, 126, 92, 255);
@@ -260,8 +263,8 @@ namespace MidtermAR.Editor
             PlayerSettings.companyName = "Yeonsik";
             PlayerSettings.productName = "상품정보 AR";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
-            PlayerSettings.bundleVersion = "0.6.2";
-            PlayerSettings.Android.bundleVersionCode = 9;
+            PlayerSettings.bundleVersion = "0.6.3";
+            PlayerSettings.Android.bundleVersionCode = 10;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -480,14 +483,17 @@ namespace MidtermAR.Editor
             if (material == null) { material = new Material(Shader.Find("Universal Render Pipeline/Unlit")); AssetDatabase.CreateAsset(material, linePath); }
             material.SetColor("_BaseColor", new Color32(40, 205, 132, 255));
             EditorUtility.SetDirty(material);
-            Assign(presenter, "cropOutline", Line("Crop Outline", 4, true, .0006f));
-            Assign(presenter, "connector", Line("Product Connector", 2, false, .0005f));
+            Assign(presenter, "cropOutline", Line("Crop Outline", 4, true, OutlineWidthMetres));
+            Assign(presenter, "connector", Line("Product Connector", 2, false, ConnectorWidthMetres));
             LineRenderer Line(string name, int points, bool loop, float width)
             {
                 var go = new GameObject(name); go.transform.SetParent(visuals.transform, false);
                 var line = go.AddComponent<LineRenderer>(); line.sharedMaterial = material;
                 line.useWorldSpace = true; line.loop = loop; line.positionCount = points;
                 line.startWidth = line.endWidth = width;
+                line.alignment = LineAlignment.View;
+                line.numCornerVertices = 4;
+                line.numCapVertices = loop ? 0 : 4; // 닫힌 윤곽은 끝이 없고, 연결선의 양 끝만 둥글게 한다.
                 line.shadowCastingMode = ShadowCastingMode.Off; line.receiveShadows = false; line.enabled = false;
                 return line;
             }
