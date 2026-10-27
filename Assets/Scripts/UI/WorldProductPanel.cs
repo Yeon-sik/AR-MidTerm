@@ -35,7 +35,7 @@ namespace MidtermAR
             HasPrice = ProductInfoFormatter.HasPrice(product);
             productTitle.text = product?.name ?? "";
             specification.text = ProductInfoFormatter.Specification(product);
-            price.text = product == null ? "" : ProductInfoFormatter.Price(product);
+            price.text = product == null ? "" : ProductInfoFormatter.WorldPrice(product);
             priceSource.text = product == null ? "" : ProductInfoFormatter.PriceSource(product);
             priceDisclaimer.text = HasPrice ? ProductInfoFormatter.PriceDisclaimer : "";
             nutrition.text = product == null ? "" : ProductInfoFormatter.Nutrition(product);

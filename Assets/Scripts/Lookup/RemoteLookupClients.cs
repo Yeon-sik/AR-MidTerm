@@ -108,8 +108,8 @@ namespace MidtermAR
                 LookupJson.Uuid(row, "standardProductId");
                 var name = LookupJson.Text(row, "name");
                 var brand = LookupJson.Text(row, "brand", true);
-                LookupJson.Number(row, "contentAmount", true, true);
-                LookupJson.Text(row, "contentUnit", true);
+                var contentAmount = LookupJson.Number(row, "contentAmount", true, true);
+                var contentUnit = LookupJson.Text(row, "contentUnit", true);
                 var count = LookupJson.Number(row, "packageCount", true, true);
                 if (count.HasValue && count != Math.Truncate(count.Value)) throw new FormatException("PT package count");
                 var specification = LookupJson.Text(row, "specificationLabel", true);
@@ -130,7 +130,8 @@ namespace MidtermAR
                     };
                 }
                 product = new ProductSnapshot { catalogProductId = id, name = name, brand = brand, specification = specification,
-                    barcode = barcode, barcodeFormat = "EAN_13", price = observation };
+                    barcode = barcode, barcodeFormat = "EAN_13", price = observation, contentAmount = contentAmount, contentUnit = contentUnit };
+                ProductCatalog.ValidateQuantities(product);
             }
             return new PtBarcodeReply { Status = status, Product = status == "matched" ? product : null };
         }

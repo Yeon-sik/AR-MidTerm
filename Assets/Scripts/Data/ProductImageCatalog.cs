@@ -11,6 +11,7 @@ namespace MidtermAR
     {
         public int schemaVersion;
         public ProductImageBinding[] images;
+        public ProductAnnotationBinding[] productAnnotations;
     }
 
     [Preserve, Serializable]
@@ -24,12 +25,27 @@ namespace MidtermAR
         public float offsetZMetres;
         public float productWidthMetres; // 크롭 폭과 구분한 상품 공통 영역의 폭
         public string productWidthSource;
+        public float productHeightMetres;
+        public string productHeightSource;
+    }
+
+    [Preserve, Serializable]
+    public sealed class ProductAnnotationBinding
+    {
+        public string catalogProductId;
+        public string id;
+        public string kind;
+        public float anchorXMetres;
+        public float anchorZMetres;
+        public string side;
+        public string pixelEvidence;
     }
 
     // 참조 이미지 이름을 상품 ID에 연결한다. 같은 상품의 여러 크롭을 허용한다.
     public sealed class ProductImageCatalog
     {
         private readonly Dictionary<string, ProductImageBinding> images = new Dictionary<string, ProductImageBinding>(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<ProductAnnotationBinding>> annotations = new Dictionary<string, List<ProductAnnotationBinding>>(StringComparer.Ordinal);
 
         public ProductImageCatalog(string json, ProductCatalog products)
         {
@@ -44,6 +60,7 @@ namespace MidtermAR
                 throw new FormatException("상품 이미지 연결 데이터가 올바르지 않습니다.");
             var names = new HashSet<string>(StringComparer.Ordinal);
             var widths = new Dictionary<string, float>(StringComparer.Ordinal);
+            var heights = new Dictionary<string, float>(StringComparer.Ordinal);
             foreach (var image in document.images)
             {
                 if (image == null || !products.TryFindById(image.catalogProductId, out _)
@@ -57,8 +74,32 @@ namespace MidtermAR
                 if (widths.TryGetValue(image.catalogProductId, out var width) && width != image.productWidthMetres)
                     throw new FormatException("같은 상품의 크롭은 같은 공통 폭을 사용해야 합니다.");
                 widths[image.catalogProductId] = image.productWidthMetres;
+                if (!Finite(image.productHeightMetres) || image.productHeightMetres < 0
+                    || image.productHeightMetres > 0 && string.IsNullOrWhiteSpace(image.productHeightSource)
+                    || heights.TryGetValue(image.catalogProductId, out var height) && height != image.productHeightMetres)
+                    throw new FormatException("상품 공통 높이와 사진 환산 근거가 없거나 크롭끼리 다릅니다.");
+                heights[image.catalogProductId] = image.productHeightMetres;
+            }
+            foreach (var annotation in document.productAnnotations ?? Array.Empty<ProductAnnotationBinding>())
+            {
+                if (annotation == null || !products.TryFindById(annotation.catalogProductId, out _)
+                    || !widths.TryGetValue(annotation.catalogProductId, out var width) || width <= 0
+                    || !heights.TryGetValue(annotation.catalogProductId, out var height) || height <= 0
+                    || string.IsNullOrWhiteSpace(annotation.id) || string.IsNullOrWhiteSpace(annotation.pixelEvidence)
+                    || annotation.kind != "servingPrice" && annotation.kind != "observationSummary"
+                    || annotation.side != "left" && annotation.side != "top"
+                    || !Finite(annotation.anchorXMetres) || !Finite(annotation.anchorZMetres)
+                    || Math.Abs(annotation.anchorXMetres) > width * .5f || Math.Abs(annotation.anchorZMetres) > height * .5f)
+                    throw new FormatException("포장 주석의 상품·종류·위치·픽셀 근거가 올바르지 않습니다.");
+                if (!annotations.TryGetValue(annotation.catalogProductId, out var list))
+                { list = new List<ProductAnnotationBinding>(); annotations.Add(annotation.catalogProductId, list); }
+                if (list.Exists(a => a.id == annotation.id)) throw new FormatException("상품 안에서 주석 ID가 중복됩니다.");
+                list.Add(annotation);
             }
         }
+
+        public IReadOnlyList<ProductAnnotationBinding> AnnotationsFor(string catalogProductId)
+            => catalogProductId != null && annotations.TryGetValue(catalogProductId, out var list) ? list : (IReadOnlyList<ProductAnnotationBinding>)Array.Empty<ProductAnnotationBinding>();
 
         public bool TryFind(ProductSnapshot product, out ProductImageBinding binding)
         {

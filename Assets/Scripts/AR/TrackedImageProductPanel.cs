@@ -17,6 +17,8 @@ namespace MidtermAR
         [SerializeField] private WorldProductPanel panelPrefab;
         [SerializeField] private LineRenderer cropOutline;
         [SerializeField] private LineRenderer connector;
+        [SerializeField] private ProductAnnotationPresenter annotations;
+        [SerializeField] private bool showAnnotations = true;
         private ProductImageState state;
         private readonly ARCoreImageObservation observation = new ARCoreImageObservation();
         private readonly HashSet<TrackableId> freshImages = new HashSet<TrackableId>();
@@ -33,7 +35,7 @@ namespace MidtermAR
         public IReferenceImageLibrary ReferenceLibrary => imageManager.referenceLibrary;
 
         public void Configure(ProductCatalog products, ProductImageCatalog images)
-        { state = new ProductImageState(products, images); InvalidatePose(); }
+        { state = new ProductImageState(products, images); annotations?.Configure(images); InvalidatePose(); }
 
         private void OnEnable()
         {
@@ -64,7 +66,7 @@ namespace MidtermAR
             if (product != null && boundProductId == product.catalogProductId && Binding == binding) return;
             boundProductId = product?.catalogProductId;
             Binding = product == null ? null : binding;
-            if (product == null || binding == null) { if (panel != null) panel.Bind(null); Hide(); return; }
+            if (product == null || binding == null) { if (panel != null) panel.Bind(null); annotations?.Bind(null); Hide(); return; }
             if (panel == null)
             {
                 panel = Instantiate(panelPrefab);
@@ -99,10 +101,12 @@ namespace MidtermAR
         {
             if (!allowed || state?.CanDisplay != true || selectedImage == null) { Hide(); return; }
             SetProduct(state.Product, state.Binding);
+            annotations?.Bind(showAnnotations ? state.Product : null);
             if (!TryApplyPose(selectedImage.transform, selectedImage.size)) { Hide(); return; }
             panel.gameObject.SetActive(true);
             if (cropOutline != null) cropOutline.enabled = true;
             if (connector != null) connector.enabled = true;
+            annotations?.SetVisible(showAnnotations);
         }
 
         public void InvalidatePose()
@@ -126,6 +130,9 @@ namespace MidtermAR
             var x = size.x * .5f; var z = size.y * .5f;
             if (cropOutline != null) cropOutline.SetPositions(new[] { image.TransformPoint(new Vector3(-x, .001f, -z)), image.TransformPoint(new Vector3(x, .001f, -z)),
                 image.TransformPoint(new Vector3(x, .001f, z)), image.TransformPoint(new Vector3(-x, .001f, z)) });
+            var height = layout.Width * rect.rect.height / rect.rect.width;
+            annotations?.ApplyPose(image, Binding, new Rect(Binding.productWidthMetres * .5f + ProductPanelLayout.GapMetres,
+                -height * .5f, layout.Width * Mathf.Cos(ProductPanelLayout.TiltDegrees * Mathf.Deg2Rad), height));
             return true;
         }
         private void Hide()
@@ -133,6 +140,7 @@ namespace MidtermAR
             if (panel != null) panel.gameObject.SetActive(false);
             if (cropOutline != null) cropOutline.enabled = false;
             if (connector != null) connector.enabled = false;
+            annotations?.SetVisible(false);
         }
         private void OnApplicationPause(bool value) { paused = value; InvalidatePose(); }
         private void OnDestroy()

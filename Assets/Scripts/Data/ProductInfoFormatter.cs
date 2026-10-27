@@ -24,6 +24,14 @@ namespace MidtermAR
         private static readonly CultureInfo Korean = CultureInfo.GetCultureInfo("ko-KR"); // 원화 가격의 천 단위 구분 형식
         public static string Number(double? value, string unit) => value.HasValue ? value.Value.ToString("0.##", CultureInfo.InvariantCulture) + unit : "정보 없음";
         public static string Price(ProductSnapshot product) => product.price?.unitPriceKrw is double value ? value.ToString("N0", Korean) + "원" : "가격 정보 없음";
+        public static string WorldPrice(ProductSnapshot product)
+        {
+            if (!HasPrice(product)) return "가격 정보 없음";
+            var summary = ProductInsightCalculator.ObservationSummary(product);
+            var listed = product.price.kind == "listed";
+            return (listed ? "게시가 " : "관측가 ") + Price(product)
+                + (!listed && summary?.Count > 1 ? " · " + summary.Count + "건" : "");
+        }
         public static string PriceSource(ProductSnapshot product) => HasPrice(product)
             ? $"PriceTrace {(product.price.kind == "listed" ? "게시가" : "관측가")} · {PriceDate(product.price.observedAt)} · {product.price.seller}"
             : "확인된 가격 관측이 없습니다.";

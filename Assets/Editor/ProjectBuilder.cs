@@ -26,6 +26,7 @@ namespace MidtermAR.Editor
     {
         public const string ScenePath = "Assets/Scenes/ProductAR.unity";
         public const string PanelPath = "Assets/Prefabs/ProductInfoPanel.prefab";
+        public const string AnnotationPath = "Assets/Prefabs/ProductAnnotationLabel.prefab";
         public const string ImageLibraryPath = "Assets/Images/ProductImageLibrary.asset";
         public const string PackageId = "com.yeonsik.midtermar";
         // 영상에서 약 40cm 거리 4~6px 목표, 측정값 아님. 최종 두께는 실물·영상 확인 후 결정한다.
@@ -258,13 +259,81 @@ namespace MidtermAR.Editor
             Debug.Log("[ProductAR Build] Editor-only world panel preview captured.");
         }
 
+        public static void CaptureAnnotationPreviews()
+        {
+            // 글자·줄바꿈 검사용 정면 렌더다. 카메라 추적 성공과 구분한다.
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var cameraObject = new GameObject("Annotation typography preview", typeof(Camera));
+            var camera = cameraObject.GetComponent<Camera>();
+            camera.transform.position = new Vector3(0, 0, -1);
+            camera.orthographic = true; camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = Ink;
+            Directory.CreateDirectory("artifacts/ui-annotations");
+            var catalog = new ProductCatalog(File.ReadAllText("Assets/Data/demo-products.json"));
+            catalog.TryFind("8809375984692", out var product);
+            try
+            {
+                foreach (var kind in new[] { "servingPrice", "observationSummary" })
+                {
+                    var widget = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(AnnotationPath));
+                    try
+                    {
+                        widget.GetComponent<WorldProductAnnotation>().SetContent(ProductInsightCalculator.AnnotationText(product, kind));
+                        var rect = (RectTransform)widget.transform.Find("Label");
+                        rect.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                        rect.localScale = Vector3.one * (ProductAnnotationLayout.Width / rect.rect.width);
+                        widget.SetActive(true);
+                        Capture(widget, "editor-" + kind, 1080, 360, .02f);
+                    }
+                    finally { UnityEngine.Object.DestroyImmediate(widget); }
+                }
+                var panel = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(PanelPath));
+                try
+                {
+                    panel.GetComponent<WorldProductPanel>().Bind(product);
+                    panel.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                    panel.transform.localScale = Vector3.one * (.0928f / ((RectTransform)panel.transform).rect.width);
+                    Capture(panel, "editor-world-price", 1080, 960, .05f);
+                }
+                finally { UnityEngine.Object.DestroyImmediate(panel); }
+            }
+            finally { UnityEngine.Object.DestroyImmediate(cameraObject); }
+
+            void Capture(GameObject root, string name, int width, int height, float orthographicSize)
+            {
+                camera.orthographicSize = orthographicSize;
+                var target = new RenderTexture(width, height, 24); camera.targetTexture = target;
+                var pixels = new Texture2D(width, height, TextureFormat.RGB24, false);
+                var previous = RenderTexture.active;
+                try
+                {
+                    Canvas.ForceUpdateCanvases();
+                    foreach (var text in root.GetComponentsInChildren<TMP_Text>())
+                    {
+                        text.ForceMeshUpdate(true, true);
+                        if (text.isTextOverflowing) throw new InvalidOperationException("Annotation preview text overflow: " + text.name);
+                        foreach (var c in text.text.Where(c => !char.IsWhiteSpace(c)))
+                            if (!text.font.HasCharacter(c, true, true)) throw new InvalidOperationException("Annotation preview missing glyph: " + c);
+                    }
+                    camera.Render(); RenderTexture.active = target;
+                    pixels.ReadPixels(new Rect(0, 0, width, height), 0, 0); pixels.Apply();
+                    File.WriteAllBytes("artifacts/ui-annotations/" + name + ".png", pixels.EncodeToPNG());
+                    Debug.Log("[ProductAR Annotation Preview] " + name + " PASS (Editor typography only)");
+                }
+                finally
+                {
+                    RenderTexture.active = previous; camera.targetTexture = null;
+                    UnityEngine.Object.DestroyImmediate(pixels); UnityEngine.Object.DestroyImmediate(target);
+                }
+            }
+        }
+
         private static void ConfigureAndroid()
         {
             PlayerSettings.companyName = "Yeonsik";
             PlayerSettings.productName = "상품정보 AR";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
-            PlayerSettings.bundleVersion = "0.6.3";
-            PlayerSettings.Android.bundleVersionCode = 10;
+            PlayerSettings.bundleVersion = "0.6.4";
+            PlayerSettings.Android.bundleVersionCode = 11;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -364,7 +433,10 @@ namespace MidtermAR.Editor
             Assign(view, "nutrition", Text(nutritionPage, "Nutrition", "", font, 30, Ink, 24, 0, 592, 240));
             Assign(view, "nutritionSource", Text(nutritionPage, "NutritionSource", "", font, 20, Ink, 24, 250, 592, 146));
             Text(pricePage, "PriceLabel", "관측 가격 · 개당", font, 26, Green, 24, 0, 592, 40);
-            Assign(view, "price", Text(pricePage, "Price", "", font, 66, Ink, 24, 44, 592, 92));
+            var priceText = Text(pricePage, "Price", "", font, 50, Ink, 24, 44, 592, 92);
+            priceText.enableAutoSizing = true; priceText.fontSizeMin = 34; priceText.fontSizeMax = 50;
+            priceText.textWrappingMode = TextWrappingModes.NoWrap;
+            Assign(view, "price", priceText);
             var source = Text(pricePage, "PriceSource", "", font, 21, Ink, 24, 146, 592, 36);
             source.enableAutoSizing = true; source.fontSizeMin = 18; source.fontSizeMax = 21;
             source.textWrappingMode = TextWrappingModes.NoWrap;
@@ -483,6 +555,12 @@ namespace MidtermAR.Editor
             if (material == null) { material = new Material(Shader.Find("Universal Render Pipeline/Unlit")); AssetDatabase.CreateAsset(material, linePath); }
             material.SetColor("_BaseColor", new Color32(40, 205, 132, 255));
             EditorUtility.SetDirty(material);
+            var annotations = visuals.AddComponent<ProductAnnotationPresenter>();
+            Assign(annotations, "annotationPrefab", CreateAnnotationLabel(EnsureFont(), material));
+            Assign(presenter, "annotations", annotations);
+            var annotationSettings = new SerializedObject(presenter);
+            annotationSettings.FindProperty("showAnnotations").boolValue = true;
+            annotationSettings.ApplyModifiedPropertiesWithoutUndo();
             Assign(presenter, "cropOutline", Line("Crop Outline", 4, true, OutlineWidthMetres));
             Assign(presenter, "connector", Line("Product Connector", 2, false, ConnectorWidthMetres));
             LineRenderer Line(string name, int points, bool loop, float width)
@@ -505,6 +583,35 @@ namespace MidtermAR.Editor
             var scannerSettings = new SerializedObject(app.GetComponent<ARBarcodeScanner>());
             scannerSettings.FindProperty("captureViewportCoordinates").boolValue = true;
             scannerSettings.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static WorldProductAnnotation CreateAnnotationLabel(TMP_FontAsset font, Material material)
+        {
+            var root = new GameObject("Product Annotation", typeof(WorldProductAnnotation));
+            var panel = new GameObject("Label", typeof(RectTransform), typeof(Canvas), typeof(UnityEngine.UI.Image));
+            panel.transform.SetParent(root.transform, false);
+            var rect = (RectTransform)panel.transform;
+            // UI 1단위당 0.125mm, 40단위 글자 em 높이 5mm. 실제 가독성은 실물로 확인한다.
+            rect.sizeDelta = new Vector2(920, 208);
+            panel.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+            panel.GetComponent<UnityEngine.UI.Image>().color = Paper;
+            panel.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
+            var text = Text(rect, "Annotation Text", "", font, 40, Ink, 32, 16, 856, 176);
+            text.alignment = TextAlignmentOptions.Center; text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.richText = false; text.raycastTarget = false;
+            // 선은 축소하는 Canvas의 형제가 되어 월드 단위 두께 2mm를 유지한다.
+            var leader = new GameObject("Leader").AddComponent<LineRenderer>(); leader.transform.SetParent(root.transform, false);
+            leader.sharedMaterial = material; leader.useWorldSpace = true; leader.positionCount = 2;
+            leader.startWidth = leader.endWidth = ConnectorWidthMetres;
+            leader.alignment = LineAlignment.View; leader.numCornerVertices = 4;
+            leader.numCapVertices = 0; // 끝 캡이 앵커를 지나 인쇄 안쪽까지 덮지 않게 한다.
+            leader.shadowCastingMode = ShadowCastingMode.Off; leader.receiveShadows = false; leader.enabled = false;
+            var widget = root.GetComponent<WorldProductAnnotation>();
+            Assign(widget, "label", text); Assign(widget, "labelPanel", rect); Assign(widget, "leader", leader);
+            PrefabUtility.SaveAsPrefabAsset(root, AnnotationPath);
+            UnityEngine.Object.DestroyImmediate(root);
+            AssetDatabase.ImportAsset(AnnotationPath, ImportAssetOptions.ForceSynchronousImport);
+            return AssetDatabase.LoadAssetAtPath<GameObject>(AnnotationPath).GetComponent<WorldProductAnnotation>();
         }
 
         private static void RegisterPackageCrop(XRReferenceImageLibrary library, string name, string path, float width)

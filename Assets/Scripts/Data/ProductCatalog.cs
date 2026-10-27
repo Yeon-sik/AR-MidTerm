@@ -22,6 +22,11 @@ namespace MidtermAR
         public string name;
         public string brand;
         public string specification;
+        public double? contentAmount;
+        public string contentUnit;
+        public double? servingCount;
+        public string servingUnit;
+        public string servingCountSource;
         public string barcode; // 숫자로 변환하지 않는 정확한 식별 문자열
         public string barcodeFormat;
         public MappingEvidence mapping; // 시연용 연결의 범위와 근거
@@ -118,6 +123,7 @@ namespace MidtermAR
                 || product.mapping == null || product.mapping.scope != "demo-only"
                 || string.IsNullOrWhiteSpace(product.mapping.source) || string.IsNullOrWhiteSpace(product.mapping.physicalDecodeVerification))
                 throw new FormatException("상품 식별 근거가 부족합니다.");
+            ValidateQuantities(product);
             if (product.barcode != null && (product.barcodeFormat != "EAN_13"
                 || !BarcodeIdentity.TryNormalizeEan13(product.barcode, out var normalized) || normalized != product.barcode))
                 throw new FormatException("상품 바코드 형식이 올바르지 않습니다.");
@@ -139,6 +145,19 @@ namespace MidtermAR
                     throw new FormatException("영양정보의 상품 연결·기준량·값이 올바르지 않습니다.");
             }
         }
+
+        public static void ValidateQuantities(ProductSnapshot product)
+        {
+            if (product.contentAmount.HasValue != (product.contentUnit != null)
+                || product.contentAmount.HasValue && (!Positive(product.contentAmount.Value)
+                    || product.contentUnit != "g" && product.contentUnit != "ml" && product.contentUnit != "each"))
+                throw new FormatException("용량과 단위는 양수 g/ml/each 쌍이어야 합니다.");
+            if (product.servingCount.HasValue
+                ? !Positive(product.servingCount.Value) || string.IsNullOrWhiteSpace(product.servingUnit) || string.IsNullOrWhiteSpace(product.servingCountSource)
+                : product.servingUnit != null || product.servingCountSource != null)
+                throw new FormatException("정 수·단위·포장 표기 근거가 필요합니다.");
+        }
+        private static bool Positive(double value) => value > 0 && !double.IsNaN(value) && !double.IsInfinity(value);
 
         private static bool IsValidNumber(double? value) => !value.HasValue || (!double.IsNaN(value.Value) && !double.IsInfinity(value.Value) && value.Value >= 0);
     }
