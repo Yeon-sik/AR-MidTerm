@@ -10,19 +10,24 @@ namespace MidtermAR
     public sealed class ARBarcodeScanner : MonoBehaviour // AR 카메라 프레임 획득과 비동기 판독 조율
     {
         [SerializeField] private ARCameraManager cameraManager;
+        [SerializeField] private ARSession session;
         [SerializeField, Range(0.2f, 1f)] private float interval = 0.35f;
         [SerializeField, Range(640, 1920)] private int longestEdge = 1920;
         [SerializeField] private float timeoutSeconds = 15f; // 한 번의 스캔 제한 시간
 
         public event Action<BarcodeReadResult> Decoded;
         public event Action TimedOut;
+        public event Action<BarcodeReadResult, BarcodeViewportTransform, float> Observed;
         public bool IsScanning { get; private set; }
+        public string FollowingBarcode { get; private set; }
+        public bool HasViewportTransform { get; private set; }
         public int ConvertedFrames { get; private set; }
         public bool HasCameraFrame => Time.unscaledTime - lastFrameTime < 2.5f;
         public int ConfirmationCount => confirmation.Count;
 
         private readonly BarcodeDecoder decoder = new BarcodeDecoder();
         private readonly BarcodeConfirmation confirmation = new BarcodeConfirmation();
+        private readonly ARCoreBarcodeCoordinates coordinates = new ARCoreBarcodeCoordinates();
         private NativeArray<byte> conversionBuffer; // CPU 이미지 변환에 재사용하는 네이티브 버퍼
         private byte[] workerPixels; // 작업 스레드에서 읽는 관리 배열
         private Task<BarcodeReadResult> pending; // 동시에 하나만 실행하는 판독 작업
@@ -31,6 +36,10 @@ namespace MidtermAR
         private int generation; // 스캔 재시작 전의 판독 결과 무시
         private int pendingGeneration; // 진행 중인 판독 작업의 스캔 세대
         private float pendingCapturedAt;
+        private BarcodeViewportTransform pendingTransform;
+        private Vector2Int pendingViewportSize;
+        private bool coordinateErrorLogged;
+        private bool coordinateMappingLogged;
         private bool conversionErrorLogged;
         private float lastFrameTime = float.NegativeInfinity;
         private bool configurationAttempted; // 카메라 해상도 설정의 반복 적용 방지
@@ -53,11 +62,23 @@ namespace MidtermAR
 
         public void SetScanning(bool value)
         {
-            if (IsScanning == value) return;
+            if (IsScanning == value && FollowingBarcode == null) return;
             IsScanning = value;
+            FollowingBarcode = null;
             generation++;
             confirmation.Reset();
             if (value) { scanStarted = Time.unscaledTime; nextCapture = scanStarted; scanFrames = 0; }
+        }
+
+        public void SetFollowing(string barcode)
+        {
+            if (FollowingBarcode == barcode && !IsScanning) return;
+            IsScanning = false;
+            FollowingBarcode = barcode;
+            generation++;
+            confirmation.Reset();
+            nextCapture = Time.unscaledTime;
+            scanFrames = 0;
         }
 
         private void Update()
@@ -72,16 +93,16 @@ namespace MidtermAR
                     confirmation.Reset();
                     Debug.LogWarning("[ProductAR] Barcode worker failed: " + finished.Exception?.GetBaseException().Message);
                 }
-                else if (!finished.IsCanceled && IsScanning && validGeneration)
+                else if (!finished.IsCanceled && (IsScanning || FollowingBarcode != null) && validGeneration)
                 {
-                    var confirmed = confirmation.Observe(finished.Result, pendingCapturedAt);
-                    if (confirmation.Count == 1)
-                        Debug.Log("[ProductAR] Unconfirmed barcode candidate: " + confirmation.Candidate);
-                    if (confirmed)
+                    var result = finished.Result;
+                    if (IsScanning && confirmation.Observe(result, pendingCapturedAt))
                     {
                         Debug.Log("[ProductAR] Barcode confirmed across " + confirmation.Count + " camera frames: " + confirmation.Candidate);
-                        Decoded?.Invoke(new BarcodeReadResult(confirmation.Candidate, "EAN_13"));
+                        Decoded?.Invoke(result);
                     }
+                    var sameViewport = pendingViewportSize == new Vector2Int(Screen.width, Screen.height);
+                    Observed?.Invoke(result, sameViewport ? pendingTransform : default, pendingCapturedAt);
                 }
             }
             if (IsScanning && Time.unscaledTime - scanStarted >= timeoutSeconds)
@@ -95,8 +116,8 @@ namespace MidtermAR
         {
             lastFrameTime = Time.unscaledTime;
             if (!configurationAttempted && ConfigureCamera()) return;
-            if (!IsScanning || pending != null || Time.unscaledTime < nextCapture || !ARReadiness.CanReadCameraInState(ARSession.state)) return;
-            nextCapture = Time.unscaledTime + interval;
+            if ((!IsScanning && FollowingBarcode == null) || pending != null || Time.unscaledTime < nextCapture || !ARReadiness.CanReadCameraInState(ARSession.state)) return;
+            nextCapture = Time.unscaledTime + (FollowingBarcode == null ? interval : 0.25f);
             if (!cameraManager.TryAcquireLatestCpuImage(out var image)) return;
             try
             {
@@ -125,6 +146,25 @@ namespace MidtermAR
                 ConvertedFrames++;
                 pendingGeneration = generation;
                 pendingCapturedAt = Time.unscaledTime;
+                pendingViewportSize = new Vector2Int(Screen.width, Screen.height);
+                pendingTransform = default;
+                try
+                {
+                    if (!coordinates.TryCapture(cameraManager, session, out pendingTransform) && !coordinateErrorLogged)
+                    { Debug.LogWarning("[ProductAR] Barcode viewport transform unavailable; follow panel remains hidden until coordinates are ready."); coordinateErrorLogged = true; }
+                }
+                catch (Exception error)
+                {
+                    if (!coordinateErrorLogged) Debug.LogWarning("[ProductAR] Barcode viewport transform: " + error.Message);
+                    coordinateErrorLogged = true;
+                }
+                HasViewportTransform = pendingTransform.IsValid;
+                if (HasViewportTransform && !coordinateMappingLogged)
+                {
+                    coordinateMappingLogged = true;
+                    Debug.Log("[ProductAR] ARCore CPU image → viewport mapping ready; origin=" + pendingTransform.Map(Vector2.zero)
+                        + "; x=" + pendingTransform.Map(Vector2.right) + "; y=" + pendingTransform.Map(Vector2.up));
+                }
                 var pixels = workerPixels;
                 var rgba = format == TextureFormat.RGBA32;
                 var sampleSlot = ++scanFrames;

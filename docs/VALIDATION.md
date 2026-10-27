@@ -1,10 +1,66 @@
-# 기획 v2 구현·검증 기록
+# 상품정보 AR 구현·검증 기록
+
+## 2026-10-24 영양성분표·관측 가격 표시 개선
+
+- 현재 자동 정보창의 영양정보를 항목·함량이 정렬된 표로 바꿨다. 기준량과 열량을 상단에 두고 굵은 구분선·행별 선·당류/포화지방 들여쓰기를 적용했다. 데이터에 없는 일일 기준치 비율이나 성분은 추가하지 않았다.
+- 관측 가격은 별도 연녹색 영역에 금액을 강조하고 판매처와 관측일·개당 가격을 분리했다. 현재 가격으로 표현하지 않으며 시연용 연결·로컬 데이터 문구를 유지한다. 카드 폭 720은 유지하고 높이는 612에서 648 기준 단위로 조정했다.
+- Unity EditMode **42/42 PASS**, 실패·건너뜀 0, Unity exit **0**. 기존 추종 시험과 정상/일부 누락·0/전체 누락의 표·가격 바인딩 3개를 포함한다. 상품을 다시 바인딩할 때 이전 정보가 남지 않는지 확인했다. 근거: `artifacts/nutrition-ui-tests.xml`, `nutrition-ui-tests.log`.
+- 1080×1920·1080×2400에서 스캔, 중앙/왼쪽/상단 추종, 소실, 전체 데이터 누락, 일부 누락·0의 **14장**을 렌더링하고 활성 텍스트 넘침 검사를 통과했다. 정상·누락·0 화면과 상단 부족 시 아래 배치를 시각 확인했다. 누락·0 렌더용 데이터는 카탈로그와 실행 씬에 저장하지 않는다. 근거: `artifacts/nutrition-ui-previews.log`, `artifacts/ui/barcode-follow/`.
+- 이 결과는 단색 배경의 에디터 UI 검사다. 실기기 카메라 위 가독성과 바코드 이동 중 사용성은 별도로 확인해야 한다.
+- Android ARM64·IL2CPP Development APK 빌드 **Succeeded / errors=0 / Unity exit=0**. 파일 `Builds/Android/ProductAR.apk`, **85,737,220 bytes**, SHA-256 `2f78d6a49f74ad9d9dbc31abc03dbb1e3c94c284206c7d1f2eb7e4cfbebc8a3a`. 패키지 `com.yeonsik.midtermar`, 버전 **0.1.0 / 1**, min API **30**, target API **35**를 확인했다. 서명 검증 PASS, Android Debug 인증서 SHA-256은 직전 v3 APK와 같은 `31419df97e5066473b3a855350f38ebce701557a6a644c91ca07db75464d1667`이다. 근거: `artifacts/nutrition-ui-build.log`, `nutrition-ui-build-summary.json`, `nutrition-ui-apk-signature.log`. 빌드가 비운 `preloadedAssets`는 원래 3개 참조로 복구했다.
+- 빌드 후 Galaxy A25 (`R5CWC01BHZP`) 연결을 확인했다. 설치 스크립트가 기기의 기존 APK를 보존하고 서명을 대조했으나, 기존 인증서는 아래 기기 기록과 같은 `cad84c…6135`, 새 APK는 `31419d…667`로 달라 업데이트 전에 중단했다. 로컬 Android 기본 디버그 키도 새 APK 인증서와 같으며 기존 앱과 일치하는 키는 확인하지 못했다. 앱 삭제·데이터 초기화·새 APK 설치·실기기 UI 검증은 수행하지 않았다. 기기에 보이는 화면은 이 변경을 포함하지 않는다.
+
+## 2026-10-24 기획 v3 — 바코드 위 자동 정보창
+
+사용자가 바코드 인식 직후 자동 표시하고 상품 이동 시 따라다니는 방식을 선택했다. 현재 상호작용 기준은 [BARCODE-FOLLOW.md](BARCODE-FOLLOW.md)다. 아래 공간 앵커·센서·터치 배치의 기기 기록은 이전 v2 성과이며 새 자동 추종의 실기기 성공으로 확대하지 않는다.
+
+- 동일 AR 카메라의 EAN-13 3회 일치 후 터치 없이 정보창을 표시하도록 연결했다. 기존 평면 감지·배치 터치 처리는 기본 실행 씬에서 비활성화했다. 상품 확인 뒤에도 같은 번호의 위치를 계속 읽으며 초기 스캔의 15초 제한과 분리했다.
+- ZXing의 원본 영상 기준 판독 선분을 전달하고 ARCore 네이티브 `IMAGE_NORMALIZED → VIEW_NORMALIZED` 변환을 카메라 콜백에서 복사한다. Unity 패키지의 version 1 포인터 구조와 ARM64 라이브러리의 `ArFrame_transformCoordinates2d` export를 확인했다. 네이티브 포인터를 디코더 스레드에 넘기지 않는다.
+- 다른 번호, 오래된 비동기 결과, 화면 잘림 밖 위치, 좌표 변환 없음은 표시하지 않는다. 마지막 유효 촬영 시각부터 0.65초 뒤 숨기며 같은 번호를 다시 읽으면 자동 표시한다. 재스캔·백그라운드 전환 시 이전 위치를 정리한다.
+- 자동 시험 **39/39 PASS**, 실패·건너뜀 0, Unity exit **0**. 0·90·180·270도 원본 영상의 판독점, 화면 회전·잘림 변환, 소실·일시 판독 공백·다른 번호·오래된 결과·재시작, 카드 경계, 터치 없는 상태 전환, 추종 중지·재시작, 기본 씬의 평면 비활성화를 확인했다. 근거: `artifacts/barcode-follow-tests.xml`, `barcode-follow-tests.log`.
+- 1080×1920·1080×2400에서 스캔·중앙/왼쪽/상단 추종·소실 화면 총 10장을 렌더링하고 활성 텍스트 넘침 검사를 통과했다. 처음 발견한 가격 글자 넘침은 수정 후 재검증했다. 근거: `artifacts/barcode-follow-previews.log`, `artifacts/ui/barcode-follow/`. 단색 배경의 에디터 UI이므로 실제 카메라 정합 성공 화면으로 해석하지 않는다.
+- ADB에 연결된 Android 기기가 없어 새 좌표 변환의 실제 네이티브 호출·실물 추종·5분 연속 부하·설치 업데이트는 **미검증**이다. 화면에서 보이는 바코드 위치를 따라가며 가림 이후의 상품 전체 3D 추적을 보장하지 않는다.
+
+### v3 자동 정보창 APK
+
+- ARM64·IL2CPP Development 빌드 **Succeeded / errors=0 / Unity exit=0**. 최종 버튼 강조 변경을 포함한 Android 네이티브 코드 생성을 확인했다. 근거: `artifacts/barcode-follow-build.log`, `barcode-follow-build-summary.json`.
+- 파일: `Builds/Android/ProductAR.apk`, **85,735,718 bytes**, SHA-256 `c1fad9de4644ade856a49edac18f92f3f375cf9a02f9702df6572d549f88a016`.
+- 패키지 `com.yeonsik.midtermar`, versionName **0.1.0**, versionCode **1**, min API **30**, target API **35**, `arm64-v8a` 확인. APK 안에 `lib/arm64-v8a/libarcore_sdk_c.so`가 포함된 것을 확인했다.
+- 서명 검증 exit **0**, Android Debug 인증서 SHA-256 `31419df97e5066473b3a855350f38ebce701557a6a644c91ca07db75464d1667`. 직전 카메라 UI APK와 같은 현재 환경 서명이며, 아래 센서 보완 당시 설치 기록의 인증서와는 다르다. 설치 스크립트의 기존 서명 대조를 유지한다. 기존 앱 삭제·데이터 초기화·설치는 수행하지 않았다.
+- 최종 버튼 색상까지 반영한 화면 10장과 **39/39**를 다시 확인했다. 빌드 후 비워진 `preloadedAssets`는 원래 3개 참조·순서로 복구했다. 임시 XR 이동·시험 리소스는 정상 종료 시 정리돼 관련 삭제·추가 변경을 남기지 않았다.
+
+## 이전 v2 구현 및 검증
 
 최신 확인일: **2026-10-24 KST**. 초기 구현은 `feat/ar-foundation-m0-m3`의 `b949cf7`, 바코드 수정 기준은 `29e66b0`이다. 아래 2026-10-24 공간 배치·센서 보완은 후속 작업 트리 변경과 생성 APK의 해시로 구분한다. 초기 조사 기준은 `45c7037`이다. 제품 사진·HTML 등 사용자 입력은 변경하지 않았다. Git 원격 생성·push·배포는 수행하지 않았다.
 
 **2026-10-23 바코드 수정:** 3회 확인만으로 반복 오독이 해결되지 않아 판독 입력을 1920×1080으로 높였다. 당시 자동 시험은 **24/24 PASS**, 수정 APK 빌드·설치·실제 1920×1080 CPU 입력 확인까지 완료했다. 고해상도 실물 반복 시험은 대기 중이다. 최신 결과는 [해상도 분석 기록](BARCODE-RESOLUTION.md)을 따른다. 아래 초기 구현 검증 19개와 구분한다.
 
 사용자가 사용자 개입 없이 가능한 후속 구현을 계속하도록 지시했으므로 **구현 완료·자동 시험·기기 실행·실물 검증을 분리**한다. 기기의 존재나 APK 설치만으로 실제 상품 인식·공간 배치의 PASS를 주장하지 않는다.
+
+## 2026-10-24 카메라 UI 축소 및 상태·버튼 정리
+
+- 실행 씬의 상단 앱 제목·소개를 현재 단계와 다음 행동으로 교체했다. 바코드 스캔·확인 중, 표면 탐색, 배치 가능, 고정 중, 배치 완료, 추적 복구, 권한·스캔 오류를 구분한다.
+- 하단 안내판은 실제 안내·상품 요약·버튼 수에 따라 높이를 조절한다. 스캔 전 상품명 미리 표시와 비활성 재배치·삭제 버튼을 제거했다. 상품 확인 후 다른 상품 스캔, 배치 후 재배치·삭제를 표시하며 재배치 취소와 앱 복귀 후 재배치 이유 안내를 추가했다.
+- 상품 확인 후 다른 상품 스캔 버튼은 보조 색상으로 낮춰 초록색 배치 표면과 경쟁하지 않게 했다. 재시도·설정 열기 버튼의 녹색 강조는 유지한다.
+- Unity 메뉴 `Product AR → Update Camera UI`로 기존 AR 씬의 카메라 UI만 갱신했다. 추가 한국어 글리프를 동적 SDF에 보존했다.
+- Unity EditMode **29/29 PASS**, 실패·건너뜀 0, 종료 코드 0. 기존 26개에 세 가지 단계의 카메라 영역·글자 넘침·버튼 높이 검증 3개를 추가했다. 근거: `artifacts/compact-ui-tests.xml`, `compact-ui-tests.log`.
+- 실제 Unity UI를 1080×1920, 1080×2400으로 각각 8개 상태, 총 16장 렌더링했다. 모든 렌더에서 활성 텍스트 넘침 검사를 통과했다. 스캔·배치 완료·추적 복구·재배치 취소·권한 화면을 시각 확인했다. 단색 배경의 에디터 UI 검증이며 실기기 AR 성공 화면으로 해석하지 않는다. 근거: `artifacts/compact-ui-previews.log`, `artifacts/ui/{scan,surface,place,placed,reposition,recovery,unknown,permission}-{1920,2400}.png`.
+
+| 화면 | 기존 UI 높이 비율 (1080×1920 기준) | 수정 후 1080×1920 | 수정 후 1080×2400 |
+|---|---|---|---|
+| 스캔 중 | 약 39.5% | 13.1% | 11.7% |
+| 표면 찾기·배치 대기 | 약 39.5% | 23.7% | 21.2% |
+| 배치 완료 | 약 39.5% | 21.5% | 19.2% |
+
+비율은 상·하단 안내판의 높이 합을 캔버스 안전 영역 높이로 나눈 값이며, 기존값은 고정 레이아웃 198+560 / 1920으로 계산했다. 시스템 표시 영역과 실제 카메라·공간 정보판의 가독성은 별도 실기기 확인이 필요하다. 버튼 높이는 기존 132 기준 단위를 유지했다. 이 UI 변경의 실기기 설치·조작은 아직 수행하지 않았다. 아래 센서 보완 APK·기기 시험은 이전 빌드의 기록이다.
+
+### 카메라 UI 수정 APK
+
+- 최종 버튼 색상 반영 후 화면 16장 렌더링과 EditMode **29/29**를 다시 통과했다. ARM64·IL2CPP Android Development 빌드 **Succeeded / errors=0 / Unity exit=0**. 근거: `artifacts/compact-ui-final-build.log`, `compact-ui-build-summary.json`. 초기 전체 빌드는 `compact-ui-build.log`로 구분한다.
+- 파일: `Builds/Android/ProductAR.apk`, **85,730,709 bytes**, SHA-256 `db10ef6ba8f309a74dfea4b902cc8e9bdb5eafe1ac9854c2a24af35b5ff6a0bf`.
+- 패키지 `com.yeonsik.midtermar`, 이름 **상품정보 AR**, versionName **0.1.0**, versionCode **1**, min API **30**, target API **35**, `arm64-v8a` 확인.
+- APK 서명 검증 종료 코드 **0**. 현재 환경의 Android Debug 인증서 SHA-256은 `31419df97e5066473b3a855350f38ebce701557a6a644c91ca07db75464d1667`이다. 아래 이전 설치 기록의 인증서와 다르므로 이전 기록만으로 호환 업데이트를 주장하지 않는다. 설치 스크립트의 기존 서명 대조를 유지하며, 기존 앱 삭제·데이터 초기화·기기 설치는 수행하지 않았다.
+- 빌드가 옮긴 XR Simulation 에셋과 시험용 임시 리소스는 정상 종료 시 복구·정리됐다. 빌드 후 비워진 `preloadedAssets`는 원래 3개 참조·순서로 복구해 ProjectSettings 변경을 남기지 않았다. 씬 저장에서 ARCameraManager의 기존 필드 2개가 패키지의 직렬화 마이그레이션에 따라 `-1`로 바뀌었으며, 실제 자동 초점·광원 추정 설정은 유지된다.
 
 ## 2026-10-24 사용자 확인 및 공간 배치 후속 작업
 
@@ -89,7 +145,7 @@
 - Android: minimum API **30**, target API **35**, **ARM64·IL2CPP**, OpenGLES3, 세로 방향.
 - 대상 기기: **Samsung Galaxy A25 / SM-A256N**, Android **16**. Google Play Services for AR **1.57.262640093** 설치 확인. 기기 serial·원문 로그·화면은 Git 제외 로컬 artifacts에 보관한다.
 
-### 최종 APK
+### 센서 보완 APK (카메라 UI 수정 전)
 
 - 경로: `Builds/Android/ProductAR.apk` — Git 제외.
 - 크기: **85,699,362 bytes** (약 81.7 MiB).

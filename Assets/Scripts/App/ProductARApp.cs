@@ -4,18 +4,16 @@ using UnityEngine.InputSystem;
 
 namespace MidtermAR
 {
-    public sealed class ProductARApp : MonoBehaviour // 스캔·상품 조회·배치·화면 안내 연결
+    public sealed class ProductARApp : MonoBehaviour
     {
-        [SerializeField] private TextAsset catalogJson; // 출처를 보존한 시연 상품 스냅샷
+        [SerializeField] private TextAsset catalogJson;
         [SerializeField] private ARReadiness readiness;
         [SerializeField] private ARBarcodeScanner scanner;
-        [SerializeField] private ProductPlacement placement;
         [SerializeField] private ProductScreenView screen;
-        private ProductWorkflow workflow; // 현재 상품과 진행 단계 관리
+        [SerializeField] private BarcodeProductPanel followPanel;
+        private ProductWorkflow workflow;
         private float nextRefresh;
-        private float noticeUntil; // 일시 안내 메시지를 표시할 종료 시각
-        private string notice;
-        private bool paused; // 백그라운드에서 스캔·배치 차단
+        private bool paused;
 
         private void Awake()
         {
@@ -26,7 +24,7 @@ namespace MidtermAR
             {
                 var catalog = new ProductCatalog(catalogJson.text);
                 workflow = new ProductWorkflow(catalog);
-                Debug.Log("[ProductAR] Local demo catalog loaded: " + catalog.Count + ", mapping: demo-only, physical decode: pending device test");
+                Debug.Log("[ProductAR] Local demo catalog loaded: " + catalog.Count + ", mapping: demo-only");
             }
             catch (Exception error)
             {
@@ -39,16 +37,16 @@ namespace MidtermAR
         {
             scanner.Decoded += OnDecoded;
             scanner.TimedOut += OnScanTimedOut;
-            placement.Placed += OnPlaced;
-            placement.Notice += OnNotice;
+            scanner.Observed += OnObserved;
         }
+
         private void OnDisable()
         {
             scanner.Decoded -= OnDecoded;
             scanner.TimedOut -= OnScanTimedOut;
-            placement.Placed -= OnPlaced;
-            placement.Notice -= OnNotice;
+            scanner.Observed -= OnObserved;
             scanner.SetScanning(false);
+            followPanel.SetCameraReady(false);
         }
 
         private void Update()
@@ -66,86 +64,89 @@ namespace MidtermAR
         private void OnDecoded(BarcodeReadResult result)
         {
             if (result.Format != "EAN_13" || !workflow.AcceptBarcode(result.Text)) return;
-            scanner.SetScanning(false);
-            placement.SetProduct(workflow.Selected);
-            Debug.Log("[ProductAR] Barcode decoded: " + result.Text + " / " + result.Format + ", phase: " + workflow.Phase);
+            followPanel.SetProduct(workflow.Selected);
+            if (workflow.Selected != null)
+            {
+                workflow.FollowBarcode();
+                scanner.SetFollowing(workflow.Selected.barcode);
+            }
+            else scanner.SetScanning(false);
+            Debug.Log("[ProductAR] Barcode decoded: " + result.Text + ", phase: " + workflow.Phase);
             Refresh();
         }
+
+        private void OnObserved(BarcodeReadResult result, BarcodeViewportTransform transform, float capturedAt)
+        {
+            if (!paused && workflow.Phase == ProductPhase.Following) followPanel.Observe(result, transform, capturedAt);
+        }
         private void OnScanTimedOut() { workflow.ScanTimedOut(); Refresh(); }
-        private void OnPlaced() { workflow.MarkPlaced(); noticeUntil = 0; Refresh(); }
-        private void OnNotice(string message) { notice = message; noticeUntil = Time.unscaledTime + 4f; Refresh(); }
 
         public void PrimaryAction()
         {
             if (readiness.PermissionBlocked) { readiness.OpenSettings(); return; }
-            if (!readiness.CameraReady) { readiness.Retry(); return; }
+            if (!readiness.CameraReady || !scanner.HasCameraFrame) { readiness.Retry(); return; }
             RestartScan();
         }
+
         public void RestartScan()
         {
             scanner.SetScanning(false);
-            placement.SetProduct(null);
+            followPanel.SetProduct(null);
             workflow.StartScan();
-            noticeUntil = 0;
-            Refresh();
-        }
-        public void Reposition() { if (!placement.IsBusy) { workflow.RequestPlacement(); Refresh(); } }
-        public void DeletePanel()
-        {
-            placement.ClearPlacement();
-            workflow.RequestPlacement();
             Refresh();
         }
 
         private void Refresh()
         {
-            var ready = readiness.IsReady && !paused;
             var cameraReady = readiness.CameraReady && scanner.HasCameraFrame && !paused;
-            scanner.SetScanning(cameraReady && workflow.Phase == ProductPhase.Scanning);
-            placement.AllowPlacement = ready && workflow.CanPlace;
-            var summary = workflow.Selected == null ? "시연 상품 · 더단백 크런치바 초코 40g" : workflow.Selected.brand + " · " + workflow.Selected.specification + "\n" + workflow.Selected.name;
+            followPanel.SetCameraReady(cameraReady);
+            if (cameraReady && workflow.Phase == ProductPhase.Following) scanner.SetFollowing(workflow.Selected.barcode);
+            else scanner.SetScanning(cameraReady && workflow.Phase == ProductPhase.Scanning);
+            var step = "1 / 2 · 바코드 스캔";
             var title = "바코드를 비춰주세요";
-            var message = "바코드 전체와 양쪽 여백이 보이게 맞춰주세요.\n같은 번호가 3회 확인될 때까지 유지해 주세요.";
+            var message = "바코드 전체가 선명하게 보이도록\n휴대폰을 잠시 멈춰주세요.";
             var action = "다시 스캔";
+            var summary = "";
             var error = false;
+            var attention = false;
+            var primary = false;
             if (workflow.Phase == ProductPhase.DataUnavailable)
-            { title = "상품정보를 준비하지 못했습니다"; message = "시연 데이터 파일을 확인해야 합니다."; error = true; }
+            { step = "준비 오류"; title = "상품정보를 불러올 수 없어요"; message = "앱을 종료한 뒤 다시 실행해 주세요."; error = true; }
             else if (!cameraReady)
             {
-                title = readiness.PermissionBlocked ? "카메라 권한이 필요합니다" : "AR 카메라 준비 중";
-                message = readiness.Status;
+                step = readiness.PermissionBlocked ? "카메라 권한 필요" : "카메라 준비 중";
+                title = readiness.PermissionBlocked ? "카메라 사용을 허용해 주세요" : "카메라를 준비하고 있어요";
+                message = readiness.CameraReady && !scanner.HasCameraFrame ? "카메라 영상을 기다리고 있어요.\n계속되면 다시 확인을 눌러주세요." : readiness.Status;
                 action = readiness.PermissionBlocked ? "설정 열기" : "다시 확인";
                 error = readiness.PermissionBlocked;
+                attention = !error;
+                primary = !paused && !readiness.IsInitializing;
             }
             else if (workflow.Phase == ProductPhase.UnknownBarcode)
-            { title = "시연 데이터에 없는 상품입니다"; message = "읽은 번호: " + workflow.LastBarcode + "\n포장에 적힌 번호와 비교한 뒤 다시 스캔해 주세요."; error = true; }
+            { step = "1 / 2 · 상품 확인 필요"; title = "시연 데이터에 없는 상품이에요"; message = "읽은 번호: " + workflow.LastBarcode + "\n포장의 번호를 확인하고 다시 스캔해 주세요."; error = true; primary = true; }
             else if (workflow.Phase == ProductPhase.ScanFailed)
-            { title = "바코드를 읽지 못했습니다"; message = "반사와 초점을 확인하고\n바코드 전체가 보이도록 다시 시도해 주세요."; error = true; }
-            else if (placement.IsBusy)
-            { title = "정보판을 고정하고 있습니다"; message = "휴대폰을 잠시 움직이지 말아주세요."; }
-            else if (workflow.Phase == ProductPhase.AwaitingPlacement)
+            { step = "1 / 2 · 스캔 시간 초과"; title = "바코드를 읽지 못했어요"; message = "반사와 초점을 확인하고\n바코드 전체가 보이도록 다시 시도해 주세요."; error = true; primary = true; }
+            else if (workflow.Phase == ProductPhase.Following)
             {
-                if (!ready)
+                var visible = followPanel.HasVisibleTarget;
+                step = visible ? "2 / 2 · 바코드 따라가는 중" : "2 / 2 · 바코드 위치 찾는 중";
+                title = visible ? "상품정보를 자동으로 표시해요" : "바코드를 다시 비춰주세요";
+                message = visible ? "바코드가 보이는 동안 정보창이 따라가요." : "같은 상품의 바코드 전체를\n화면 가운데에 선명하게 비춰주세요.";
+                summary = visible ? "" : workflow.Selected.name + " · " + workflow.Selected.specification;
+                action = "다른 상품 스캔";
+                primary = true;
+                attention = !visible;
+                if (!scanner.HasViewportTransform)
                 {
-                    title = "공간 추적을 복구하고 있습니다";
-                    message = readiness.TrackingGuidance;
-                }
-                else
-                {
-                    title = placement.HasTrackedPlane ? "상품 옆을 눌러 배치하세요" : "책상 표면을 천천히 비춰주세요";
-                    message = placement.HasTrackedPlane ? "표시된 수평 표면을 누르면 정보판이 놓입니다.\n상품을 옮기면 정보판도 재배치해 주세요." : "상품 옆의 책상을 여러 각도에서 비추면\n정보판을 놓을 표면을 찾을 수 있습니다.";
+                    step = "2 / 2 · 화면 위치 준비 중";
+                    title = "정보창 위치를 준비하고 있어요";
+                    message = "인식한 바코드의 화면 위치를\n확인하고 있어요. 잠시 유지해 주세요.";
                 }
             }
-            else if (workflow.Phase == ProductPhase.Placed)
-            {
-                title = placement.PlacementTracking ? "정보판을 공간에 배치했습니다" : "공간 추적을 복구하고 있습니다";
-                message = placement.PlacementTracking ? "휴대폰을 움직이며 정보를 확인하세요.\n상품을 옮기면 재배치를 눌러주세요." : "잘못된 위치를 표시하지 않도록 정보판을 숨겼습니다.\n주변을 천천히 비추거나 다시 배치해 주세요.";
-            }
-            else if (workflow.Phase == ProductPhase.Scanning && scanner.ConfirmationCount > 0)
-                title = "바코드 확인 중 (" + scanner.ConfirmationCount + "/" + BarcodeConfirmation.RequiredReads + ")";
-            if (cameraReady && Time.unscaledTime < noticeUntil) message = notice;
-            screen.Show(title, message, summary, action, !readiness.IsInitializing && !placement.IsBusy && workflow.Phase != ProductPhase.DataUnavailable,
-                ready && workflow.Phase == ProductPhase.Placed && !placement.IsBusy, placement.HasPlacement && !placement.IsBusy, error);
+            else if (scanner.ConfirmationCount > 0)
+            { step = "1 / 2 · 바코드 확인 중"; title = "상품을 확인하고 있어요"; message = "바코드가 보이도록 잠시 유지해 주세요."; }
+            screen.Show(step, title, message, summary, action, primary, false, false, error, attention,
+                secondaryAction: workflow.Selected != null && cameraReady);
         }
 
         private void OnApplicationPause(bool value)
@@ -154,8 +155,8 @@ namespace MidtermAR
             if (value && workflow != null)
             {
                 scanner.SetScanning(false);
-                placement.ClearPlacement();
-                workflow.RequestPlacement();
+                followPanel.ClearPosition();
+                followPanel.SetCameraReady(false);
             }
             nextRefresh = 0;
         }
