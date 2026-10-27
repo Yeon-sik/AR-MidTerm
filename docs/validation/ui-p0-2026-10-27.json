@@ -1,0 +1,193 @@
+{
+  "recordedDateKst": "2026-10-27",
+  "sourceCommit": "b79fc63bf202e1321a309628cfe92c76995a0fb1",
+  "sourceBranch": "feat/ui-p0-video",
+  "baseCommit": "2dd295a51d2888155271a1c6701b1b6a33aefa17",
+  "result": "AUTOMATED_PASS_RELEASE_INSTALLED_PHYSICAL_TESTS_NOT_RUN",
+  "scope": {
+    "recognitionLookupConflictLossRulesChanged": false,
+    "branchMergePerformed": false,
+    "oldSubmissionTagMoved": false,
+    "measuredProductWidthMetres": 0.058,
+    "widthEvidence": "Existing user-supplied approximate theanine packaging width recorded 2026-10-26; not a new measurement",
+    "commonOriginGapMetres": 0.012,
+    "fixedImagePlaneTiltDegrees": 15,
+    "cameraBillboardOrViewportRelocation": false,
+    "outline": "Selected tracked crop size at image plane +1mm; one outline and one connector; same gate as board",
+    "tabRules": "Nutrition values > price value > no tabs and one empty-information line; actual zero is available",
+    "rescan": "Footer only; same reset path; no World/Tracked RescanRequested event",
+    "sourceEvidenceFieldsModified": false
+  },
+  "tests": {
+    "command": "scripts/Test-EditMode.ps1",
+    "result": "PASS",
+    "total": 194,
+    "passed": 194,
+    "failed": 0,
+    "skipped": 0,
+    "existingTestsRetained": 172,
+    "added": 22,
+    "unityExitCode": 0,
+    "evidence": "artifacts/editmode/20261026-164234-d8afbdc2/summary.json",
+    "coverage": [
+      "Nonoverlap, 12mm gap, fixed 15 degree tilt and connector endpoints",
+      "Common board origin across different tracked crop sizes and poses",
+      "Common width evidence and per-product crop consistency",
+      "Board/outline/connector hide together on loss, Limited, last known, not ready, conflict, denied route and pause",
+      "Availability defaults, disabled tab pointer events, minimum tab touch height and compact empty/price body",
+      "All-null nutrition, actual zero, same-product tab retention, different product and rescan default",
+      "2D missing sections, compact empty card and PT unavailable snapshot label",
+      "Forbidden developer copy, retained development-card notice and price source/date/disclaimer",
+      "Only two world tab buttons and existing footer reset connection"
+    ],
+    "firstRun": {
+      "passed": 192,
+      "failed": 2,
+      "reason": "Existing pointer tests omitted product binding; bind actual available data before pointer interaction"
+    },
+    "missingExistingCases": 0
+  },
+  "build": {
+    "command": "scripts/Build-Android.ps1 -Release",
+    "type": "release",
+    "options": "BuildOptions.None",
+    "versionName": "0.6.2",
+    "versionCode": 9,
+    "package": "com.yeonsik.midtermar",
+    "result": "Succeeded",
+    "apk": "Builds/Android/ProductAR.apk",
+    "sha256": "b1423bc0989f30dee33a6709fa0834ef73a48d14d2a6e4f9eeb0afc532a28f2e",
+    "sizeBytes": 52906964,
+    "developmentFlag": "ABSENT_IN_APK_MANIFEST",
+    "developmentLookupCheckExcluded": "PASS: type absent from IL2CPP global-metadata.dat, together with DevelopmentDecoderCheck",
+    "onlineConfigTextAssetIncluded": "PASS: exact local settings values found in joined sharedassets0.assets split entries; no values recorded",
+    "keyValuesInLogs": "Build log: zero actual key/contact matches. Device runtime log: NOT_RUN; process not running when queried.",
+    "artifactVerificationEvidence": "artifacts/ui-p0/release-verification.json"
+  },
+  "installation": {
+    "status": "PASS_ARTIFACT_AND_INSTALL_VERIFIED",
+    "device": "Galaxy A25 / SM-A256N / Android 16",
+    "previousVersion": "0.6.1 (8)",
+    "previousDebuggable": true,
+    "mode": "compatible-update-r",
+    "sameSigner": true,
+    "installedApkHashMatches": true,
+    "uninstallOrDataClearPerformed": false,
+    "signerSha256": "cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135",
+    "installedApkSha256": "b1423bc0989f30dee33a6709fa0834ef73a48d14d2a6e4f9eeb0afc532a28f2e",
+    "installedDebuggable": false,
+    "launchResponse": "Activity start Status ok; cold launch; installer output",
+    "evidence": [
+      "artifacts/install/result.json",
+      "artifacts/ui-p0/device-verification.json",
+      "artifacts/ui-p0/installed-package.txt"
+    ]
+  },
+  "deviceChecks": {
+    "userConfirmed": [],
+    "logOrCaptureConfirmed": [
+      "compatible-update-r and matching signing certificate",
+      "pulled installed APK hash equals release artifact",
+      "installed version 0.6.2 (9) and DEBUGGABLE absent",
+      "installer Activity start response ok"
+    ],
+    "notRun": [
+      "front",
+      "tilt30",
+      "near20cm",
+      "far50cm",
+      "price",
+      "occluded",
+      "proteinBarcode",
+      "fiveControlledRepeatTrials",
+      "fiveMinuteLoad",
+      "physical watermark visual check",
+      "actual crop alignment and product motion",
+      "actual world tab touch",
+      "runtime error and key log scan: app process not running"
+    ],
+    "userAvailability": "User answered 지금 실물 시험 불가; no physical success confirmed for 0.6.2"
+  },
+  "captures": [
+    {
+      "id": "front",
+      "path": "artifacts/ui-p0/theanine-front.png",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "tilt30",
+      "path": "artifacts/ui-p0/theanine-tilt-30.png",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "near20cm",
+      "path": "artifacts/ui-p0/theanine-near-20cm.png",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "far50cm",
+      "path": "artifacts/ui-p0/theanine-far-50cm.png",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "price",
+      "path": "artifacts/ui-p0/theanine-price.png",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "occluded",
+      "path": "artifacts/ui-p0/theanine-occluded.png",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "proteinBarcode",
+      "path": "artifacts/ui-p0/protein-barcode.png",
+      "status": "NOT_RUN"
+    }
+  ],
+  "evidencePolicy": "User reports, single-frame captures and logs are separate. Screenshots do not prove measured distance, angle, frame-level hiding latency or continuous alignment. No unperformed result is filled as PASS. No key/contact/raw network response is stored here.",
+  "representativeCaptures": [
+    {
+      "id": "front",
+      "fileExists": false,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "proteinBarcode",
+      "fileExists": false,
+      "status": "NOT_RUN"
+    }
+  ],
+  "changedFiles": [
+    "Assets/Data/product-images.json",
+    "Assets/Editor/ProjectBuilder.cs",
+    "Assets/Fonts/Generated/NotoSansKR SDF.asset",
+    "Assets/Materials.meta",
+    "Assets/Materials/ProductTrackingLine.mat",
+    "Assets/Materials/ProductTrackingLine.mat.meta",
+    "Assets/Prefabs/ProductInfoPanel.prefab",
+    "Assets/Scenes/ProductAR.unity",
+    "Assets/Scripts/App/ProductARApp.cs",
+    "Assets/Scripts/AR/ProductPanelLayout.cs",
+    "Assets/Scripts/AR/ProductPanelLayout.cs.meta",
+    "Assets/Scripts/AR/TrackedImageProductPanel.cs",
+    "Assets/Scripts/Data/ProductImageCatalog.cs",
+    "Assets/Scripts/Data/ProductInfoFormatter.cs",
+    "Assets/Scripts/UI/BarcodeProductPanel.cs",
+    "Assets/Scripts/UI/ProductScreenView.cs",
+    "Assets/Scripts/UI/WorldProductPanel.cs",
+    "Assets/Tests/Editor/OnlineDisplayTests.cs",
+    "Assets/Tests/Editor/ProductARTests.cs",
+    "Assets/Tests/Editor/ProductImageTests.cs",
+    "Assets/Tests/Editor/ProductRecognitionV5Tests.cs",
+    "Assets/Tests/Editor/UiP0Tests.cs",
+    "Assets/Tests/Editor/UiP0Tests.cs.meta",
+    "DESIGN.md",
+    "docs/DEVICE-CHECKLIST.md",
+    "docs/VALIDATION.md",
+    "docs/validation/ui-p0-2026-10-27.json",
+    "docs/WORKLOG.md",
+    "README.md",
+    "scripts/Build-Android.ps1"
+  ]
+}

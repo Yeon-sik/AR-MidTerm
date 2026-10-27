@@ -4,9 +4,9 @@
 
 테아닌 밀크씨슬 박스는 사용자 제공 바코드 `8809375984692`·약 58mm 폭과 상단·하단 크롭을 등록했다. 2026-10-27 사용자 동일 상품 확인 후 PT ID `18e83c5c-86a4-4e95-a131-411381789687`로 연결하고 13,210원 관측 2건의 출처·신뢰도를 보존했다. 공개 영양 결과는 없어 비워 둔다. 브이젤 카드와 더단백의 개발용 연결은 계속 구분 표시한다.
 
-**0.6.1 보완 EditMode 172/172 PASS**, 실패·건너뜀 0. 기존 162개를 유지하고 온라인 전용 상품의 표시·해제와 제출 원본의 로컬 설정 없음 경로 등을 추가 검증했다. 온라인 DTO를 로컬 Selected에 넣지 않고 실제 표시 상품과 키를 버튼·상품 변경 감지 기준으로 사용한다. 앞면 3D 우선·실패 프레임 즉시 해제·최대 0.65초 규칙은 유지한다. 빌드·실기기 결과는 [검증 기록](docs/VALIDATION.md)을 따른다. 이전 바코드 선행 흐름은 [v4 구현](docs/PRODUCT-IMAGE-TRACKING.md)에 보존한다.
+**0.6.2 UI 보완 EditMode 194/194 PASS**, 실패·건너뜀 0. 기존 172개를 유지하고 위치 기하·윤곽/연결선 숨김·탭/문구·중복 버튼 시험 22개를 추가했다. 온라인 DTO를 로컬 Selected에 넣지 않고 실제 표시 상품과 키를 버튼·상품 변경 감지 기준으로 사용한다. 앞면 3D 우선·실패 프레임 즉시 해제·최대 0.65초 규칙은 유지한다. 릴리스 APK는 A25에 동일 서명으로 업데이트했으며 **이번 UI의 실물 캡처·사용자 확인은 NOT_RUN**이다. 빌드·실기기 결과는 [검증 기록](docs/VALIDATION.md)을 따른다. 이전 바코드 선행 흐름은 [v4 구현](docs/PRODUCT-IMAGE-TRACKING.md)에 보존한다.
 
-최신 결과는 [0.6.1 마무리 검증 JSON](docs/validation/online-lookup-finish-2026-10-27.json), 이전 온라인 도입 결과는 [0.6.0 검증 JSON](docs/validation/barcode-online-lookup-2026-10-27.json)에 기록한다. 기기 실행·사용자 기본 확인·자동 시험·미수행 반복 시험을 구분한다.
+촬영 전 UI 보완은 별도 **feat/ui-p0-video** 브랜치의 **0.6.2 (9)**다. 정보판은 상품 오른쪽 12mm 간격·고정 15°로 표시하고, 실제 추적 크롭 윤곽·연결선을 함께 숨기고 표시한다. 테아닌은 가격 탭으로 시작하며 재스캔은 하단 바 하나다. 최신 결과는 [0.6.2 UI 검증 JSON](docs/validation/ui-p0-2026-10-27.json), 이전 결과는 [0.6.1](docs/validation/online-lookup-finish-2026-10-27.json)·[0.6.0](docs/validation/barcode-online-lookup-2026-10-27.json)에 기록한다. 기기 실행·사용자 확인·캡처·자동 시험·미수행 반복 시험을 구분한다.
 
 상품마다 추가 마커를 붙이지 않는 확장은 [바코드 마커 기술 조사 보고서](docs/BARCODE-MARKER-RESEARCH.md)에 정리했다. ZXing·OpenCV 등 공개 구현, 2D 검출과 3D 자세 추정의 차이, 과제 적합성과 후속 검증 범위를 비교한다.
 
@@ -18,7 +18,7 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 
 ## 사용 흐름
 
-- **앞면 경로:** 등록된 테아닌 포장의 두 크롭 중 하나를 FULL_TRACKING하면 3D 정보판을 표시하고 영양/가격 탭을 전환한다. 더단백 포장 앞면 AR은 현재 시연 대상에 포함하지 않는다.
+- **앞면 경로:** 등록된 테아닌 포장의 두 크롭 중 하나를 FULL_TRACKING하면 오른쪽 3D 정보판과 크롭 윤곽을 표시한다. 영양이 없는 테아닌은 가격이 기본이며 영양 탭은 비활성이다. 더단백 포장 앞면 AR은 현재 시연 대상에 포함하지 않는다.
 - **바코드 경로:** EAN-13을 3회 확인하면 독립적인 2D 정보판과 앞면 등록 여부 배지를 표시한다. 이미지가 없어도 사용할 수 있다.
 - 같은 상품의 복수 앞면은 허용한다. 다른 상품의 앞면이 동시에 보이거나 서로 다른 앞면/확정 바코드가 충돌하면 숨긴다.
 - 미등록 번호는 읽은 번호와 **로컬 카탈로그 스냅샷 날짜**를 표시한다. 운영 PriceTrace 전체의 미등록을 단정하지 않는다.
@@ -49,10 +49,11 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 
 ## 빌드·설치·남은 검증
 
-제출 코드 버전은 **0.6.1 (8)**이다. Android 버전·권한은 ProjectBuilder 빌드 경로에서 설정한다. 버전별 A25 업데이트·설치 해시·확인/미수행 항목은 [검증 기록](docs/VALIDATION.md)을 따른다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
+현재 촬영용 버전은 **0.6.2 (9)**다. Android 버전·권한은 ProjectBuilder 빌드 경로에서 설정한다. 버전별 A25 업데이트·설치 해시·확인/미수행 항목은 [검증 기록](docs/VALIDATION.md)을 따른다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
 
 - APK: `Builds/Android/ProductAR.apk` (생성 파일, Git 제외), 앱 이름 **상품정보 AR**, 패키지 `com.yeonsik.midtermar`.
-- 재빌드: `scripts/Build-Android.ps1`. 한글 경로 제한을 피하도록 영문 임시 복사본에서 빌드한다.
+- 영상용 릴리스: `scripts/Build-Android.ps1 -Release`. BuildOptions.None으로 개발 워터마크·DEVELOPMENT_BUILD 전용 코드 없이 만든다. 온라인 설정은 씬의 TextAsset 참조로 포함한다.
+- 개발 빌드: `scripts/Build-Android.ps1`. 기존 개발 진단 경로를 유지한다. 두 경로 모두 한글 경로 제한을 피하도록 영문 임시 복사본에서 빌드한다.
 - 설치·실행: `scripts/Install-Android.ps1 -DeviceSerial <serial> -Launch`. 서명·버전을 확인한 `-r` 업데이트를 사용한다.
 - 씬·프리팹 재생성: Unity 메뉴 **Product AR → Prepare Project and Scene**. 생성 씬을 수동 수정했다면 재생성 전 내용을 보존한다.
 - 남은 실물 시험: [현재 이미지 정보판 체크리스트](docs/DEVICE-CHECKLIST.md). 포장 앞면 추적·회전·거리 변화·소실·재획득과 탭 터치를 확인해야 한다. 평면 배치는 [v2 체크리스트](docs/DEVICE-CHECKLIST-V2.md)에 보관한다.
@@ -60,7 +61,7 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 
 ## 제출 기준 커밋과 키 없는 원본
 
-**제출 기준 커밋은 로컬 태그 `submission/v0.6.1-2026-10-29`가 가리키는 커밋**이다. 정확한 SHA는 `git rev-parse 'submission/v0.6.1-2026-10-29^{commit}'` 또는 원본 ZIP의 `SUBMISSION-MANIFEST.json`에서 확인한다. 앱 검증 소스는 `70d73e7545a103bca60954fc9132c3f2cd04fb49`이며 태그 커밋에는 후속 검증 문서도 포함한다.
+**기존 제출 기준은 로컬 태그 `submission/v0.6.1-2026-10-29`가 가리키는 `2dd295a`**다. 0.6.2 UI 보완은 feat/ui-p0-video에 두며 이번 작업에서는 기존 제출 태그·세 브랜치를 이동하거나 병합하지 않는다. 정확한 SHA는 `git rev-parse 'submission/v0.6.1-2026-10-29^{commit}'` 또는 원본 ZIP의 `SUBMISSION-MANIFEST.json`에서 확인한다. 기존 앱 검증 소스는 `70d73e7545a103bca60954fc9132c3f2cd04fb49`다.
 
 `Assets/Config/remote-lookup.local.json`이 없으면 **로컬 전용으로 동작**한다. 온라인 설정 생성 도구는 **`scripts/Initialize-RemoteLookup.ps1`**이다. 설정을 만든 뒤 씬을 갱신하고 재빌드한다. 키가 없는 제출 검토 환경에서는 설정 생성을 건너뛴다.
 
@@ -68,4 +69,4 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 ./scripts/Export-Submission.ps1 -SourceRef submission/v0.6.1-2026-10-29
 ```
 
-원본 압축은 Assets·Packages·ProjectSettings·docs·scripts·README와 관련 문서를 포함하고, Library·Temp·Logs·obj·Builds·artifacts·로컬 설정·키를 제외한다. ZIP 내부의 제외 경로와 키 패턴을 검사한다. [포함/제외·재검사·설정 생성·병합 승인 절차](docs/SUBMISSION.md)를 따른다. 브랜치 병합은 사용자 확인 후 `feat/barcode-online-lookup → feat/image-tracking-probe → feat/ar-foundation-m0-m3` 순서로 수행한다.
+원본 압축은 Assets·Packages·ProjectSettings·docs·scripts·README와 관련 문서를 포함하고, Library·Temp·Logs·obj·Builds·artifacts·로컬 설정·키를 제외한다. ZIP 내부의 제외 경로와 키 패턴을 검사한다. [포함/제외·재검사·설정 생성·병합 승인 절차](docs/SUBMISSION.md)를 따른다. 기존 온라인 작업의 두 단계 병합은 사용자 승인 후 2dd295a로 완료했다. 새 UI 브랜치의 병합은 이번 작업에 포함하지 않는다.
