@@ -173,10 +173,32 @@
     {
       "id": "b3d52f8c-5cb0-4eda-bf94-d0c52d116289",
       "canonicalName": "The미식",
-      "officialSiteUrl": "https://www.harimglobal.com/",
+      "officialSiteUrl": "https://the-mishik.com/",
       "parentBrandId": null,
       "status": "active",
-      "source": "User-provided packaging name and manufacturer official brand information"
+      "source": "Verified from Harim Industry official BRANDS page, official news release and The Mishik official brand mall; exact product identity remains physical-package evidence",
+      "research": {
+        "checkedDateKst": "2026-10-28",
+        "classification": "FOOD_BRAND_OPERATED_BY_MANUFACTURER",
+        "operatingCompany": "주식회사 하림산업",
+        "aliases": [
+          "더미식",
+          "The 미식"
+        ],
+        "evidenceUrls": [
+          "https://harim-foods.com/theme/s007/index/brand01.php",
+          "https://the-mishik.com/index.html",
+          "https://harim-foods.com/bbs/board.php?bo_table=bo1&page=6&wr_id=63",
+          "https://harim-foods.com/bbs/board.php?bo_table=bo1&page=6&wr_id=68"
+        ],
+        "parentBrandIdDecision": "Retain null: company operation does not by itself establish a parent-brand ID",
+        "trademarkRegistrantVerified": false,
+        "metadataOnly": [
+          "operatingCompany",
+          "aliases"
+        ],
+        "remoteRegistrationApproved": false
+      }
     }
   ]
 }
