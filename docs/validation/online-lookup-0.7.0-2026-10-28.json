@@ -49,15 +49,30 @@
     "buildType": "development",
     "sha256": "d3dcf62757dddb08fb91d880c21ed5410d8c7e3dd2fe96d724473adfa5704dde",
     "path": "Builds/Android/RegistrationProbe.apk",
-    "installedOnA25": true,
+    "installedOnA25": false,
     "installMode": "compatible-update-r",
     "installedApkMatches": true,
     "launch": "PASS",
-    "registration": "NOT_RUN",
-    "physicalReacquisition": "NOT_RUN",
+    "registration": "PASS_LOG_ONLY",
+    "physicalReacquisition": "NOT_CONFIRMED",
     "productIntegration": "NOT_IMPLEMENTED_PENDING_FEASIBILITY",
-    "captureFiles": [],
-    "evidence": "artifacts/v0.7.0/registration-probe/device-verification.json"
+    "captureFiles": [
+      "artifacts/v0.7.0/registration-probe/capture-attempt.png"
+    ],
+    "evidence": "artifacts/v0.7.0/registration-probe/device-verification.json",
+    "firstAttempt": {
+      "atKst": "2026-10-28T13:09:05+09:00",
+      "addJobsSucceeded": 3,
+      "fullTrackingConfirmed": false,
+      "reacquisitionConfirmed": false,
+      "userReported": "English instructions unclear; camera turned black after capture",
+      "screenshotConfirmed": "Black camera background; Jin Ramen crop preview visible; SessionInitializing",
+      "trackingLossReason": "InsufficientLight",
+      "cameraSource": "640x480",
+      "repeatCaptureIssue": "Duplicate images remain but only latest name selected; cannot conclude no image was detected",
+      "evidence": "artifacts/v0.7.0/registration-probe/capture-attempt.log"
+    },
+    "supersededBy": "runtime-registration-probe-2026-10-28.json: 0.7.0-probe.2 (13)"
   },
   "editorVisuals": {
     "status": "PASS_EDITOR_ONLY",
@@ -99,6 +114,27 @@
         "pt": "not_linked",
         "off": "found_with_nutrition",
         "physicalPossessionNotConfirmed": true
+      },
+      {
+        "barcode": "8801045520728",
+        "pt": "not_linked",
+        "off": "not_found",
+        "userProductName": "스낵면",
+        "checkedAtUtc": "2026-10-28T04:10:20Z",
+        "evidence": "artifacts/v0.7.0/ramen-candidates-2026-10-28.json"
+      },
+      {
+        "barcode": "8801045014869",
+        "pt": "not_linked",
+        "off": "found_without_nutrition",
+        "userProductName": "진라면 약간매운맛",
+        "returnedName": "진라면 약간 매운맛",
+        "returnedBrand": "오뚜기",
+        "returnedQuantity": null,
+        "checkedAtUtc": "2026-10-28T04:10:20Z",
+        "evidence": "artifacts/v0.7.0/ramen-candidates-2026-10-28.json",
+        "userConfirmedPackage": "봉지 120g 덜매운맛",
+        "ptCup110gCandidateExcluded": true
       }
     ]
   },
@@ -109,9 +145,9 @@
     "0.7.0 actual barcode OFF nutrition display",
     "0.7.0 theanine rotation/distance/occlusion/reacquisition",
     "additional 3-5 PT product identity/price/nutrition confirmation",
-    "C physical registration and reacquisition",
     "C product-linked 3D integration",
-    "final submission tag/ZIP/video/Word report"
+    "final submission tag/ZIP/video/Word report",
+    "C first FULL_TRACKING and physical loss/reacquisition confirmation"
   ],
   "cutoff": {
     "localTime": "2026-10-28T22:00:00+09:00",

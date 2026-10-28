@@ -53,7 +53,7 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 
 현재 빌드 목표는 **0.7.0 (13)**이다. Android 버전·권한은 ProjectBuilder 빌드 경로에서 설정한다. 버전별 A25 업데이트·설치 해시·확인/미수행 항목은 [검증 기록](docs/VALIDATION.md)을 따른다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
 
-2026-10-28 소스 `aa40bc0`의 0.7.0 (13) 릴리스 빌드는 완료했으나 미설치이며, A25에는 0.7.0-probe (13)가 설치되어 실물 등록 시험을 기다리고 있다. 개발용 시험 앱과 제출용 릴리스의 확인 결과를 섞지 않는다.
+2026-10-28 소스 `aa40bc0`의 0.7.0 (13) 릴리스 빌드는 완료했으나 미설치다. A25에는 한국어 안내·중복 촬영 방지를 보완한 `3313647`의 **0.7.0-probe.2 (13)**가 설치돼 있다. 전체 시험은 305/305 통과했으며 실물 등록·재인식 재시험은 대기 중이다. [시험 앱 기록](docs/validation/runtime-registration-probe-2026-10-28.json)과 제출용 릴리스의 확인 결과를 섞지 않는다.
 
 - APK: `Builds/Android/ProductAR.apk` (생성 파일, Git 제외), 앱 이름 **상품정보 AR**, 패키지 `com.yeonsik.midtermar`.
 - 영상용 릴리스: `scripts/Build-Android.ps1 -Release`. BuildOptions.None으로 개발 워터마크·DEVELOPMENT_BUILD 전용 코드 없이 만든다. 온라인 설정은 씬의 TextAsset 참조로 포함한다.
