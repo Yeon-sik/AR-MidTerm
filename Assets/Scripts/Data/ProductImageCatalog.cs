@@ -21,6 +21,7 @@ namespace MidtermAR
         public string referenceImageName;
         public string displayName;
         public bool developmentOnly;
+        public bool runtimeRegistered; // 세션 등록부만 설정한다. 정적 JSON에서는 허용하지 않는다.
         public float offsetXMetres; // 크롭 중심에서 상품 공통 원점까지의 이미지 로컬 오프셋
         public float offsetZMetres;
         public float productWidthMetres; // 크롭 폭과 구분한 상품 공통 영역의 폭
@@ -63,6 +64,8 @@ namespace MidtermAR
             var heights = new Dictionary<string, float>(StringComparer.Ordinal);
             foreach (var image in document.images)
             {
+                if (image?.runtimeRegistered == true)
+                    throw new FormatException("현장 등록 이미지는 정적 상품 이미지 JSON에 저장할 수 없습니다.");
                 if (image == null || !products.TryFindById(image.catalogProductId, out _)
                     || string.IsNullOrWhiteSpace(image.referenceImageName) || string.IsNullOrWhiteSpace(image.displayName)
                     || !names.Add(image.referenceImageName) || !Finite(image.offsetXMetres) || !Finite(image.offsetZMetres))

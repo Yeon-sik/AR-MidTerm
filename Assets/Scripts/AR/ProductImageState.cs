@@ -7,30 +7,34 @@ namespace MidtermAR
     {
         private readonly ProductCatalog products;
         private readonly ProductImageCatalog images;
+        private readonly SessionImageRegistry sessionImages;
         private string preferredImage;
-        public ProductImageBinding Binding { get; private set; }
-        public ProductSnapshot Product { get; private set; }
+        public ImageProductTarget Target { get; private set; }
+        public ProductImageBinding Binding => Target?.Binding;
+        public ProductSnapshot Product => Target?.DisplayProduct;
         public bool HasImageConflict { get; private set; }
         public bool Ready { get; private set; }
         public bool CanDisplay => Ready && Product != null && !HasImageConflict;
 
-        public ProductImageState(ProductCatalog products, ProductImageCatalog images)
-        { this.products = products; this.images = images; }
+        public ProductImageState(ProductCatalog products, ProductImageCatalog images, SessionImageRegistry sessionImages = null)
+        { this.products = products; this.images = images; this.sessionImages = sessionImages; }
 
         public void BeginFrame(bool ready)
         {
             Ready = ready;
-            Product = null;
-            Binding = null;
+            Target = null;
             HasImageConflict = false;
         }
 
         public void ObserveImage(string name, TrackingState state, int method)
         {
-            if (!ImageTrackingPolicy.CanDisplay(Ready, false, state, method, true)
-                || !images.TryFindByImage(name, out var binding) || !products.TryFindById(binding.catalogProductId, out var product)) return;
-            if (Product != null && Product.catalogProductId != product.catalogProductId) HasImageConflict = true;
-            if (Binding == null || name == preferredImage) { Binding = binding; Product = product; }
+            if (!ImageTrackingPolicy.CanDisplay(Ready, false, state, method, true)) return;
+            ImageProductTarget target;
+            if (images.TryFindByImage(name, out var binding) && products.TryFindById(binding.catalogProductId, out var product))
+                target = ImageProductTarget.FromLocal(product, binding, "PT 스냅샷 " + products.SnapshotDate);
+            else if (sessionImages == null || !sessionImages.TryFindByImage(name, out target)) return;
+            if (Product != null && !ProductIdentity.Matches(Product, target.DisplayProduct)) HasImageConflict = true;
+            if (Target == null || name == preferredImage) Target = target;
         }
 
         public void EndFrame() { if (CanDisplay) preferredImage = Binding.referenceImageName; }

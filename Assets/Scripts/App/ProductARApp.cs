@@ -15,7 +15,18 @@ namespace MidtermAR
         [SerializeField] private ProductScreenView screen;
         [SerializeField] private TrackedImageProductPanel imagePanel;
         [SerializeField] private BarcodeProductPanel barcodePanel;
+        [SerializeField] private RuntimeProductRegistrationController frontRegistration;
+        private ProductCatalog localCatalog;
+        private ProductImageCatalog imageCatalog;
+        private SessionImageRegistry sessionImages;
         private ProductRecognitionState recognition;
+        private ProductSnapshot pendingRegistrationProduct;
+        private ProductSnapshot pendingRegistrationLocalProduct;
+        private string pendingRegistrationSource;
+        private string registrationNotice;
+        private float registrationNoticeUntil;
+        private bool registrationScreenActive;
+        private bool registrationSucceeded;
         private bool paused;
         private string lastDisplayedProductKey;
         private float nextRefresh;
@@ -34,8 +45,11 @@ namespace MidtermAR
                 var catalog = new ProductCatalog(catalogJson.text);
                 var images = new ProductImageCatalog(imageBindingsJson.text, catalog);
                 images.ValidateLibrary(imagePanel.ReferenceLibrary);
-                imagePanel.Configure(catalog, images);
-                recognition = new ProductRecognitionState(catalog, images);
+                localCatalog = catalog;
+                imageCatalog = images;
+                sessionImages = new SessionImageRegistry(catalog);
+                imagePanel.Configure(catalog, images, sessionImages);
+                recognition = new ProductRecognitionState(catalog, images, sessionImages);
                 var config = RemoteLookupConfig.Parse(remoteLookupJson != null ? remoteLookupJson.text : null);
                 if (config.PtReady)
                 {
@@ -61,10 +75,22 @@ namespace MidtermAR
         private void OnEnable()
         {
             scanner.Observed += OnObserved;
+            if (frontRegistration != null)
+            {
+                frontRegistration.ImageAdded += OnFrontImageAdded;
+                frontRegistration.StateChanged += OnRegistrationStateChanged;
+            }
         }
         private void OnDisable()
         {
             scanner.Observed -= OnObserved;
+            if (frontRegistration != null)
+            {
+                frontRegistration.ImageAdded -= OnFrontImageAdded;
+                frontRegistration.StateChanged -= OnRegistrationStateChanged;
+                frontRegistration.Cancel();
+            }
+            ClearPendingRegistration();
             scanner.SetContinuous(false);
             recognition?.Suspend();
             imagePanel.InvalidatePose();
@@ -75,15 +101,17 @@ namespace MidtermAR
         {
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
-                if (recognition?.DisplayProduct != null || recognition?.ConfirmedBarcode != null) RestartScan();
+                if (frontRegistration?.IsActive == true) frontRegistration.Cancel();
+                else if (recognition?.DisplayProduct != null || recognition?.ConfirmedBarcode != null) RestartScan();
                 else Application.Quit();
             }
-            scanner.SetContinuous(recognition != null && !paused && readiness.CameraReady && scanner.HasCameraFrame);
+            scanner.SetContinuous(recognition != null && !paused && frontRegistration?.IsActive != true
+                && readiness.CameraReady && scanner.HasCameraFrame);
         }
 
         private void OnObserved(BarcodeReadResult result, BarcodeViewportTransform transform, float capturedAt)
         {
-            if (paused || recognition == null || float.IsNaN(capturedAt) || float.IsInfinity(capturedAt)
+            if (paused || frontRegistration?.IsActive == true || recognition == null || float.IsNaN(capturedAt) || float.IsInfinity(capturedAt)
                 || capturedAt > Time.unscaledTime || Time.unscaledTime - capturedAt > BarcodeFollowState.MaxAgeSeconds
                 || capturedAt <= lastCapturedAt) return;
             recognition.ObserveBarcode(result, capturedAt, Time.unscaledTime);
@@ -94,15 +122,23 @@ namespace MidtermAR
 
         private void LateUpdate()
         {
+            if (frontRegistration?.IsActive == true)
+            {
+                imagePanel.Present(false);
+                barcodePanel.SetCameraReady(false);
+                screen.gameObject.SetActive(false);
+                return;
+            }
+            if (!screen.gameObject.activeSelf) screen.gameObject.SetActive(true);
             if (recognition != null)
             {
                 imagePanel.SampleFrame();
                 var previousRoute = recognition.Route;
-                recognition.Resolve(imagePanel.CurrentProduct, imagePanel.HasImageConflict, Time.unscaledTime);
+                recognition.ResolveImage(imagePanel.ImageTarget, imagePanel.HasImageConflict, Time.unscaledTime);
                 if (!paused)
                 {
                     lookup?.Tick(recognition, Time.realtimeSinceStartupAsDouble);
-                    recognition.Resolve(imagePanel.CurrentProduct, imagePanel.HasImageConflict, Time.unscaledTime);
+                    recognition.ResolveImage(imagePanel.ImageTarget, imagePanel.HasImageConflict, Time.unscaledTime);
                 }
                 if (previousRoute != recognition.Route)
                 {
@@ -147,6 +183,10 @@ namespace MidtermAR
         }
         public void RestartScan()
         {
+            frontRegistration?.Cancel();
+            ClearPendingRegistration();
+            registrationNotice = null;
+            registrationSucceeded = false;
             scanner.SetContinuous(false);
             recognition?.Reset();
             imagePanel.ResetSelection();
@@ -157,6 +197,78 @@ namespace MidtermAR
             nextRefresh = 0;
             Refresh();
         }
+
+        // 등록 버튼을 누른 시점의 상품을 고정한다. 앞면으로 돌려 바코드가 사라져도 대상은 바뀌지 않는다.
+        public void BeginFrontRegistration()
+        {
+            if (paused || frontRegistration == null || !readiness.CameraReady || !scanner.HasCameraFrame
+                || !CanOfferFrontRegistration(recognition, imageCatalog, sessionImages)) return;
+            var product = recognition.BarcodeDisplayProduct;
+            var key = ProductIdentity.Key(product);
+            if (!frontRegistration.CanBegin(key)) return;
+            pendingRegistrationProduct = SessionImageRegistry.CopyProduct(product);
+            localCatalog.TryFindById(product.catalogProductId, out pendingRegistrationLocalProduct);
+            pendingRegistrationSource = recognition.SourceBadge;
+            if (!frontRegistration.Begin(key, product.name)) { ClearPendingRegistration(); return; }
+            recognition.Suspend();
+            scanner.SetContinuous(false);
+            imagePanel.InvalidatePose();
+            barcodePanel.SetCameraReady(false);
+            lastRead = null;
+            lastCapturedAt = float.NegativeInfinity;
+            lastDisplayedProductKey = null;
+            registrationNotice = null;
+            registrationSucceeded = false;
+            screen.gameObject.SetActive(false);
+        }
+
+        public static bool CanOfferFrontRegistration(ProductRecognitionState state, ProductImageCatalog images,
+            SessionImageRegistry registry)
+        {
+            if (state?.Route != ProductDisplayRoute.Barcode2D || state.BarcodeDisplayProduct == null
+                || string.IsNullOrEmpty(ProductIdentity.Key(state.BarcodeDisplayProduct))) return false;
+            if (state.OnlineEnabled && state.LookupResult?.Status != LookupStatus.Matched
+                && state.LookupResult?.Status != LookupStatus.ExternalFound) return false;
+            if (registry?.ContainsProduct(state.BarcodeDisplayProduct) == true) return false;
+            return images == null || !images.TryFind(state.BarcodeDisplayProduct, out var binding) || binding.developmentOnly;
+        }
+
+        private void OnFrontImageAdded(string referenceImageName)
+        {
+            if (paused || pendingRegistrationProduct == null) return;
+            var registered = sessionImages.TryAdd(referenceImageName, pendingRegistrationProduct,
+                pendingRegistrationLocalProduct, pendingRegistrationSource, out _);
+            registrationSucceeded = registered;
+            registrationNotice = registered ? "앞면을 등록했어요. 같은 앞면을 비추고 휴대폰을 천천히 움직여주세요."
+                : "앞면 연결을 완료하지 못했어요. 앱을 다시 실행한 뒤 등록해주세요.";
+            registrationNoticeUntil = Time.unscaledTime + 25f;
+            Debug.Log("[ProductAR Registration] product binding=" + registered + "; image=" + referenceImageName);
+            ClearPendingRegistration();
+            nextRefresh = 0;
+        }
+
+        private void OnRegistrationStateChanged()
+        {
+            if (frontRegistration?.IsActive == true)
+            { registrationScreenActive = true; return; }
+            // 취소 뒤 늦게 끝난 native 작업은 새로운 바코드 선택을 해제하지 않는다.
+            if (!registrationScreenActive) return;
+            registrationScreenActive = false;
+            if (registrationNotice == null)
+            {
+                registrationSucceeded = false;
+                registrationNotice = frontRegistration?.Status;
+                registrationNoticeUntil = Time.unscaledTime + 8f;
+            }
+            ClearPendingRegistration();
+            recognition?.Suspend();
+            imagePanel.InvalidatePose();
+            screen.gameObject.SetActive(true);
+            nextRefresh = 0;
+        }
+
+        private void ClearPendingRegistration()
+        { pendingRegistrationProduct = null; pendingRegistrationLocalProduct = null; pendingRegistrationSource = null; }
 
         private void Refresh()
         {
@@ -194,14 +306,18 @@ namespace MidtermAR
             {
                 step = "앞면 · 3D 정보";
                 title = imagePanel.HasVisibleTarget ? "앞면에 상품정보를 표시해요" : "앞면 위치를 확인하고 있어요";
-                message = ProductInfoFormatter.Honesty(recognition.Selected, imagePanel.Binding);
+                message = ProductInfoFormatter.Honesty(recognition.DisplayProduct, imagePanel.Binding);
                 primary = true;
             }
             else if (recognition.Route == ProductDisplayRoute.Barcode2D)
             {
                 step = "바코드 · 2D 정보";
                 title = "바코드로 상품을 확인했어요";
-                message = ProductInfoFormatter.CompactSource(recognition.SourceBadge) + "\n" + ProductInfoFormatter.FrontHint(recognition.BarcodeBadge(recognition.BarcodeDisplayProduct));
+                var frontHint = CanOfferFrontRegistration(recognition, imageCatalog, sessionImages)
+                    && frontRegistration?.HasProcessedProduct(ProductIdentity.Key(recognition.BarcodeDisplayProduct)) == true
+                    ? RuntimeProductRegistrationController.RestartNotice
+                    : ProductInfoFormatter.FrontHint(recognition.BarcodeBadge(recognition.BarcodeDisplayProduct));
+                message = ProductInfoFormatter.CompactSource(recognition.SourceBadge) + "\n" + frontHint;
                 if (!string.IsNullOrEmpty(recognition.LookupResult?.Detail)) message += "\n" + recognition.LookupResult.Detail;
                 if (!barcodePanel.HasVisibleTarget) message += "\n바코드를 선명하게 비춰주세요.";
                 primary = true;
@@ -215,13 +331,18 @@ namespace MidtermAR
             }
             else if (recognition.ConfirmationCount > 0)
             { title = "바코드를 확인하고 있어요"; message = "같은 번호를 3회 확인할 때까지 유지해 주세요."; }
-            screen.Show(step, title, message, summary, action, primary, false, false, error, attention,
+            else if (registrationNotice != null && Time.unscaledTime < registrationNoticeUntil)
+            { title = registrationSucceeded ? "등록한 앞면을 비춰주세요" : "앞면 등록"; message = registrationNotice; }
+            var canRegister = ready && frontRegistration != null && frontRegistration.CanBegin(ProductIdentity.Key(recognition?.BarcodeDisplayProduct))
+                && CanOfferFrontRegistration(recognition, imageCatalog, sessionImages);
+            screen.Show(step, title, message, summary, action, primary, canRegister, false, error, attention, moveAction: "앞면 등록",
                 secondaryAction: recognition?.DisplayProduct != null && ready);
         }
 
         private void OnApplicationPause(bool value)
         {
             paused = value;
+            if (value) { frontRegistration?.Cancel(); ClearPendingRegistration(); }
             recognition?.Suspend();
             scanner.SetContinuous(false);
             imagePanel.InvalidatePose();

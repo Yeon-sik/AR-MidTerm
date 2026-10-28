@@ -336,7 +336,7 @@ namespace MidtermAR.Editor
             PlayerSettings.productName = "상품정보 AR";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
             PlayerSettings.bundleVersion = "0.7.0";
-            PlayerSettings.Android.bundleVersionCode = 13;
+            PlayerSettings.Android.bundleVersionCode = 14;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -549,6 +549,11 @@ namespace MidtermAR.Editor
             Assign(presenter, "cameraManager", camera.GetComponent<ARCameraManager>());
             Assign(presenter, "arCamera", camera);
             Assign(presenter, "panelPrefab", panel);
+            var registration = app.GetComponent<RuntimeProductRegistrationController>()
+                ?? app.gameObject.AddComponent<RuntimeProductRegistrationController>();
+            registration.Configure(camera.GetComponent<ARCameraManager>(), images, camera,
+                UnityEngine.Object.FindFirstObjectByType<ARSession>(), EnsureFont());
+            Assign(app, "frontRegistration", registration);
             var oldVisuals = app.transform.Find("Tracking Visuals");
             if (oldVisuals != null) UnityEngine.Object.DestroyImmediate(oldVisuals.gameObject);
             var visuals = new GameObject("Tracking Visuals"); visuals.transform.SetParent(app.transform, false);
@@ -686,13 +691,14 @@ namespace MidtermAR.Editor
             var layout = buttons.gameObject.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
             layout.spacing = 18; layout.childControlWidth = true; layout.childControlHeight = true; layout.childForceExpandWidth = true;
             var primary = Button(buttons, "Primary", "다시 스캔", font, Green, 1.4f, out var primaryLabel);
-            var move = Button(buttons, "Reposition", "재배치", font, new Color(0.2f, 0.3f, 0.34f), 1, out var moveLabel);
+            var move = Button(buttons, "Reposition", "앞면 등록", font, Green, 1, out var moveLabel);
             var delete = Button(buttons, "Delete", "삭제", font, new Color(0.2f, 0.3f, 0.34f), 1, out _);
             Assign(view, "primaryLabel", primaryLabel); Assign(view, "primaryButton", primary);
             Assign(view, "moveLabel", moveLabel);
             Assign(view, "moveButton", move); Assign(view, "deleteButton", delete);
             Assign(view, "instructionPanel", bottom); Assign(view, "buttons", buttons);
             UnityEventTools.AddPersistentListener(primary.onClick, app.PrimaryAction);
+            UnityEventTools.AddPersistentListener(move.onClick, app.BeginFrontRegistration);
             var events = new GameObject("UI Event System", typeof(EventSystem), typeof(InputSystemUIInputModule));
             events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
             Canvas.ForceUpdateCanvases();

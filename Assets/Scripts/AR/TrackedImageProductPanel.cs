@@ -23,19 +23,22 @@ namespace MidtermAR
         private readonly ARCoreImageObservation observation = new ARCoreImageObservation();
         private readonly HashSet<TrackableId> freshImages = new HashSet<TrackableId>();
         private WorldProductPanel panel;
-        private string boundProductId;
+        private ProductSnapshot boundProduct;
+        private string boundDisplayKey;
+        private string boundSourceBadge;
         private ARTrackedImage selectedImage;
         private bool paused;
         private float lastCameraFrame = float.NegativeInfinity;
         public bool HasVisibleTarget => panel != null && panel.gameObject.activeSelf;
         public ProductImageBinding Binding { get; private set; }
+        public ImageProductTarget ImageTarget => state?.CanDisplay == true ? state.Target : null;
         public ProductSnapshot CurrentProduct => state?.CanDisplay == true ? state.Product : null;
         public bool HasImageConflict => state?.HasImageConflict == true;
         public bool TrackingMethodUnavailable => observation.Unavailable;
         public IReferenceImageLibrary ReferenceLibrary => imageManager.referenceLibrary;
 
-        public void Configure(ProductCatalog products, ProductImageCatalog images)
-        { state = new ProductImageState(products, images); annotations?.Configure(images); InvalidatePose(); }
+        public void Configure(ProductCatalog products, ProductImageCatalog images, SessionImageRegistry registry = null)
+        { state = new ProductImageState(products, images, registry); annotations?.Configure(images); InvalidatePose(); }
 
         private void OnEnable()
         {
@@ -59,12 +62,16 @@ namespace MidtermAR
         }
 
         // 같은 상품의 재획득·크롭 전환에서는 탭을 유지한다.
-        public void SetProduct(ProductSnapshot product, ProductImageBinding binding)
+        public void SetProduct(ProductSnapshot product, ProductImageBinding binding, string displayKey = null, string sourceBadge = null)
         {
             if (product != null && binding != null && product.catalogProductId != binding.catalogProductId)
                 throw new ArgumentException("상품정보와 이미지의 상품 ID가 일치하지 않습니다.");
-            if (product != null && boundProductId == product.catalogProductId && Binding == binding) return;
-            boundProductId = product?.catalogProductId;
+            var key = product == null ? null : displayKey ?? ProductIdentity.Key(product);
+            if (product != null && ReferenceEquals(boundProduct, product) && boundDisplayKey == key
+                && Binding == binding && boundSourceBadge == sourceBadge) return;
+            boundProduct = product;
+            boundDisplayKey = key;
+            boundSourceBadge = sourceBadge;
             Binding = product == null ? null : binding;
             if (product == null || binding == null) { if (panel != null) panel.Bind(null); annotations?.Bind(null); Hide(); return; }
             if (panel == null)
@@ -73,7 +80,7 @@ namespace MidtermAR
                 panel.name = "Tracked Product Information";
                 panel.GetComponent<Canvas>().worldCamera = arCamera;
             }
-            panel.Bind(product, binding);
+            panel.Bind(product, binding, key, sourceBadge);
             Hide();
         }
 
@@ -100,7 +107,10 @@ namespace MidtermAR
         public void Present(bool allowed)
         {
             if (!allowed || state?.CanDisplay != true || selectedImage == null) { Hide(); return; }
-            SetProduct(state.Product, state.Binding);
+            var target = state.Target;
+            // 사전 등록 앞면의 기존 표시를 보존하고, 현장 등록에는 식별 시점의 출처를 함께 표시한다.
+            SetProduct(target.DisplayProduct, target.Binding, target.IdentityKey,
+                target.Binding.runtimeRegistered ? target.SourceBadge : null);
             annotations?.Bind(showAnnotations ? state.Product : null);
             if (!TryApplyPose(selectedImage.transform, selectedImage.size)) { Hide(); return; }
             panel.gameObject.SetActive(true);

@@ -16,11 +16,12 @@ namespace MidtermAR
         public static string Specification(ProductSnapshot p) => p == null ? "" : string.IsNullOrEmpty(p.brand) ? p.specification ?? ""
             : p.brand + (string.IsNullOrEmpty(p.specification) ? "" : " · " + p.specification);
         public static string Honesty(ProductSnapshot p, ProductImageBinding binding) => p == null ? ""
+            : binding?.runtimeRegistered == true ? "현장 등록 · 크기는 추정값\n앱을 종료하면 등록이 사라져요."
             : (binding?.developmentOnly == true ? CardNotice : "")
                 + (binding != null && string.IsNullOrEmpty(p.barcode) ? (binding.developmentOnly ? "\n" : "") + "바코드 미연결" : "");
         public static string CompactSource(string badge) => (badge ?? "").Replace("Open Food Facts 정보", "Open Food Facts")
             .Replace("PT 등록 여부 확인 불가", "PT 등록 확인 불가");
-        public static string FrontHint(string badge) => string.IsNullOrEmpty(badge) ? "" : badge.StartsWith("앞면 이미지 등록됨")
+        public static string FrontHint(string badge) => string.IsNullOrEmpty(badge) ? "" : badge.Contains("현장 등록") ? "앞면 현장 등록됨 · 이번 실행에서만 유지" : badge.StartsWith("앞면 이미지 등록됨")
             ? "앞면 이미지 등록됨" : "앞면 이미지 없음";
         private static readonly CultureInfo Korean = CultureInfo.GetCultureInfo("ko-KR"); // 원화 가격의 천 단위 구분 형식
         public static string Number(double? value, string unit) => value.HasValue ? value.Value.ToString("0.##", CultureInfo.InvariantCulture) + unit : "정보 없음";

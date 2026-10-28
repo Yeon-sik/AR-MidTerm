@@ -18,8 +18,10 @@ namespace MidtermAR
         {
             layout = default;
             if (binding == null || !Positive(cropSize.x) || !Positive(cropSize.y)) return false;
-            // 실제 포장은 기록한 공통 폭을 쓴다. 크기 미측정 개발 카드만 현재 추적 크기를 쓴다.
-            var productWidth = binding.productWidthMetres > 0 ? binding.productWidthMetres : binding.developmentOnly ? cropSize.x : 0;
+            // 사전 등록 포장은 실측한 공통 폭을 쓴다. 현장 등록은 ARCore 추정 폭을 허용한다.
+            // 개발 카드의 기존 추적 폭 대체도 유지하되, 일반 포장의 실측 누락을 허용하지 않는다.
+            var productWidth = binding.productWidthMetres > 0 ? binding.productWidthMetres
+                : binding.runtimeRegistered || binding.developmentOnly ? cropSize.x : 0;
             if (!Positive(productWidth)) return false;
             // 58mm 포장은 92.8mm 창. 640단위 창의 30단위 본문이 약 4.4mm가 되도록 최소 90mm를 둔다.
             // 160mm 상한은 큰 개발용 마커의 UI 과대 확대를 막는 표시 기준이며 상품 실측값이 아니다.

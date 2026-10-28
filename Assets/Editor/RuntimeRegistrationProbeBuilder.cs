@@ -22,6 +22,7 @@ namespace MidtermAR.Editor
             var app = Object.FindFirstObjectByType<ProductARApp>();
             var appObject = app.gameObject;
             Object.DestroyImmediate(app);
+            Object.DestroyImmediate(appObject.GetComponent<RuntimeProductRegistrationController>());
             // 스캐너의 기존 카메라 해상도·자동초점 초기화는 유지한다.
             // ProductARApp이 없으므로 스캔을 시작하지 않으며 바코드 디코딩은 실행되지 않는다.
             appObject.GetComponent<ARBarcodeScanner>().SetScanning(false);

@@ -1,4 +1,3 @@
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
 using UnityEngine;
 
@@ -62,4 +61,3 @@ namespace MidtermAR
             && !float.IsInfinity(value.x) && !float.IsInfinity(value.y);
     }
 }
-#endif

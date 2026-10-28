@@ -430,6 +430,10 @@ namespace MidtermAR.Tests
             var app = Object.FindFirstObjectByType<ProductARApp>();
             var presenter = Object.FindFirstObjectByType<TrackedImageProductPanel>();
             Call(app, "Awake");
+            // 두 로컬 상품의 전환 시험이다. 앱과 테스트의 카탈로그를 같은 객체로 맞춘다.
+            typeof(ProductARApp).GetField("recognition", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(app, new ProductRecognitionState(products, images));
+            presenter.Configure(products, images);
             try
             {
                 var state = Field<ProductRecognitionState>(app, "recognition");
