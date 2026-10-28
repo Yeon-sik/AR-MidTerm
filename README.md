@@ -12,7 +12,7 @@ OFF 영양은 판매 상태의 100g/100ml 표준값과 Open Food Facts 출처를
 
 상품마다 추가 마커를 붙이지 않는 확장은 [바코드 마커 기술 조사 보고서](docs/BARCODE-MARKER-RESEARCH.md)에 정리했다. ZXing·OpenCV 등 공개 구현, 2D 검출과 3D 자세 추정의 차이, 과제 적합성과 후속 검증 범위를 비교한다.
 
-PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조회하는 계층을 구현했다. [온라인 조회 설정·실행·중단 절차](docs/ONLINE-LOOKUP.md), [도입 조사 정정](docs/BARCODE-PRODUCT-LOOKUP-RESEARCH.md)을 따른다. 설정이 없으면 로컬 전용, PT 오류면 확인 불가와 날짜가 있는 스냅샷을 표시한다. **2026-10-27 A25에서 두 시연 바코드의 PT 등록 표시·테아닌 앞면 3D·오프라인 대체 표시를 사용자와 확인했다.** 작업 초반의 404/PGRST202는 이후 200/matched로 바뀌었다. 정상 OFF 분기와 반복·부하 시험의 수행 여부는 검증 기록을 따른다.
+PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조회하는 계층을 구현했다. 현재 범위는 [0.7.0 온라인 조회와 검증 경계](docs/ONLINE-LOOKUP-0.7.0.md)를 따른다. [이전 설정·조회 기록](docs/ONLINE-LOOKUP.md), [도입 조사 정정](docs/BARCODE-PRODUCT-LOOKUP-RESEARCH.md)은 이력으로 보존한다. 설정이 없으면 로컬 전용, PT 오류면 확인 불가와 날짜가 있는 스냅샷을 표시한다. **2026-10-27 A25에서 두 시연 바코드의 PT 등록 표시·테아닌 앞면 3D·오프라인 대체 표시를 사용자와 확인했다.** 작업 초반의 404/PGRST202는 이후 200/matched로 바뀌었다. 정상 OFF 분기와 반복·부하 시험의 수행 여부는 검증 기록을 따른다.
 
 바코드로 상품을 식별하고 사전 등록 이미지로 3D 위치를 추적하는 Android AR 카메라 앱이다.
 
@@ -52,6 +52,8 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 ## 빌드·설치·남은 검증
 
 현재 빌드 목표는 **0.7.0 (13)**이다. Android 버전·권한은 ProjectBuilder 빌드 경로에서 설정한다. 버전별 A25 업데이트·설치 해시·확인/미수행 항목은 [검증 기록](docs/VALIDATION.md)을 따른다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
+
+2026-10-28 소스 `aa40bc0`의 0.7.0 (13) 릴리스 빌드는 완료했으나 미설치이며, A25에는 0.7.0-probe (13)가 설치되어 실물 등록 시험을 기다리고 있다. 개발용 시험 앱과 제출용 릴리스의 확인 결과를 섞지 않는다.
 
 - APK: `Builds/Android/ProductAR.apk` (생성 파일, Git 제외), 앱 이름 **상품정보 AR**, 패키지 `com.yeonsik.midtermar`.
 - 영상용 릴리스: `scripts/Build-Android.ps1 -Release`. BuildOptions.None으로 개발 워터마크·DEVELOPMENT_BUILD 전용 코드 없이 만든다. 온라인 설정은 씬의 TextAsset 참조로 포함한다.

@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "recordedDateKst": "2026-10-28",
+  "sourceCommit": "aa40bc03c665b3f56502f9cbbc95b104d057ef32",
+  "branch": "feat/ui-p0-video",
+  "status": "A_IMPLEMENTED_B_WAITING_FOR_PRODUCTS_C_WAITING_FOR_PHYSICAL_TEST",
+  "scope": {
+    "offNutritionImplemented": true,
+    "observedPricesOnly": true,
+    "annotationsEnabled": false,
+    "boardPlacement": "fixed right, 12 mm gap, 15 degrees",
+    "registrationInRelease": false,
+    "validatedPtProducts": 2,
+    "requestedPtProducts": "5-7",
+    "remoteDataModified": false
+  },
+  "tests": {
+    "total": 302,
+    "passed": 302,
+    "failed": 0,
+    "skipped": 0,
+    "baselineCases": 248,
+    "missingPreviousCases": 0,
+    "added": 54,
+    "unityExitCode": 0,
+    "evidence": "artifacts/editmode/20261028-033303-65d8047e/summary.json"
+  },
+  "release": {
+    "versionName": "0.7.0",
+    "versionCode": 13,
+    "buildType": "release",
+    "buildResult": "Succeeded",
+    "sha256": "44c363d547b9cf0d89d3359663ed1b974bc924d2b13fd2943376d9d8dfa99ecd",
+    "sizeBytes": 52981548,
+    "path": "Builds/Android/ProductAR.apk",
+    "debuggable": false,
+    "developmentProbeTypesPresent": false,
+    "onlineConfigIncluded": true,
+    "exactSecretOrContactMatchesInBuildLog": 0,
+    "sourceFilesCompared": 107,
+    "sourceMismatchCount": 0,
+    "signerMatchesInstalledProbe": true,
+    "installedOnA25": false,
+    "physicalChecks": "NOT_RUN"
+  },
+  "registrationProbe": {
+    "versionName": "0.7.0-probe",
+    "versionCode": 13,
+    "buildType": "development",
+    "sha256": "d3dcf62757dddb08fb91d880c21ed5410d8c7e3dd2fe96d724473adfa5704dde",
+    "path": "Builds/Android/RegistrationProbe.apk",
+    "installedOnA25": true,
+    "installMode": "compatible-update-r",
+    "installedApkMatches": true,
+    "launch": "PASS",
+    "registration": "NOT_RUN",
+    "physicalReacquisition": "NOT_RUN",
+    "productIntegration": "NOT_IMPLEMENTED_PENDING_FEASIBILITY",
+    "captureFiles": [],
+    "evidence": "artifacts/v0.7.0/registration-probe/device-verification.json"
+  },
+  "editorVisuals": {
+    "status": "PASS_EDITOR_ONLY",
+    "checked": [
+      "artifacts/ui/barcode-follow/off-nutrition-1920.png",
+      "artifacts/ui/barcode-follow/off-nutrition-2400.png"
+    ],
+    "syntheticData": true,
+    "physicalEvidence": false,
+    "initialNoGraphicsOutput": "Blank; excluded from visual evidence and rerendered with graphics"
+  },
+  "publicLookup": {
+    "checkedAtUtc": "2026-10-28T03:33:33Z",
+    "evidence": "artifacts/v0.7.0/public-lookup-check.json",
+    "physicalEvidence": false,
+    "results": [
+      {
+        "barcode": "8809375984692",
+        "pt": "matched",
+        "serverPrice": null,
+        "approvedNutrition": false,
+        "priceFallback": "bundled observed snapshot"
+      },
+      {
+        "barcode": "8801104671507",
+        "pt": "matched",
+        "serverPrice": null,
+        "approvedNutrition": true,
+        "priceFallback": "bundled observed snapshot"
+      },
+      {
+        "barcode": "8809778493005",
+        "pt": "not_linked",
+        "off": "not_found",
+        "userProductName": "The미식 메밀비빔면"
+      },
+      {
+        "barcode": "3017624010701",
+        "pt": "not_linked",
+        "off": "found_with_nutrition",
+        "physicalPossessionNotConfirmed": true
+      }
+    ]
+  },
+  "userConfirmed": [],
+  "captureConfirmed": [],
+  "notRun": [
+    "0.7.0 release installation and installed hash check",
+    "0.7.0 actual barcode OFF nutrition display",
+    "0.7.0 theanine rotation/distance/occlusion/reacquisition",
+    "additional 3-5 PT product identity/price/nutrition confirmation",
+    "C physical registration and reacquisition",
+    "C product-linked 3D integration",
+    "final submission tag/ZIP/video/Word report"
+  ],
+  "cutoff": {
+    "localTime": "2026-10-28T22:00:00+09:00",
+    "ifNotPhysicallyVerified": "Exclude C from 0.7.0; keep A and completed B scope",
+    "replacesPreviousAnnotationFallback": true
+  },
+  "delivery": {
+    "remotePush": false,
+    "branchMerge": false,
+    "submissionTagCreated": false,
+    "existingTagMovedOrDeleted": false,
+    "appUninstalledOrDataCleared": false
+  }
+}
