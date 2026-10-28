@@ -43,11 +43,21 @@
     "backgroundRenderingEnabled": true,
     "startupScreenshot": "artifacts/v0.7.0/registration-probe-2/startup.png",
     "startupCameraImage": "BLACK_IN_CAPTURE; physical camera orientation not confirmed",
-    "actualBrightSceneBeforeCapture": "WAITING_FOR_USER",
-    "registration": "NOT_RUN_ON_PROBE_2",
-    "firstFullTracking": "NOT_RUN_ON_PROBE_2",
-    "physicalReacquisition": "NOT_RUN_ON_PROBE_2",
-    "evidence": "artifacts/v0.7.0/registration-probe-2/startup.log"
+    "actualBrightSceneBeforeCapture": "USER_COMPLETED_CAPTURE; not independently captured before shutter",
+    "registration": "PASS_LOG_AND_USER",
+    "firstFullTracking": "PASS_LOG",
+    "physicalReacquisition": "PASS_LOG_AND_USER",
+    "evidence": "artifacts/v0.7.0/registration-probe-2/reacquisition.log",
+    "reacquisitionCapture": "artifacts/v0.7.0/registration-probe-2/reacquisition.png",
+    "sequenceKst": {
+      "registered": "13:37:12.708",
+      "firstTracking": "13:37:25.008",
+      "loss": "13:37:30.552",
+      "reacquired": "13:37:32.775",
+      "estimatedWidthMetres": 0.1297,
+      "estimatedHeightMetres": 0.207,
+      "sizeIsMeasured": false
+    }
   },
   "previousAttempt": {
     "versionName": "0.7.0-probe",
@@ -61,11 +71,15 @@
     "evidence": "artifacts/v0.7.0/registration-probe/capture-attempt.log",
     "screenshot": "artifacts/v0.7.0/registration-probe/capture-attempt.png"
   },
-  "physicalConfirmed": [],
+  "physicalConfirmed": [
+    "User: captured the front and reached reacquisition complete",
+    "Native Success followed by valid FULL_TRACKING, Limited/method2 loss, and FULL_TRACKING reacquisition",
+    "Screenshot progress: registration, first recognition and reacquisition complete; later frame is dark and session is initializing"
+  ],
   "notRun": [
-    "Probe 2 registration and loss/reacquisition",
     "C integration with identified PT/OFF product and 3D panel",
-    "Final release build including C"
+    "Final release build including C",
+    "Controlled repeated trials and quantitative size accuracy"
   ],
   "noChangesTo": [
     "recognition confirmation/conflict/loss rules",

@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "recordedDateKst": "2026-10-28",
+  "sourceCommit": "45b8522dd0cfb6cd42148bdee2aabafe771c745c",
+  "branch": "feat/ui-p0-video",
+  "scope": "Barcode-identified PT/OFF product to session-only runtime front registration and 3D display",
+  "tests": {
+    "total": 378,
+    "passed": 378,
+    "failed": 0,
+    "skipped": 0,
+    "previous": 305,
+    "missingPrevious": [],
+    "added": 73,
+    "unityExitCode": 0,
+    "evidence": "artifacts/editmode/20261028-050027-f4e467e3/summary.json",
+    "comparison": "artifacts/v0.7.0/c-integration-test-comparison.json"
+  },
+  "editorVisuals": {
+    "result": "PASS_EDITOR_CAPTURE",
+    "physicalTrackingEvidence": false,
+    "checks": [
+      "Korean glyphs",
+      "Text fits after render-target canvas layout",
+      "Missing OFF price and nutrition remain explicit",
+      "OFF provenance and session limitations"
+    ],
+    "captures": [
+      "artifacts/v0.7.0/registration-ui/capture-form.png",
+      "artifacts/v0.7.0/registration-ui/off-front-no-nutrition.png"
+    ],
+    "log": "artifacts/v0.7.0/registration-ui-preview.log"
+  },
+  "apk": {
+    "versionName": "0.7.0",
+    "versionCode": 14,
+    "buildType": "release",
+    "status": "BUILD_SUCCEEDED_INSTALLED_PHYSICAL_FLOW_NOT_VERIFIED",
+    "sha256": "cc1525e6e0b17bc65b63a96944225bead5e8f83a273fbf961d8f56f2dd8b6472",
+    "sizeBytes": 53030340,
+    "installedApkSha256": "cc1525e6e0b17bc65b63a96944225bead5e8f83a273fbf961d8f56f2dd8b6472",
+    "installedApkMatches": true,
+    "installMode": "compatible-update-r",
+    "signerSha256": "cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135",
+    "installedAtUtc": "2026-10-28T05:05:53.5726852Z",
+    "path": "artifacts/v0.7.0/c-integration-release/ProductAR.apk"
+  },
+  "priorProbe": {
+    "sourceCommit": "3313647d82e2601a4f5616994ef35d13b420ad02",
+    "versionName": "0.7.0-probe.2",
+    "registration": "PASS_LOG_AND_USER",
+    "firstFullTracking": "PASS_LOG",
+    "lossAndReacquisition": "PASS_LOG_AND_USER",
+    "evidence": "docs/validation/runtime-registration-probe-2026-10-28.json",
+    "provesProductionProductPanel": false
+  },
+  "productionPhysicalChecks": {
+    "jinRamenBarcodeToOffName": "NOT_RUN",
+    "frontRegistrationButton": "NOT_RUN",
+    "frontCaptureAndQualityValidation": "NOT_RUN",
+    "frontOnly3dProductPanel": "NOT_RUN",
+    "outlineConnectorAndRightPanel": "NOT_RUN",
+    "lossAndReacquisition": "NOT_RUN",
+    "noNutritionAndNoPriceWithOffSource": "NOT_RUN",
+    "theanineStaticFrontRegression": "NOT_RUN",
+    "proteinBarPtBarcodeRegression": "NOT_RUN",
+    "registrationDisappearsAfterFullRestart": "NOT_RUN",
+    "releaseNoDevelopmentWatermark": "PASS_STARTUP_CAPTURE_AND_RELEASE_FLAGS"
+  },
+  "productionCaptures": [],
+  "remaining": [
+    "Physical verification of the production release flow",
+    "Three to five additional exact PT products and verified barcode mappings; existing count remains two",
+    "Physical OFF product with nutrition; supplied Jin Ramen has OFF name but no nutrition",
+    "Final submission source tag, archive, silent video, and report"
+  ],
+  "invariants": [
+    "No packaging annotations",
+    "Right panel gap 0.012m and tilt 15 degrees",
+    "Barcode requires three confirmations",
+    "Hide on loss, conflicting products, pause, or limited tracking",
+    "Ignore stale lookup and cancelled registration results",
+    "Online DTO never becomes local Selected",
+    "Only PT observed prices; no invented OFF nutrition or price",
+    "Runtime front size is estimated, never a measured value",
+    "Runtime image and product mapping are memory-only"
+  ],
+  "userData": {
+    "uninstall": false,
+    "dataClear": false
+  },
+  "remoteDataModified": false,
+  "git": {
+    "pushed": false,
+    "merged": false,
+    "submissionTagCreated": false
+  },
+  "cutoffKst": "2026-10-28T22:00:00+09:00",
+  "artifactVerification": {
+    "sourceCommit": "45b8522dd0cfb6cd42148bdee2aabafe771c745c",
+    "versionIdentity": "package: name='com.yeonsik.midtermar' versionCode='14' versionName='0.7.0' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'",
+    "sha256": "cc1525e6e0b17bc65b63a96944225bead5e8f83a273fbf961d8f56f2dd8b6472",
+    "sizeBytes": 53030340,
+    "signerSha256": "cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135",
+    "debuggable": false,
+    "productionController": true,
+    "sessionRegistry": true,
+    "developmentRegistrationProbe": false,
+    "developmentLookupProbe": false,
+    "comparedSourceFiles": 125,
+    "sourceMismatches": [],
+    "sensitiveBuildLogMatches": 0
+  },
+  "startup": {
+    "launch": "PASS_COLD_START",
+    "onlineMode": true,
+    "cpuImage": "1920x1080",
+    "capturedCameraImage": "BLACK_IN_CAPTURE; physical camera view not confirmed",
+    "majorExceptionMatches": 0,
+    "sensitiveLogMatches": 0,
+    "log": "artifacts/v0.7.0/c-integration-release/startup.log",
+    "screenshot": "artifacts/v0.7.0/c-integration-release/startup.png"
+  }
+}
