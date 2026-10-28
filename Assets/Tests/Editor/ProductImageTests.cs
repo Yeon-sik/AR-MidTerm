@@ -174,7 +174,7 @@ namespace MidtermAR.Tests
                 {
                     Assert.That(Text(panel, "price"), Is.EqualTo(dataState == "partial" ? "관측가 0원" : "관측가 1,400원"));
                     Assert.That(Text(panel, "priceSource"), Does.Contain(product.price.seller).And.Contain(product.price.observedAt).And.Contain("PriceTrace 관측가"));
-                    Assert.That(Text(panel, "nutritionSource"), Is.EqualTo("PriceTrace 승인 영양자료"));
+                    Assert.That(Text(panel, "nutritionSource"), Is.EqualTo("Fitness Nutrition · PT 승인"));
                     Assert.That(Text(panel, "nutrition"), Does.Contain(dataState == "partial" ? "당류 0g" : "당류 7g"));
                     Assert.That(Text(panel, "nutrition"), Does.Contain(dataState == "partial" ? "지방 정보 없음" : "지방 7g"));
                 }

@@ -73,6 +73,8 @@ namespace MidtermAR
         public double? fiberGrams;
         public string source;
         public string displaySource;
+        public string provider; // 영양값 제공 서비스. 원자료의 source와 구분한다.
+        public string sourceUpdatedAt; // OFF 상품 레코드 수정 시각. 영양 검증일이나 조회일이 아니다.
         public string nutritionFoodId;
         public string sourceCatalogProductId; // 영양정보의 연결 상품 일치 검증에 사용
     }

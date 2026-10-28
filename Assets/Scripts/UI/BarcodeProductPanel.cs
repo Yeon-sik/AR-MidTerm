@@ -44,7 +44,8 @@ namespace MidtermAR
             provenance.text = product == null ? "" : ProductInfoFormatter.CompactSource(sourceBadge ?? "PriceTrace");
             registrationStatus.text = product == null ? "" : ProductInfoFormatter.FrontHint(badge);
             nutritionSource.text = ProductInfoFormatter.NutritionSource(product);
-            emptyInformation.text = product == null ? "" : ProductInfoFormatter.EmptyInformation;
+            emptyInformation.text = product == null ? "" : ProductInfoFormatter.HasNutrition(product)
+                ? "가격 정보 없음" : ProductInfoFormatter.EmptyInformation;
             LayoutContent(product);
             if (product == null)
             {
@@ -56,8 +57,8 @@ namespace MidtermAR
                 if (text != null) text.richText = false;
             specification.text = ProductInfoFormatter.Specification(product);
             price.text = ProductInfoFormatter.Price(product);
-            if (priceLabel != null) priceLabel.text = product.price?.kind == "listed" ? "게시 가격" : "관측 가격";
-            var hasPrice = product.price?.unitPriceKrw.HasValue == true;
+            if (priceLabel != null) priceLabel.text = "관측 가격";
+            var hasPrice = ProductInfoFormatter.HasPrice(product);
             seller.text = hasPrice ? ProductInfoFormatter.PriceSource(product) : "확인된 가격 관측이 없습니다.";
             observedAt.text = hasPrice ? ProductInfoFormatter.PriceDisclaimer : "판매처·관측일 정보 없음";
             if (hasPrice) { observedAt.enableAutoSizing = true; observedAt.fontSizeMin = 18; observedAt.fontSizeMax = 22; }
@@ -78,13 +79,13 @@ namespace MidtermAR
             var hasNutrition = ProductInfoFormatter.HasNutrition(product);
             priceSection.gameObject.SetActive(hasPrice);
             nutritionSection.gameObject.SetActive(hasNutrition);
-            emptyInformation.gameObject.SetActive(product != null && !hasPrice && !hasNutrition);
+            emptyInformation.gameObject.SetActive(product != null && !hasPrice);
             var hasSpecification = !string.IsNullOrEmpty(ProductInfoFormatter.Specification(product));
             specification.gameObject.SetActive(hasSpecification);
             var cursor = hasSpecification ? 116f : 72f;
             if (hasPrice) { Position(priceSection, cursor, 140); cursor += 152; }
             if (hasNutrition) { Position(nutritionSection, cursor, 376); cursor += 388; }
-            if (product != null && !hasPrice && !hasNutrition) { Position(emptyInformation.rectTransform, cursor, 52); cursor += 64; }
+            if (product != null && !hasPrice) { Position(emptyInformation.rectTransform, cursor, 52); cursor += 64; }
             Position(provenance.rectTransform, cursor, 38); cursor += 40;
             registrationStatus.gameObject.SetActive(!string.IsNullOrEmpty(registrationStatus.text));
             Position(registrationStatus.rectTransform, cursor, 34);

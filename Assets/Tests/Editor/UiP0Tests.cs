@@ -193,7 +193,8 @@ namespace MidtermAR.Tests
             panel.SetProduct(Sample(nutrition, price), sourceBadge: "PT 등록 여부 확인 불가 · PT 스냅샷 2026-10-26");
             Assert.That(Field<RectTransform>(panel, "nutritionSection").gameObject.activeSelf, Is.EqualTo(nutrition));
             Assert.That(Field<RectTransform>(panel, "priceSection").gameObject.activeSelf, Is.EqualTo(price));
-            Assert.That(Field<TMP_Text>(panel, "emptyInformation").gameObject.activeSelf, Is.EqualTo(!nutrition && !price));
+            Assert.That(Field<TMP_Text>(panel, "emptyInformation").gameObject.activeSelf, Is.EqualTo(!price));
+            if (nutrition && !price) Assert.That(Field<TMP_Text>(panel, "emptyInformation").text, Is.EqualTo("가격 정보 없음"));
             Assert.That(Field<TMP_Text>(panel, "provenance").text, Does.Contain("PT 등록 확인 불가").And.Contain("2026-10-26"));
             if (!nutrition && !price) Assert.That(Field<RectTransform>(panel, "card").rect.height, Is.LessThan(240));
         }

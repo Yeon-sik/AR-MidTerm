@@ -18,7 +18,7 @@ namespace MidtermAR
         [SerializeField] private LineRenderer cropOutline;
         [SerializeField] private LineRenderer connector;
         [SerializeField] private ProductAnnotationPresenter annotations;
-        [SerializeField] private bool showAnnotations = true;
+        [SerializeField] private bool showAnnotations = false;
         private ProductImageState state;
         private readonly ARCoreImageObservation observation = new ARCoreImageObservation();
         private readonly HashSet<TrackableId> freshImages = new HashSet<TrackableId>();

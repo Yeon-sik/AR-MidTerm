@@ -1,10 +1,12 @@
 param(
     [string]$UnityEditor = 'C:\Program Files\Unity\Hub\Editor\6000.3.22f1\Editor\Unity.exe',
     [string]$ReuseStage,
-    [switch]$Release
+    [switch]$Release,
+    [switch]$RegistrationProbe
 )
 
 $ErrorActionPreference = 'Stop'
+if ($Release -and $RegistrationProbe) { throw 'RegistrationProbe is a separate development-only build, not a release.' }
 $taskRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $taskTempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\') + '\'
 $taskStage = if ($ReuseStage) { [IO.Path]::GetFullPath($ReuseStage).TrimEnd('\') }
@@ -31,18 +33,20 @@ foreach ($taskDirectory in @('Assets', 'Packages', 'ProjectSettings', 'ThirdPart
 }
 $taskArtifacts = Join-Path $taskRoot 'artifacts'
 New-Item -ItemType Directory -Path $taskArtifacts -Force | Out-Null
-$taskLog = Join-Path $taskArtifacts 'android-build-ascii.log'
-$taskMethod = if ($Release) { 'MidtermAR.Editor.ProjectBuilder.BuildAndroidRelease' } else { 'MidtermAR.Editor.ProjectBuilder.BuildAndroid' }
+$taskLog = Join-Path $taskArtifacts $(if ($RegistrationProbe) { 'registration-probe-build.log' } else { 'android-build-ascii.log' })
+$taskMethod = if ($RegistrationProbe) { 'MidtermAR.Editor.RuntimeRegistrationProbeBuilder.BuildAndroid' }
+    elseif ($Release) { 'MidtermAR.Editor.ProjectBuilder.BuildAndroidRelease' } else { 'MidtermAR.Editor.ProjectBuilder.BuildAndroid' }
 $taskArgs = @('-batchmode', '-nographics', '-quit', '-buildTarget', 'Android', '-projectPath', ('"' + $taskStage + '"'), '-executeMethod', $taskMethod, '-logFile', ('"' + $taskLog + '"'))
 Write-Output "Building isolated source copy: $taskStage"
 $taskProcess = Start-Process -FilePath $UnityEditor -ArgumentList $taskArgs -WindowStyle Hidden -PassThru
 $taskProcess.WaitForExit()
 if ($taskProcess.ExitCode -ne 0) { throw "Unity build failed ($($taskProcess.ExitCode)). Log: $taskLog. Isolated copy retained: $taskStage" }
-$taskBuiltApk = Join-Path $taskStage 'Builds\Android\ProductAR.apk'
+$taskApkName = if ($RegistrationProbe) { 'RegistrationProbe.apk' } else { 'ProductAR.apk' }
+$taskBuiltApk = Join-Path $taskStage ('Builds\Android\' + $taskApkName)
 if (-not (Test-Path -LiteralPath $taskBuiltApk -PathType Leaf)) { throw "No APK was produced. Isolated copy retained: $taskStage" }
 $taskOutput = Join-Path $taskRoot 'Builds\Android'
 New-Item -ItemType Directory -Path $taskOutput -Force | Out-Null
-$taskApk = Join-Path $taskOutput 'ProductAR.apk'
+$taskApk = Join-Path $taskOutput $taskApkName
 Copy-Item -LiteralPath $taskBuiltApk -Destination $taskApk -Force
 $taskRecord = [ordered]@{
     timestampUtc = [DateTime]::UtcNow.ToString('o')
@@ -53,9 +57,10 @@ $taskRecord = [ordered]@{
     sha256 = (Get-FileHash -LiteralPath $taskApk -Algorithm SHA256).Hash.ToLowerInvariant()
     sizeBytes = (Get-Item -LiteralPath $taskApk).Length
     result = 'BUILD_SUCCEEDED_DEVICE_NOT_VERIFIED'
-    buildType = if ($Release) { 'release' } else { 'development' }
+    buildType = if ($RegistrationProbe) { 'registration-probe-development' } elseif ($Release) { 'release' } else { 'development' }
 }
-$taskRecord | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskArtifacts 'android-build-summary.json') -Encoding UTF8
+$taskSummaryName = if ($RegistrationProbe) { 'registration-probe-build-summary.json' } else { 'android-build-summary.json' }
+$taskRecord | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $taskArtifacts $taskSummaryName) -Encoding UTF8
 Write-Output "APK: $taskApk"
 Write-Output "SHA256: $($taskRecord.sha256)"
 Write-Output "Temporary build copy retained for diagnosis: $taskStage"

@@ -40,7 +40,7 @@ namespace MidtermAR.Tests
             p.price.kind = "listed";
             Assert.That(ProductInsightCalculator.PricePerServing(p), Is.Null);
             Assert.That(ProductInsightCalculator.PricePerContentUnit(p), Is.Null);
-            Assert.That(ProductInfoFormatter.WorldPrice(p), Is.EqualTo("게시가 13,210원"));
+            Assert.That(ProductInfoFormatter.WorldPrice(p), Is.EqualTo("가격 정보 없음"));
         }
 
         [Test]

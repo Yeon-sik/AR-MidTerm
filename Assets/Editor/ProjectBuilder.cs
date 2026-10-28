@@ -96,6 +96,7 @@ namespace MidtermAR.Editor
                 price = new PriceSnapshot { unitPriceKrw = 0, seller = product.price.seller, observedAt = product.price.observedAt },
                 nutrition = new NutritionSnapshot { basisAmount = 40, basisUnit = "g", sugarsGrams = 0, sodiumMg = 0 }
             };
+            var off = OffProductClient.Parse(@"{""code"":""8809778493005"",""status"":""success"",""result"":{""id"":""product_found""},""errors"":[],""product"":{""product_name"":""OFF 영양 검증용 식품"",""brands"":""검증용"",""quantity"":""400 g"",""product_quantity_unit"":""g"",""last_modified_t"":1793145600,""nutriments"":{""energy-kcal_100g"":250,""proteins_100g"":5,""sugars_100g"":0,""sodium_100g"":0.4}}}", "8809778493005");
             var canvas = view.GetComponent<Canvas>();
             var camera = new GameObject("Follow UI Preview", typeof(Camera)).GetComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor;
@@ -115,12 +116,14 @@ namespace MidtermAR.Editor
                 Capture("lost", null, true);
                 Capture("data-missing", new Vector2(0.5f, 0.45f), sample: missing);
                 Capture("data-partial-zero", new Vector2(0.5f, 0.45f), sample: partial);
+                Capture("off-nutrition", new Vector2(0.5f, 0.45f), sample: off);
                 camera.targetTexture = null;
                 UnityEngine.Object.DestroyImmediate(target);
 
                 void Capture(string name, Vector2? position, bool lost = false, ProductSnapshot sample = null)
                 {
-                    follow.SetProduct(position.HasValue || lost ? sample ?? product : null);
+                    follow.SetProduct(position.HasValue || lost ? sample ?? product : null,
+                        sourceBadge: sample == off ? "Open Food Facts 정보 · PT 바코드 연결 필요" : null);
                     view.Show(position.HasValue ? "2 / 2 · 바코드 따라가는 중" : lost ? "2 / 2 · 바코드 위치 찾는 중" : "1 / 2 · 바코드 스캔",
                         position.HasValue ? "상품정보를 자동으로 표시해요" : lost ? "바코드를 다시 비춰주세요" : "바코드를 비춰주세요",
                         position.HasValue ? "바코드가 보이는 동안 정보창이 따라가요." : "바코드 전체가 선명하게 보이도록\n휴대폰을 잠시 멈춰주세요.",
@@ -327,13 +330,13 @@ namespace MidtermAR.Editor
             }
         }
 
-        private static void ConfigureAndroid()
+        internal static void ConfigureAndroid()
         {
             PlayerSettings.companyName = "Yeonsik";
             PlayerSettings.productName = "상품정보 AR";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
-            PlayerSettings.bundleVersion = "0.6.4";
-            PlayerSettings.Android.bundleVersionCode = 11;
+            PlayerSettings.bundleVersion = "0.7.0";
+            PlayerSettings.Android.bundleVersionCode = 13;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -559,7 +562,8 @@ namespace MidtermAR.Editor
             Assign(annotations, "annotationPrefab", CreateAnnotationLabel(EnsureFont(), material));
             Assign(presenter, "annotations", annotations);
             var annotationSettings = new SerializedObject(presenter);
-            annotationSettings.FindProperty("showAnnotations").boolValue = true;
+            // 포장 표기 주석은 보류한다. 원본 연구 코드는 보존하되 제출 앱에는 표시하지 않는다.
+            annotationSettings.FindProperty("showAnnotations").boolValue = false;
             annotationSettings.ApplyModifiedPropertiesWithoutUndo();
             Assign(presenter, "cropOutline", Line("Crop Outline", 4, true, OutlineWidthMetres));
             Assign(presenter, "connector", Line("Product Connector", 2, false, ConnectorWidthMetres));

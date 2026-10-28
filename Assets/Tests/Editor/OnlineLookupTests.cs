@@ -261,8 +261,15 @@ namespace MidtermAR.Tests
             json["matches"][0]["latestPublicPrice"] = new JObject { ["amountKrw"] = 0, ["kind"] = "listed", ["seller"] = "판매처",
                 ["observedAt"] = "2026-10-26T12:00:00Z", ["sourceLabel"] = "공개 게시 가격" };
             var result = PtBarcodeClient.Parse(json.ToString(), A);
+            // 0.7.0의 관측가 전용 표시 정책: 게시가를 관측가로 바꾸거나 matched를 오류로 만들지 않는다.
+            Assert.That(result.Status, Is.EqualTo("matched"));
+            Assert.That(result.Product.price, Is.Null);
+            json["matches"][0]["latestPublicPrice"]["kind"] = "observed";
+            json["matches"][0]["latestPublicPrice"]["sourceLabel"] = "공개 관측 가격";
+            result = PtBarcodeClient.Parse(json.ToString(), A);
             Assert.That(result.Product.price.unitPriceKrw, Is.EqualTo(0));
-            Assert.That(result.Product.price.kind, Is.EqualTo("listed"));
+            Assert.That(result.Product.price.kind, Is.EqualTo("observed"));
+            Assert.That(result.Product.price.displaySource, Is.EqualTo("공개 관측 가격"));
         }
 
         [TestCase(0)]
@@ -327,7 +334,8 @@ namespace MidtermAR.Tests
             for (var i = 0; i < 16; i++) { try { await client.Lookup(A, CancellationToken.None); } catch (IOException) { } }
             Assert.That(http.Calls, Is.EqualTo(15));
             Assert.That(http.UserAgent, Is.EqualTo("ProductAR/0.6.0 (test@example.invalid)"));
-            Assert.That(http.Url, Does.Contain("/api/v3/product/").And.Contain("fields=product_name_ko,product_name,brands,quantity").And.Not.Contain("nutriments"));
+            Assert.That(http.Url, Does.Contain("/api/v3/product/").And.Contain("fields=product_name_ko,product_name,brands,quantity,nutriments")
+                .And.Contain("no_nutrition_data,product_quantity_unit,serving_quantity_unit,last_modified_t"));
             Assert.That(limit.TryAcquire(60), Is.True);
         }
 

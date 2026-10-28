@@ -123,6 +123,8 @@ namespace MidtermAR.Tests
         {
             EditorSceneManager.OpenScene(ProjectBuilder.ScenePath);
             var presenter = Object.FindFirstObjectByType<TrackedImageProductPanel>();
+            // 보류한 주석의 독립 회귀 시험에서만 명시적으로 켠다. 제출 씬의 기본값은 꺼짐이다.
+            Set(presenter, "showAnnotations", true);
             var products = Products(); var images = new ProductImageCatalog(File.ReadAllText("Assets/Data/product-images.json"), products);
             presenter.Configure(products, images);
             var state = Field<ProductImageState>(presenter, "state");

@@ -128,6 +128,8 @@ namespace MidtermAR
                         observedAt = LookupJson.Timestamp(p, "observedAt"), displaySource = LookupJson.Text(p, "sourceLabel"),
                         source = "PT public barcode v1", kind = kind
                     };
+                    // 유효한 게시 가격도 계약상 matched다. 관측가만 표시하므로 가격만 제외한다.
+                    if (kind == "listed") observation = null;
                 }
                 product = new ProductSnapshot { catalogProductId = id, name = name, brand = brand, specification = specification,
                     barcode = barcode, barcodeFormat = "EAN_13", price = observation, contentAmount = contentAmount, contentUnit = contentUnit };
@@ -139,6 +141,7 @@ namespace MidtermAR
 
     public sealed class OffProductClient : IOffProductClient
     {
+        public const string SourceName = "Open Food Facts";
         private static readonly LookupRateLimit AppLimit = new LookupRateLimit();
         private readonly RemoteLookupConfig config;
         private readonly ILookupHttp http;
@@ -152,7 +155,8 @@ namespace MidtermAR
         {
             if (!config.OffReady || !rateLimit.TryAcquire(clock())) throw new IOException("OFF contact/limit unavailable");
             var response = await http.Send("https://world.openfoodfacts.org/api/v3/product/" + barcode
-                + "?fields=product_name_ko,product_name,brands,quantity", null, null, config.UserAgent(version), cancellation);
+                + "?fields=product_name_ko,product_name,brands,quantity,nutriments,no_nutrition_data,product_quantity_unit,serving_quantity_unit,last_modified_t",
+                null, null, config.UserAgent(version), cancellation);
             if (response.Status != 200 && response.Status != 404) throw new IOException("OFF unavailable");
             return Parse(response.Body, barcode, response.Status);
         }
@@ -176,7 +180,74 @@ namespace MidtermAR
             var product = root["product"] as JObject ?? throw new FormatException("OFF product missing");
             var name = LookupJson.OptionalText(product, "product_name_ko") ?? LookupJson.OptionalText(product, "product_name");
             return name == null ? null : new ProductSnapshot { name = name, brand = LookupJson.OptionalText(product, "brands"),
-                specification = LookupJson.OptionalText(product, "quantity"), barcode = barcode, barcodeFormat = "EAN_13" };
+                specification = LookupJson.OptionalText(product, "quantity"), barcode = barcode, barcodeFormat = "EAN_13",
+                nutrition = ParseNutrition(product, barcode) };
+        }
+
+        private static NutritionSnapshot ParseNutrition(JObject product, string barcode)
+        {
+            if (product["no_nutrition_data"]?.Type == JTokenType.String && (string)product["no_nutrition_data"] == "on"
+                || !(product["nutriments"] is JObject values)) return null;
+            // OFF product_nutrition schema: *_100g는 판매 상태 100g/액체 100ml의 표준값이다.
+            // *_unit는 입력 단위이므로 쓰지 않는다. sodium은 g, energy/energy-kj는 kJ다.
+            // https://openfoodfacts.github.io/documentation/docs/Product-Opener/schemas/schemas/product_nutrition/
+            var kcal = Nutrient(values, "energy-kcal_100g");
+            var kj = Nutrient(values, "energy-kj_100g") ?? Nutrient(values, "energy_100g");
+            var sodiumGrams = Nutrient(values, "sodium_100g");
+            var sodiumMg = sodiumGrams * 1000;
+            if (sodiumMg.HasValue && double.IsInfinity(sodiumMg.Value)) sodiumMg = null;
+            var snapshot = new NutritionSnapshot
+            {
+                basisAmount = 100, basisUnit = NutritionBasisUnit(product), prepState = "as_sold",
+                caloriesKcal = kcal ?? kj / 4.184,
+                carbsGrams = Nutrient(values, "carbohydrates_100g"), proteinGrams = Nutrient(values, "proteins_100g"),
+                fatGrams = Nutrient(values, "fat_100g"), sugarsGrams = Nutrient(values, "sugars_100g"),
+                saturatedFatGrams = Nutrient(values, "saturated-fat_100g"), sodiumMg = sodiumMg,
+                fiberGrams = Nutrient(values, "fiber_100g"), provider = SourceName,
+                source = "https://world.openfoodfacts.org/product/" + barcode, displaySource = SourceName,
+                sourceUpdatedAt = ProductUpdatedAt(product)
+            };
+            return ProductInfoFormatter.HasNutrition(new ProductSnapshot { nutrition = snapshot }) ? snapshot : null;
+        }
+
+        private static double? Nutrient(JObject values, string key)
+        {
+            var value = values[key];
+            if (value == null || value.Type == JTokenType.Null) return null;
+            if (value.Type != JTokenType.Integer && value.Type != JTokenType.Float && value.Type != JTokenType.String) return null;
+            double number;
+            if (value.Type == JTokenType.String)
+            {
+                if (!double.TryParse((string)value, NumberStyles.Float, CultureInfo.InvariantCulture, out number)) return null;
+            }
+            else
+            {
+                try { number = (double)value; }
+                catch (OverflowException) { return null; }
+            }
+            if (double.IsNaN(number) || double.IsInfinity(number) || number < 0) return null;
+            return number; // 잘못된 필드만 버린다. 나머지 영양값과 상품 식별은 유지한다.
+        }
+
+        private static string NutritionBasisUnit(JObject product)
+        {
+            var pack = NormalizedQuantityUnit(product["product_quantity_unit"]);
+            var serving = NormalizedQuantityUnit(product["serving_quantity_unit"]);
+            // 원문이 g/ml를 확정하지 않으면 질량과 부피를 임의로 바꾸지 않는다.
+            return pack != null && serving != null && pack != serving ? "g/100ml" : pack ?? serving ?? "g/100ml";
+        }
+
+        private static string NormalizedQuantityUnit(JToken token)
+        {
+            var unit = token?.Type == JTokenType.String ? ((string)token).Trim().ToLowerInvariant() : null;
+            return unit == "g" || unit == "ml" ? unit : null;
+        }
+
+        private static string ProductUpdatedAt(JObject product)
+        {
+            var value = Nutrient(product, "last_modified_t");
+            if (!value.HasValue || value != Math.Truncate(value.Value) || value > 253402300799) return null;
+            return DateTimeOffset.FromUnixTimeSeconds((long)value.Value).ToString("o", CultureInfo.InvariantCulture);
         }
     }
 
@@ -213,7 +284,7 @@ namespace MidtermAR
                     fatGrams = LookupJson.Number(values, "fat_grams", true), sodiumMg = LookupJson.Number(values, "sodium_mg", true),
                     saturatedFatGrams = LookupJson.Number(values, "saturated_fat_grams", true), sugarsGrams = LookupJson.Number(values, "sugars_grams", true),
                     fiberGrams = LookupJson.Number(values, "fiber_grams", true), source = LookupJson.Text(row, "source_type"),
-                    displaySource = "PT 승인 공개 영양자료"
+                    provider = "Fitness Nutrition", displaySource = "Fitness Nutrition · PT 승인"
                 };
                 if (selected != null) throw new FormatException("Multiple public nutrition rows require review");
                 selected = snapshot;
