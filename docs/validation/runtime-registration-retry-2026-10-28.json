@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "recordedDateKst": "2026-10-28",
+  "sourceCommit": "ab7687ea05abd84e88274e6ddac158fdce255bb4",
+  "branch": "feat/ui-p0-video",
+  "purpose": "Identify the post-registration detection or display failure without changing recognition policy",
+  "priorFailure": "docs/validation/runtime-registration-0.7.0-2026-10-28.json",
+  "rootCause": "UNCONFIRMED; filled noodle bag reported. Surface deformation is a possible condition, not a measured cause.",
+  "reference": "https://developers.google.com/ar/develop/augmented-images#requirements",
+  "changes": [
+    "Log native registration result and crop/source dimensions",
+    "Log runtime image detection state, method, and estimated size on state changes",
+    "Log image display readiness, mapping, conflict, and pose rejection",
+    "Explain flat stable packaging and matching the captured shape"
+  ],
+  "tests": {
+    "total": 378,
+    "passed": 378,
+    "failed": 0,
+    "skipped": 0,
+    "previous": 378,
+    "missingPrevious": [],
+    "added": 0,
+    "unityExitCode": 0,
+    "evidence": "artifacts/editmode/20261028-052932-afb9ca44/summary.json"
+  },
+  "apk": {
+    "versionName": "0.7.0",
+    "versionCode": 15,
+    "buildType": "release",
+    "status": "BUILD_SUCCEEDED_INSTALLED_NATIVE_TRACKING_CONFIRMED_VISUAL_PENDING",
+    "sha256": "b87b7f7fb7e71cba4f1b1c695ad98824aaf9d667537be6e1b3cd71117fbfe219",
+    "sizeBytes": 53037720,
+    "installedApkSha256": "b87b7f7fb7e71cba4f1b1c695ad98824aaf9d667537be6e1b3cd71117fbfe219",
+    "installedApkMatches": true,
+    "installMode": "compatible-update-r",
+    "signerSha256": "cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135",
+    "installedAtUtc": "2026-10-28T05:32:10.018879Z",
+    "path": "artifacts/v0.7.0/c-recognition-diagnostics-release/ProductAR.apk"
+  },
+  "artifactVerification": {
+    "sourceCommit": "ab7687ea05abd84e88274e6ddac158fdce255bb4",
+    "versionIdentity": "package: name='com.yeonsik.midtermar' versionCode='15' versionName='0.7.0' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'",
+    "sha256": "b87b7f7fb7e71cba4f1b1c695ad98824aaf9d667537be6e1b3cd71117fbfe219",
+    "sizeBytes": 53037720,
+    "signerSha256": "cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135",
+    "debuggable": false,
+    "productionController": true,
+    "sessionRegistry": true,
+    "developmentRegistrationProbe": false,
+    "developmentLookupProbe": false,
+    "comparedSourceFiles": 125,
+    "sourceMismatches": [],
+    "sensitiveBuildLogMatches": 0
+  },
+  "startup": {
+    "launch": "PASS_COLD_START",
+    "onlineMode": true,
+    "cpuImage": "1920x1080",
+    "cameraImage": "VISIBLE_IN_CAPTURE",
+    "majorExceptionMatches": 0,
+    "sensitiveLogMatches": 0,
+    "log": "artifacts/v0.7.0/c-recognition-diagnostics-release/startup.log",
+    "screenshot": "artifacts/v0.7.0/c-recognition-diagnostics-release/startup.png"
+  },
+  "editorVisuals": {
+    "result": "PASS_EDITOR_CAPTURE",
+    "physicalTrackingEvidence": false,
+    "capture": "artifacts/v0.7.0/registration-ui/capture-form.png",
+    "log": "artifacts/v0.7.0/registration-ui-preview.log"
+  },
+  "physicalChecks": {
+    "flatStableFrontCapture": "CAPTURE_COMPLETED_LOG; surface flatness not visually confirmed",
+    "nativeRegistration": "PASS_LOG",
+    "runtimeImageDetection": "PASS_LOG",
+    "fullTracking": "PASS_LOG",
+    "correctProduct3dPanel": "ROUTE_IMAGE3D_LOG; visual panel not confirmed",
+    "lossAndReacquisition": "PASS_TRACKING_STATE_AND_ROUTE_TRANSITIONS_LOG; deliberate physical removal not confirmed",
+    "theanineRegression": "NOT_RUN",
+    "barcodeRegression": "NOT_RUN",
+    "noDevelopmentWatermark": "PASS_RELEASE_FLAGS_AND_STARTUP_CAPTURE"
+  },
+  "captures": [],
+  "noChangeTo": [
+    "Three barcode confirmations",
+    "Full-tracking-only image display",
+    "Loss/conflict/pause/stale response rules",
+    "Right panel 12mm gap and 15 degree tilt",
+    "No packaging annotations",
+    "Session-only runtime registration"
+  ],
+  "userData": {
+    "uninstall": false,
+    "dataClear": false
+  },
+  "remoteDataModified": false,
+  "cutoffKst": "2026-10-28T22:00:00+09:00",
+  "trial": {
+    "image": "session-front-cb99acbc70234f39856e19d071916c3c",
+    "registeredAtKst": "2026-10-28T14:33:40.072+09:00",
+    "firstFullTrackingAtKst": "2026-10-28T14:33:53.248+09:00",
+    "image3dRouteAtKst": "2026-10-28T14:33:53.250+09:00",
+    "nativeAddToFirstFullTrackingSeconds": 13.178,
+    "initialEstimatedSizeMetres": [
+      0.0753,
+      0.1202
+    ],
+    "laterEstimatedSizeMetres": [
+      0.086,
+      0.1373
+    ],
+    "sizeIsMeasured": false,
+    "limitedAtKst": "2026-10-28T14:34:03.419+09:00",
+    "hiddenRouteAtKst": "2026-10-28T14:34:03.420+09:00",
+    "reacquiredAtKst": "2026-10-28T14:34:05.119+09:00",
+    "restoredRouteAtKst": "2026-10-28T14:34:05.120+09:00",
+    "conflict": false,
+    "poseRejectedLogMatches": 0,
+    "evidence": "artifacts/v0.7.0/c-recognition-diagnostics-release/retry-1/device.log",
+    "screenshot": "artifacts/v0.7.0/c-recognition-diagnostics-release/retry-1/screen.png",
+    "screenshotShows": "Camera dark and no current target; not evidence of panel appearance",
+    "visualProductPanel": "USER_CONFIRMATION_AND_VIDEO_REVIEW_PENDING",
+    "userVideoReport": "User recorded the test screen and saved it to gallery",
+    "videoLocation": "UNRESOLVED; no recent MP4 found in standard capture folders of connected A25"
+  }
+}

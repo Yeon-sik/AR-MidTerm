@@ -55,12 +55,12 @@
     "provesProductionProductPanel": false
   },
   "productionPhysicalChecks": {
-    "jinRamenBarcodeToOffName": "NOT_RUN",
-    "frontRegistrationButton": "NOT_RUN",
-    "frontCaptureAndQualityValidation": "NOT_RUN",
-    "frontOnly3dProductPanel": "NOT_RUN",
+    "jinRamenBarcodeToOffName": "BARCODE_AND_ROUTE_CONFIRMED_LOG; name not captured",
+    "frontRegistrationButton": "USER_REACHED_REGISTRATION",
+    "frontCaptureAndQualityValidation": "PASS_NATIVE_SUCCESS_AND_PRODUCT_BINDING_LOG; user captured",
+    "frontOnly3dProductPanel": "FAIL_USER_NOT_RECOGNIZED",
     "outlineConnectorAndRightPanel": "NOT_RUN",
-    "lossAndReacquisition": "NOT_RUN",
+    "lossAndReacquisition": "NOT_REACHED",
     "noNutritionAndNoPriceWithOffSource": "NOT_RUN",
     "theanineStaticFrontRegression": "NOT_RUN",
     "proteinBarPtBarcodeRegression": "NOT_RUN",
@@ -120,5 +120,19 @@
     "sensitiveLogMatches": 0,
     "log": "artifacts/v0.7.0/c-integration-release/startup.log",
     "screenshot": "artifacts/v0.7.0/c-integration-release/startup.png"
+  },
+  "failedPhysicalAttempt": {
+    "versionCode": 14,
+    "barcode": "8801045014869",
+    "userReport": "After registering mild Jin Ramen front, app asks to move phone and show front but recognition fails. Package contains the noodles.",
+    "registeredAtKst": "2026-10-28T14:22:59.251+09:00",
+    "nativeDatabaseImageCount": 4,
+    "productBinding": true,
+    "detectionOrDisplayFailure": "UNRESOLVED; no image observation diagnostics in this release",
+    "surfaceDeformation": "POSSIBLE; filled bag reported, curvature not visually confirmed",
+    "deviceScreenshot": "Home screen after the attempt; not evidence of the registration or product panel",
+    "evidence": "artifacts/v0.7.0/c-integration-release/failed-recognition-1/device.log",
+    "screenshot": "artifacts/v0.7.0/c-integration-release/failed-recognition-1/screen.png",
+    "reference": "https://developers.google.com/ar/develop/augmented-images#requirements"
   }
 }
