@@ -28,7 +28,7 @@
     "versionName": "0.7.0",
     "versionCode": 15,
     "buildType": "release",
-    "status": "BUILD_SUCCEEDED_INSTALLED_NATIVE_TRACKING_CONFIRMED_VISUAL_PENDING",
+    "status": "BUILD_SUCCEEDED_INSTALLED_BASIC_C_FLOW_CONFIRMED",
     "sha256": "b87b7f7fb7e71cba4f1b1c695ad98824aaf9d667537be6e1b3cd71117fbfe219",
     "sizeBytes": 53037720,
     "installedApkSha256": "b87b7f7fb7e71cba4f1b1c695ad98824aaf9d667537be6e1b3cd71117fbfe219",
@@ -70,17 +70,25 @@
     "log": "artifacts/v0.7.0/registration-ui-preview.log"
   },
   "physicalChecks": {
-    "flatStableFrontCapture": "CAPTURE_COMPLETED_LOG; surface flatness not visually confirmed",
+    "flatStableFrontCapture": "CAPTURE_COMPLETED_LOG; screenshot shows a wrinkled filled package, not a measured flatness check",
     "nativeRegistration": "PASS_LOG",
     "runtimeImageDetection": "PASS_LOG",
     "fullTracking": "PASS_LOG",
-    "correctProduct3dPanel": "ROUTE_IMAGE3D_LOG; visual panel not confirmed",
-    "lossAndReacquisition": "PASS_TRACKING_STATE_AND_ROUTE_TRANSITIONS_LOG; deliberate physical removal not confirmed",
+    "correctProduct3dPanel": "PASS_GALLERY_CAPTURES_FULL_PRODUCT_TEXT",
+    "lossAndReacquisition": "PASS_USER_AND_TRACKING_ROUTE_LOG; no video of deliberate occlusion",
     "theanineRegression": "NOT_RUN",
     "barcodeRegression": "NOT_RUN",
-    "noDevelopmentWatermark": "PASS_RELEASE_FLAGS_AND_STARTUP_CAPTURE"
+    "noDevelopmentWatermark": "PASS_RELEASE_FLAGS_AND_USER_SCREENSHOT",
+    "outlineConnectorAndRightPanel": "PASS_GALLERY_CAPTURES; edge-framing limitations remain",
+    "noNutritionAndNoPrice": "PASS_USER_SCREENSHOT",
+    "offSourceBadge": "PASS_GALLERY_CAPTURES_FULL_OFF_AND_PT_LINK_NEEDED_TEXT",
+    "completePanelWithinViewport": "ALL_TEXT_READABLE; right panel background and part of crop outline still extend beyond viewport"
   },
-  "captures": [],
+  "captures": [
+    "artifacts/v0.7.0/captures/jin-front-user-143412.jpg",
+    "artifacts/v0.7.0/captures/jin-front-user-144624.jpg",
+    "artifacts/v0.7.0/captures/jin-front-user-144626.jpg"
+  ],
   "noChangeTo": [
     "Three barcode confirmations",
     "Full-tracking-only image display",
@@ -99,7 +107,7 @@
     "image": "session-front-cb99acbc70234f39856e19d071916c3c",
     "registeredAtKst": "2026-10-28T14:33:40.072+09:00",
     "firstFullTrackingAtKst": "2026-10-28T14:33:53.248+09:00",
-    "image3dRouteAtKst": "2026-10-28T14:33:53.250+09:00",
+    "image3dRouteAtKst": "2026-10-28T14:33:53.25+09:00",
     "nativeAddToFirstFullTrackingSeconds": 13.178,
     "initialEstimatedSizeMetres": [
       0.0753,
@@ -111,16 +119,119 @@
     ],
     "sizeIsMeasured": false,
     "limitedAtKst": "2026-10-28T14:34:03.419+09:00",
-    "hiddenRouteAtKst": "2026-10-28T14:34:03.420+09:00",
+    "hiddenRouteAtKst": "2026-10-28T14:34:03.42+09:00",
     "reacquiredAtKst": "2026-10-28T14:34:05.119+09:00",
-    "restoredRouteAtKst": "2026-10-28T14:34:05.120+09:00",
+    "restoredRouteAtKst": "2026-10-28T14:34:05.12+09:00",
     "conflict": false,
     "poseRejectedLogMatches": 0,
     "evidence": "artifacts/v0.7.0/c-recognition-diagnostics-release/retry-1/device.log",
     "screenshot": "artifacts/v0.7.0/c-recognition-diagnostics-release/retry-1/screen.png",
     "screenshotShows": "Camera dark and no current target; not evidence of panel appearance",
-    "visualProductPanel": "USER_CONFIRMATION_AND_VIDEO_REVIEW_PENDING",
-    "userVideoReport": "User recorded the test screen and saved it to gallery",
-    "videoLocation": "UNRESOLVED; no recent MP4 found in standard capture folders of connected A25"
+    "visualProductPanel": "PASS_ADDITIONAL_GALLERY_CAPTURES_FULL_TEXT_READABLE",
+    "userVideoReport": "User identified the item in gallery Photos; the located evidence is a JPEG screenshot",
+    "videoLocation": "NO_VIDEO_REVIEWED; gallery evidence located as screenshot"
+  },
+  "galleryEvidence": {
+    "mediaId": 1491,
+    "originalFileName": "Screenshot_20261028_143412_ AR.jpg",
+    "sourcePath": "/sdcard/DCIM/Screenshots/Screenshot_20261028_143412_ AR.jpg",
+    "capturedAtKst": "2026-10-28T14:34:12+09:00",
+    "localPath": "artifacts/v0.7.0/captures/jin-front-user-143412.jpg",
+    "sha256": "8d4de9aef9a19d50bda4f0b35eb55157892dbb9c524ca32bc87bfe62fd26da85",
+    "width": 1080,
+    "height": 2340,
+    "observed": [
+      "Real Jin Ramen package front",
+      "Green rectangle over the registered crop",
+      "Connector leading to white 3D panel on the right",
+      "Jin Ramen product title prefix and Ottogi brand",
+      "Price information unavailable and nutrition information unavailable",
+      "Open Food Facts source prefix",
+      "Runtime estimated-size and session-lifetime notice",
+      "No Development Build watermark"
+    ],
+    "limitations": [
+      "Panel title and provenance extend outside the right screen edge",
+      "Full PT-link-needed badge is not visible",
+      "A still image cannot prove deliberate occlusion or motion following",
+      "12mm gap and 15 degree tilt are code/test evidence, not photo measurements",
+      "Outline corresponds to registered image crop, not the whole bag boundary"
+    ]
+  },
+  "additionalGalleryEvidence": [
+    {
+      "mediaId": 1494,
+      "originalFileName": "Screenshot_20261028_144624_ AR.jpg",
+      "sourcePath": "/sdcard/DCIM/Screenshots/Screenshot_20261028_144624_ AR.jpg",
+      "localPath": "artifacts/v0.7.0/captures/jin-front-user-144624.jpg",
+      "capturedAtKst": "2026-10-28T14:46:24+09:00",
+      "sha256": "244fe11964857376dc66d59346d4f69b6b0d80bff815933df841f39d1f92fc8a",
+      "width": 1080,
+      "height": 2340,
+      "observed": [
+        "Jin Ramen product name and Ottogi brand",
+        "Price information unavailable",
+        "Nutrition information unavailable",
+        "Open Food Facts information and PT barcode link needed",
+        "Runtime registration, estimated-size and session-lifetime notice",
+        "White 3D panel, green outline and connector"
+      ],
+      "limitations": [
+        "All text readable but right background edge is outside viewport",
+        "Some green outline extends beyond left viewport edge",
+        "Still image does not prove movement or occlusion"
+      ]
+    },
+    {
+      "mediaId": 1495,
+      "originalFileName": "Screenshot_20261028_144626_ AR.jpg",
+      "sourcePath": "/sdcard/DCIM/Screenshots/Screenshot_20261028_144626_ AR.jpg",
+      "localPath": "artifacts/v0.7.0/captures/jin-front-user-144626.jpg",
+      "capturedAtKst": "2026-10-28T14:46:26+09:00",
+      "sha256": "24f3f98eeaf2bb4e630ea486b160bce4c08bd1fab663f55dbff2bd3296b2ed49",
+      "width": 1080,
+      "height": 2340,
+      "observed": [
+        "Jin Ramen product name and Ottogi brand",
+        "Price information unavailable",
+        "Nutrition information unavailable",
+        "Open Food Facts information and PT barcode link needed",
+        "Runtime registration, estimated-size and session-lifetime notice",
+        "White 3D panel, green outline and connector"
+      ],
+      "limitations": [
+        "All text readable but right background edge is outside viewport",
+        "Some green outline extends beyond left viewport edge",
+        "Still image does not prove movement or occlusion"
+      ]
+    }
+  ],
+  "occlusionConfirmation": {
+    "status": "PASS_USER_AND_LOG",
+    "userAnswer": "모두 숨김·복구됨",
+    "question": "When the front was fully covered, did panel, outline and connector all disappear and return together?",
+    "latestLog": "artifacts/v0.7.0/c-recognition-diagnostics-release/retry-2-device.log",
+    "limitedAtKst": "2026-10-28T14:46:13.084+09:00",
+    "hiddenRouteAtKst": "2026-10-28T14:46:13.085+09:00",
+    "reacquiredAtKst": "2026-10-28T14:46:17.696+09:00",
+    "restoredRouteAtKst": "2026-10-28T14:46:17.698+09:00",
+    "exactUserGestureTimestamp": "Not independently timestamped",
+    "visualOcclusionVideo": "NOT_REVIEWED"
+  },
+  "cutoffGate": {
+    "status": "PASS_BASIC_DEVICE_FLOW_BEFORE_CUTOFF",
+    "includedAsSubmissionCandidate": true,
+    "proof": [
+      "Native registration and product binding log",
+      "Full-tracking and Image3D route log",
+      "Gallery screenshots with product panel, provenance, outline and connector",
+      "User confirms complete occlusion hides all three and uncovering restores them"
+    ],
+    "remaining": [
+      "Wider framing for final demo video",
+      "Controlled repeated trials",
+      "Session-only behavior after full process restart",
+      "Theanine and PT barcode regression checks on version 15"
+    ]
   }
 }
