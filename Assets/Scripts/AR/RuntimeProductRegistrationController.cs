@@ -64,7 +64,7 @@ namespace MidtermAR
             }
             if (!lifecycle.Begin(productKey, productLabel)) return false;
             EnsureView();
-            SetStatus("평평하고 반사가 적은 앞면을 틀에 채운 뒤 촬영해주세요.");
+            SetStatus(RuntimeProductRegistrationView.ReadyInstruction);
             RefreshView();
             StateChanged?.Invoke();
             return true;
@@ -165,6 +165,8 @@ namespace MidtermAR
                     addJob = library.ScheduleAddImageWithValidationJob(capturedTexture, referenceName, RequestedPhysicalWidthMetres);
                     jobScheduled = true;
                     SetStatus("사진의 특징을 확인하고 앞면을 등록하고 있어요.");
+                    Debug.Log($"[ProductAR Registration] add scheduled; image={referenceName}; source={cpuImage.width}x{cpuImage.height}; "
+                        + $"crop={outputWidth}x{outputHeight}; specifiedSize=false; viewport={GuideViewport}; cpuTimestamp={cpuImage.timestamp:F6}");
                 }
             }
             catch (Exception error)
@@ -214,10 +216,11 @@ namespace MidtermAR
             var result = addJob.status;
             jobScheduled = false;
             var publish = lifecycle.Complete(attempt, result == AddReferenceImageJobStatus.Success);
+            Debug.Log($"[ProductAR Registration] add completed; image={referenceName}; status={result}; current={publish}; libraryCount={library?.count}");
             ReleaseCaptureTexture();
             if (publish)
             {
-                SetStatus("앞면을 등록했어요. 같은 앞면을 비추고 휴대폰을 천천히 움직여주세요.");
+                SetStatus("앞면을 등록했어요. 촬영할 때의 모양을 유지하고 앞면 전체를 정면에서 비춰주세요.");
                 RefreshView();
                 try { ImageAdded?.Invoke(referenceName); }
                 finally { StateChanged?.Invoke(); }

@@ -10,7 +10,7 @@ namespace MidtermAR
         public static Rect CaptureArea => new Rect(.27f, .125f, .69f, .075f);
         public static Rect CancelArea => new Rect(.27f, .045f, .69f, .065f);
         public const string SessionNotice = "앱을 종료하면 등록이 사라져요. 크기는 카메라가 추정해요.";
-        public const string ReadyInstruction = "평평하고 반사가 적은 앞면을 틀에 채운 뒤 촬영해주세요.";
+        public const string ReadyInstruction = "봉지의 주름을 펴고 앞면을 평평하게 고정해주세요. 반사를 피하고 틀을 채워 촬영해주세요.";
         private static readonly Color Ink = new Color(.08f, .15f, .19f, .96f);
         private static readonly Color Green = new Color(.11f, .43f, .32f);
         private static readonly Color Muted = new Color(.27f, .34f, .36f);

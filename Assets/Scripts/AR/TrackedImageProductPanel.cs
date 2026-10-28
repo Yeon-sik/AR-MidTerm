@@ -20,8 +20,13 @@ namespace MidtermAR
         [SerializeField] private ProductAnnotationPresenter annotations;
         [SerializeField] private bool showAnnotations = false;
         private ProductImageState state;
+        private SessionImageRegistry sessionImages;
         private readonly ARCoreImageObservation observation = new ARCoreImageObservation();
         private readonly HashSet<TrackableId> freshImages = new HashSet<TrackableId>();
+        private readonly Dictionary<TrackableId, string> runtimeObservationLogs = new Dictionary<TrackableId, string>();
+        private string lastRuntimeFrameLog;
+        private float nextRuntimeFrameLog;
+        private bool invalidRuntimePoseLogged;
         private WorldProductPanel panel;
         private ProductSnapshot boundProduct;
         private string boundDisplayKey;
@@ -38,7 +43,7 @@ namespace MidtermAR
         public IReferenceImageLibrary ReferenceLibrary => imageManager.referenceLibrary;
 
         public void Configure(ProductCatalog products, ProductImageCatalog images, SessionImageRegistry registry = null)
-        { state = new ProductImageState(products, images, registry); annotations?.Configure(images); InvalidatePose(); }
+        { sessionImages = registry; state = new ProductImageState(products, images, registry); annotations?.Configure(images); InvalidatePose(); }
 
         private void OnEnable()
         {
@@ -56,9 +61,19 @@ namespace MidtermAR
         private void OnImagesChanged(ARTrackablesChangedEventArgs<ARTrackedImage> changes)
         {
             if (paused) return;
-            foreach (var image in changes.added) freshImages.Add(image.trackableId);
-            foreach (var image in changes.updated) freshImages.Add(image.trackableId);
-            foreach (var image in changes.removed) freshImages.Remove(image.Key);
+            foreach (var image in changes.added) { freshImages.Add(image.trackableId); LogRuntimeObservation(image); }
+            foreach (var image in changes.updated) { freshImages.Add(image.trackableId); LogRuntimeObservation(image); }
+            foreach (var image in changes.removed)
+            { freshImages.Remove(image.Key); runtimeObservationLogs.Remove(image.Key); }
+        }
+
+        private void LogRuntimeObservation(ARTrackedImage image)
+        {
+            if (image.referenceImage.name?.StartsWith("session-front-", StringComparison.Ordinal) != true) return;
+            var snapshot = $"state={image.trackingState}; method={observation.GetMethod(session, image)}";
+            if (runtimeObservationLogs.TryGetValue(image.trackableId, out var previous) && previous == snapshot) return;
+            runtimeObservationLogs[image.trackableId] = snapshot;
+            Debug.Log($"[ProductAR RuntimeTracking] image={image.referenceImage.name}; {snapshot}; estimatedSize={image.size.ToString("F4")}");
         }
 
         // 같은 상품의 재획득·크롭 전환에서는 탭을 유지한다.
@@ -102,6 +117,16 @@ namespace MidtermAR
                         if (image.referenceImage.name == state.Binding.referenceImageName && freshImages.Contains(image.trackableId))
                         { selectedImage = image; break; }
             }
+            if (sessionImages?.Count > 0 && Time.unscaledTime >= nextRuntimeFrameLog)
+            {
+                nextRuntimeFrameLog = Time.unscaledTime + 1f;
+                var snapshot = $"ready={ready}; cameraFresh={Time.unscaledTime - lastCameraFrame < 1f}; sessionReady={readiness.IsReady}; "
+                    + $"managerEnabled={imageManager.isActiveAndEnabled}; running={imageManager.subsystem?.running}; "
+                    + $"trackables={imageManager.trackables.count}; fresh={freshImages.Count}; "
+                    + $"mapped={state.Binding?.referenceImageName ?? "none"}; conflict={state.HasImageConflict}; methodUnavailable={observation.Unavailable}";
+                if (snapshot != lastRuntimeFrameLog)
+                { lastRuntimeFrameLog = snapshot; Debug.Log("[ProductAR RuntimeTracking] frame; " + snapshot); }
+            }
         }
 
         public void Present(bool allowed)
@@ -112,7 +137,13 @@ namespace MidtermAR
             SetProduct(target.DisplayProduct, target.Binding, target.IdentityKey,
                 target.Binding.runtimeRegistered ? target.SourceBadge : null);
             annotations?.Bind(showAnnotations ? state.Product : null);
-            if (!TryApplyPose(selectedImage.transform, selectedImage.size)) { Hide(); return; }
+            if (!TryApplyPose(selectedImage.transform, selectedImage.size))
+            {
+                if (target.Binding.runtimeRegistered && !invalidRuntimePoseLogged)
+                { invalidRuntimePoseLogged = true; Debug.LogWarning("[ProductAR RuntimeTracking] pose rejected; estimatedSize=" + selectedImage.size); }
+                Hide(); return;
+            }
+            invalidRuntimePoseLogged = false;
             panel.gameObject.SetActive(true);
             if (cropOutline != null) cropOutline.enabled = true;
             if (connector != null) connector.enabled = true;

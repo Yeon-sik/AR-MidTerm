@@ -239,7 +239,7 @@ namespace MidtermAR
             var registered = sessionImages.TryAdd(referenceImageName, pendingRegistrationProduct,
                 pendingRegistrationLocalProduct, pendingRegistrationSource, out _);
             registrationSucceeded = registered;
-            registrationNotice = registered ? "앞면을 등록했어요. 같은 앞면을 비추고 휴대폰을 천천히 움직여주세요."
+            registrationNotice = registered ? "앞면을 등록했어요. 촬영할 때의 모양을 유지하고 앞면 전체를 정면에서 비춰주세요."
                 : "앞면 연결을 완료하지 못했어요. 앱을 다시 실행한 뒤 등록해주세요.";
             registrationNoticeUntil = Time.unscaledTime + 25f;
             Debug.Log("[ProductAR Registration] product binding=" + registered + "; image=" + referenceImageName);
