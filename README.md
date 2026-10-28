@@ -56,7 +56,7 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 
 ## 빌드·설치·남은 검증
 
-최신 릴리스 APK는 **0.7.0 (16)**이며 소스는 `c710097`이다. 5종 스냅샷·새 영양을 반영하고 전체 EditMode **381/381 통과**(기존378+신규3)했다. APK SHA-256은 `12dd7317bbc3bd5da7b790266632457d8cced65fbdd1c2662e5b1450d913159f`, 크기는 53,036,676 bytes다. 이전 A25 검증 빌드와 서명 일치·DEBUGGABLE 부재·빌드 입력 125개 일치·로그 키 노출 0건을 확인했다. A25는 현재 연결할 수 없어 16번 설치·실물 확인은 미수행이며 마지막 설치·실물 기록은 15번이다. 버전별 범위는 [검증 기록](docs/VALIDATION.md)을 따른다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
+최신 릴리스 APK는 **0.7.0 (16)**이며 소스는 `c710097`이다. 5종 스냅샷·새 영양을 반영하고 전체 EditMode **381/381 통과**(기존378+신규3)했다. APK SHA-256은 `12dd7317bbc3bd5da7b790266632457d8cced65fbdd1c2662e5b1450d913159f`, 크기는 53,036,676 bytes다. 이전 A25 검증 빌드와 서명 일치·DEBUGGABLE 부재·빌드 입력 125개 일치·로그 키 노출 0건을 확인했다. 2026-10-29 A25에 같은 서명으로 16번을 업데이트하고 설치 APK 해시 일치를 확인했다. 카메라·실물은 잠금 해제 후 수행 대기이며 [오늘 기기 기록](docs/validation/device-0.7.0-2026-10-29.json)을 따른다. 버전별 범위는 [검증 기록](docs/VALIDATION.md)을 따른다. 기능 검증은 `scripts/Test-EditMode.ps1`, 씬·프리팹 갱신은 Unity 메뉴 **Product AR → Prepare Image Tracking Scene (No Build)**를 사용한다.
 
 2026-10-28 소스 `ab7687e`의 전체 시험은 **378/378 통과**했다. 기존 378개를 유지했다. 0.7.0 (15) 릴리스를 A25에 같은 서명으로 `-r` 업데이트했고 설치 APK 해시 일치를 확인했다. 앞선 14번 빌드는 진라면 이미지 등록·상품 연결 뒤 실물 인식 실패가 보고됐다. 원인을 확정하지 않고 추적 단계 진단과 평평한 포장 안내를 보강했다. [재시험 검증 JSON](docs/validation/runtime-registration-retry-2026-10-28.json)에 해시와 실제 확인 범위를 기록한다. 이전 `aa40bc0`의 0.7.0 (13)은 C 없는 미설치 빌드이며, `3313647`의 **0.7.0-probe.2 (13)**는 등록·재인식 가능성을 확인한 개발용 앱이다. [시험 앱 기록](docs/validation/runtime-registration-probe-2026-10-28.json)과 제출용 릴리스의 확인 결과를 섞지 않는다.
 

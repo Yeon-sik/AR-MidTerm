@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "dateKst": "2026-10-29",
+  "status": "INSTALL_VERIFIED_PHYSICAL_CHECKS_PENDING",
+  "sourceCommit": "c710097cf3cf66f353f9afd3c6f0132e83d920a1",
+  "branch": "feat/ui-p0-video",
+  "apk": {
+    "versionName": "0.7.0",
+    "versionCode": 16,
+    "sourceSha256": "12dd7317bbc3bd5da7b790266632457d8cced65fbdd1c2662e5b1450d913159f",
+    "installedSha256": "12dd7317bbc3bd5da7b790266632457d8cced65fbdd1c2662e5b1450d913159f",
+    "installedHashMatches": true,
+    "signerSha256": "cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135"
+  },
+  "installation": {
+    "device": "Galaxy A25 SM-A256N",
+    "mode": "compatible-update-r",
+    "timestampUtc": "2026-10-28T15:31:37.0943906Z",
+    "previousVersionCode": 15,
+    "installedVersionCode": 16,
+    "signaturesCompared": true,
+    "firstInstallTimeUnchanged": true,
+    "uninstalled": false,
+    "dataCleared": false,
+    "permanentDataIntegrity": "No app data backup comparison; compatible -r update and unchanged first-install time confirmed",
+    "startupScreenBeforeUnlock": "DOZING; black capture; physical camera startup not yet verified",
+    "androidVersion": "16",
+    "androidApiLevel": 36,
+    "keyguardShowingAndInputRestricted": true
+  },
+  "checks": [
+    {
+      "id": "pt-the-mishik",
+      "barcode": "8809778493005",
+      "status": "NOT_RUN",
+      "captures": []
+    },
+    {
+      "id": "pt-snack",
+      "barcode": "8801045520728",
+      "status": "NOT_RUN",
+      "captures": []
+    },
+    {
+      "id": "pt-jin",
+      "barcode": "8801045014869",
+      "status": "NOT_RUN",
+      "captures": []
+    },
+    {
+      "id": "theanine-front-ar",
+      "status": "NOT_RUN",
+      "captures": []
+    },
+    {
+      "id": "jin-pt-front-registration",
+      "status": "NOT_RUN",
+      "captures": []
+    },
+    {
+      "id": "offline-snapshot",
+      "status": "NOT_RUN",
+      "captures": []
+    },
+    {
+      "id": "off-nutrition-real-food",
+      "status": "NOT_RUN",
+      "captures": []
+    }
+  ],
+  "captures": [],
+  "evidenceRoot": "artifacts/v0.7.0/device-2026-10-29",
+  "notes": [
+    "User physical confirmation, screenshot inspection and logs will be recorded separately",
+    "Prior 15-build physical success is not used as PASS for version 16",
+    "No code changes or rebuild requested for this verification"
+  ],
+  "publicLookup": {
+    "checkedAt": "2026-10-29T00:34:13.1634072+09:00",
+    "scope": "Public HTTP read, separate from device camera",
+    "ptMatched": 5,
+    "nutritionFound": 4,
+    "theanineNutritionAbsent": true,
+    "artifactPath": "artifacts/v0.7.0/device-2026-10-29/public-lookup.json"
+  },
+  "previousCodeTests": {
+    "total": 381,
+    "passed": 381,
+    "sourceCommit": "c710097cf3cf66f353f9afd3c6f0132e83d920a1",
+    "rerunForDeviceQa": false
+  }
+}
