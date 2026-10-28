@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using TMPro;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
@@ -21,7 +22,9 @@ namespace MidtermAR.Editor
             var app = Object.FindFirstObjectByType<ProductARApp>();
             var appObject = app.gameObject;
             Object.DestroyImmediate(app);
-            Object.DestroyImmediate(appObject.GetComponent<ARBarcodeScanner>());
+            // 스캐너의 기존 카메라 해상도·자동초점 초기화는 유지한다.
+            // ProductARApp이 없으므로 스캔을 시작하지 않으며 바코드 디코딩은 실행되지 않는다.
+            appObject.GetComponent<ARBarcodeScanner>().SetScanning(false);
             Object.DestroyImmediate(appObject.GetComponent<TrackedImageProductPanel>());
             Object.DestroyImmediate(appObject.GetComponent<ProductPlacement>());
             var visuals = appObject.transform.Find("Tracking Visuals");
@@ -32,6 +35,9 @@ namespace MidtermAR.Editor
             var probe = appObject.AddComponent<RuntimeImageRegistrationProbe>();
             probe.Configure(camera, Object.FindFirstObjectByType<ARTrackedImageManager>(),
                 camera.GetComponent<Camera>(), Object.FindFirstObjectByType<ARSession>());
+            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Fonts/Generated/NotoSansKR SDF.asset");
+            if (font == null) throw new InvalidOperationException("Registration probe Korean font is missing.");
+            probe.SetUiFont(font);
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
         }
@@ -40,7 +46,7 @@ namespace MidtermAR.Editor
         {
             PrepareScene();
             ProjectBuilder.ConfigureAndroid();
-            PlayerSettings.bundleVersion = "0.7.0-probe";
+            PlayerSettings.bundleVersion = "0.7.0-probe.2";
             // 같은 코드의 release로 -r 복구할 수 있다. 앱 삭제나 다운그레이드는 필요 없다.
             PlayerSettings.Android.bundleVersionCode = 13;
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };

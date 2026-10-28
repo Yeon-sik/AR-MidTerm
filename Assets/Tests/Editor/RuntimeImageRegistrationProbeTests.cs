@@ -140,6 +140,41 @@ namespace MidtermAR.Tests
                 Is.EqualTo(RuntimeImageRegistrationProbe.PointerAction.None));
         }
 
+        [Test]
+        public void SuccessfulNativeRegistrationLocksFurtherCapturesForThisRun()
+        {
+            Assert.That(RuntimeImageRegistrationProbe.CanStartCapture(true, false, false, false), Is.True);
+            Assert.That(RuntimeImageRegistrationProbe.CanStartCapture(true, false, false, true), Is.False);
+            Assert.That(RuntimeImageRegistrationProbe.CanStartCapture(true, true, false, false), Is.False);
+            Assert.That(RuntimeImageRegistrationProbe.CanStartCapture(true, false, true, false), Is.False);
+            Assert.That(RuntimeImageRegistrationProbe.CanStartCapture(false, false, false, false), Is.False);
+        }
+
+        [Test]
+        public void KoreanInstructionsSeparateRegisteredFromTrackingAndPrioritizeSessionRecovery()
+        {
+            var evidence = new RuntimeImageRegistrationEvidence();
+            evidence.Registered("front");
+            StringAssert.Contains("앞면을 찾고", RuntimeImageRegistrationProbeView.Heading(true, false, false, evidence));
+            StringAssert.Contains("다시 촬영하지 말고", RuntimeImageRegistrationProbeView.Guidance(true, false, false, evidence, ""));
+            StringAssert.Contains("주변을 천천히", RuntimeImageRegistrationProbeView.Heading(false, false, false, evidence));
+            StringAssert.Contains("사진은 등록됐지만", RuntimeImageRegistrationProbeView.Guidance(false, false, false, evidence, ""));
+            StringAssert.DoesNotContain("다시 인식했어요", RuntimeImageRegistrationProbeView.Heading(true, false, false, evidence));
+        }
+
+        [Test]
+        public void KoreanInstructionsDescribeTheRequiredLossAndReacquisitionActions()
+        {
+            var evidence = new RuntimeImageRegistrationEvidence();
+            evidence.Registered("front");
+            evidence.Observe("front", true, TrackingState.Tracking, 1, Vector2.one);
+            StringAssert.Contains("화면 밖", RuntimeImageRegistrationProbeView.Heading(true, false, false, evidence));
+            evidence.Observe("front", true, TrackingState.Tracking, 2, Vector2.one);
+            StringAssert.Contains("다시 비춰", RuntimeImageRegistrationProbeView.Heading(true, false, false, evidence));
+            evidence.Observe("front", true, TrackingState.Tracking, 1, Vector2.one);
+            Assert.That(RuntimeImageRegistrationProbeView.Heading(true, false, false, evidence), Is.EqualTo("다시 인식했어요"));
+        }
+
         private static byte[] Pixels(params byte[] values)
         {
             var bytes = new byte[values.Length * 3];

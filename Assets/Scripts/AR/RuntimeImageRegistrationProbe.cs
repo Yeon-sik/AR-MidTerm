@@ -1,5 +1,7 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
+using System.Collections.Generic;
+using TMPro;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,16 +17,23 @@ namespace MidtermAR
         [SerializeField] private ARTrackedImageManager imageManager;
         [SerializeField] private Camera arCamera;
         [SerializeField] private ARSession session;
+        [SerializeField] private TMP_FontAsset uiFont;
         private readonly ARCoreBarcodeCoordinates coordinates = new ARCoreBarcodeCoordinates();
         private readonly ARCoreImageObservation observation = new ARCoreImageObservation();
         private readonly RuntimeImageRegistrationEvidence evidence = new RuntimeImageRegistrationEvidence();
+        private readonly Dictionary<string, string> detectedImageStates = new Dictionary<string, string>();
+        private readonly Dictionary<string, float> nextDetectedImageLogs = new Dictionary<string, float>();
         private MutableRuntimeReferenceImageLibrary library;
         private AddReferenceImageJobState addJob;
         private Texture2D preview;
-        private bool captureRequested, adding, paused, subscribed;
+        private RuntimeImageRegistrationProbeView view;
+        private bool captureRequested, adding, paused, subscribed, hasNativeImageAdded;
         private int generation, jobGeneration, originalImageCount;
         private string pendingName;
-        private string status = "Wait for AR tracking. Fill the guide with a flat, detailed package front.";
+        private string status = "평평하고 무늬가 있는 앞면을 틀에 채운 뒤 한 번만 촬영해주세요.";
+        private string lastCameraDiagnostics;
+        private int cameraTextureCount;
+        private float nextCameraDiagnostics;
         private float lastCameraFrame = float.NegativeInfinity;
         private float lastImageUpdate = float.NegativeInfinity;
         private float nextPoseLog;
@@ -38,7 +47,24 @@ namespace MidtermAR
         public string Status => status;
         public bool RegistrationAdded => !string.IsNullOrEmpty(evidence.ImageName);
         public bool ReacquisitionConfirmed => evidence.Reacquired;
+        private bool CanCapture => CanStartCapture(Ready, adding, captureRequested, hasNativeImageAdded);
+        private bool CanReset => !hasNativeImageAdded && (captureRequested || adding);
         public enum PointerAction { None, Capture, Cancel }
+
+        public static bool CanStartCapture(bool ready, bool adding, bool capturing, bool registered)
+            => ready && !adding && !capturing && !registered;
+
+        public void SetUiFont(TMP_FontAsset font) => uiFont = font;
+
+        private void Start()
+        {
+            if (uiFont == null) { Debug.LogError("[RuntimeRegistrationProbe] Noto Korean UI font is missing."); return; }
+            var ui = new GameObject("Registration Instructions", typeof(RectTransform));
+            ui.transform.SetParent(transform, false);
+            view = ui.AddComponent<RuntimeImageRegistrationProbeView>();
+            view.Initialize(uiFont);
+            RefreshView();
+        }
 
         private static Rect CaptureButtonRect(Vector2Int size)
             => new Rect(size.x * .27f, size.y * .8f, size.x * .69f, size.y * .075f);
@@ -78,8 +104,8 @@ namespace MidtermAR
             && imageManager.subsystem != null && imageManager.subsystem.running
             && Time.unscaledTime - lastCameraFrame < 1f;
 
-        private void OnEnable() => Subscribe();
-        private void OnDisable() { Unsubscribe(); Cancel(); }
+        private void OnEnable() { Subscribe(); if (view != null) view.gameObject.SetActive(true); }
+        private void OnDisable() { Unsubscribe(); Cancel(); if (view != null) view.gameObject.SetActive(false); }
 
         private void Subscribe()
         {
@@ -100,15 +126,15 @@ namespace MidtermAR
 
         public void RequestCapture()
         {
-            if (adding || captureRequested) return;
-            if (!Ready) { SetStatus("AR is not ready. Move the phone slowly and retry."); return; }
+            if (adding || captureRequested || hasNativeImageAdded) return;
+            if (!Ready) { SetStatus("주변을 천천히 비춰 공간 추적을 준비한 뒤 촬영해주세요."); return; }
             generation++;
             evidence.Reset();
             captureRequested = true;
             requestedAt = Time.unscaledTime;
             requestedScreen = new Vector2Int(Screen.width, Screen.height);
             requestedOrientation = Screen.orientation;
-            SetStatus("Capturing the next camera frame...");
+            SetStatus("카메라의 앞면 사진을 가져오고 있어요. 잠시만 유지해주세요.");
         }
 
         public void Cancel()
@@ -117,7 +143,8 @@ namespace MidtermAR
             captureRequested = false;
             evidence.Reset();
             // Native add jobs cannot be cancelled. Ignore their result, then release resources on completion.
-            SetStatus(adding ? "Cancelled. Waiting for the native add job to finish..." : "Cancelled. No tracking result is selected.");
+            SetStatus(adding ? "촬영을 취소했어요. 처리 중인 작업이 끝나면 다시 촬영할 수 있어요."
+                : "이번 확인을 초기화했어요. 앞면을 틀에 맞추고 새로 촬영해주세요.");
         }
 
         private void OnApplicationPause(bool value)
@@ -131,10 +158,13 @@ namespace MidtermAR
         {
             if (paused) return;
             lastCameraFrame = Time.unscaledTime;
+            cameraTextureCount = args.textures?.Count ?? 0;
+            LogCameraDiagnostics("frame-state-change");
             if (!captureRequested || !Ready) return;
             captureRequested = false;
+            LogCameraDiagnostics("before-capture", true);
             if (requestedScreen != new Vector2Int(Screen.width, Screen.height) || requestedOrientation != Screen.orientation)
-            { SetStatus("Screen orientation changed. Align the guide and capture again."); return; }
+            { SetStatus("화면 방향이 바뀌었어요. 앞면을 틀에 다시 맞추고 촬영해주세요."); return; }
             try
             {
                 if (arCamera == null || arCamera.rect != new Rect(0, 0, 1, 1))
@@ -175,7 +205,7 @@ namespace MidtermAR
                     // null means unknown physical size; no fabricated measurement enters this probe.
                     addJob = library.ScheduleAddImageWithValidationJob(preview, pendingName, null);
                     adding = true;
-                    SetStatus("Checking image quality and adding it... This is not recognition success yet.");
+                    SetStatus("사진의 인식 가능 여부를 확인하고 있어요. 아직 실물 인식이 확인된 단계는 아니에요.");
                     Debug.Log($"[RuntimeRegistrationProbe] add scheduled; name={pendingName}; crop={outputWidth}x{outputHeight}; "
                         + $"source={cpuImage.width}x{cpuImage.height}; specifiedSize=false; originalImages={originalImageCount}; "
                         + $"viewport={GuideViewport}; cpuTimestamp={cpuImage.timestamp:F6}");
@@ -183,7 +213,7 @@ namespace MidtermAR
             }
             catch (Exception error)
             {
-                SetStatus("Capture/add failed: " + error.Message);
+                SetStatus("앞면을 등록하지 못했어요. 잠시 후 다시 촬영해주세요.");
                 Debug.LogWarning("[RuntimeRegistrationProbe] " + error);
             }
         }
@@ -213,26 +243,31 @@ namespace MidtermAR
         {
             ReadPointerInput();
             if (captureRequested && Time.unscaledTime - requestedAt > 4f)
-            { captureRequested = false; SetStatus("No camera frame arrived. Check AR readiness and retry."); }
+            { captureRequested = false; SetStatus("카메라 사진을 받지 못했어요. 카메라가 준비되면 다시 촬영해주세요."); }
             if (adding && addJob.jobHandle.IsCompleted)
             {
                 addJob.jobHandle.Complete();
                 adding = false;
                 var result = addJob.status;
+                // The native library cannot remove a successful add, even if its UI request was cancelled.
+                // A second capture of the same print would create competing references and invalidate this trial.
+                if (result == AddReferenceImageJobStatus.Success) hasNativeImageAdded = true;
                 Debug.Log("[RuntimeRegistrationProbe] add completed; status=" + result + "; name=" + pendingName
                     + "; resultCurrent=" + (jobGeneration == generation && !paused));
+                LogCameraDiagnostics("after-registration", true);
                 if (jobGeneration != generation || paused)
-                    SetStatus("Cancelled add job finished. Its image is ignored for this probe.");
+                    SetStatus("취소한 작업이 끝났어요. 앞면을 틀에 맞추고 새로 촬영해주세요.");
                 else if (result == AddReferenceImageJobStatus.Success)
                 {
                     evidence.Registered(pendingName);
-                    SetStatus("Image added. Aim at the SAME front. Move the phone slightly to estimate its size.");
+                    SetStatus("앞면 사진이 등록됐어요. 다시 촬영하지 말고 같은 앞면을 계속 비춰주세요.");
                 }
                 else SetStatus(result == AddReferenceImageJobStatus.ErrorInvalidImage
-                    ? "Image quality rejected. Use a flat face with more detail and less glare."
-                    : "Image was not added: " + result + ". Retry with another capture.");
+                    ? "인식하기 어려운 사진이에요. 반사가 적고 무늬가 많은 평평한 면을 촬영해주세요."
+                    : "앞면을 등록하지 못했어요. 다른 사진으로 다시 촬영해주세요.");
             }
             if (!Ready || Time.unscaledTime - lastImageUpdate > .75f) evidence.Hide();
+            RefreshView();
         }
 
         private void ReadPointerInput()
@@ -253,10 +288,10 @@ namespace MidtermAR
             switch (ActionAtPointer(position, new Vector2Int(Screen.width, Screen.height)))
             {
                 case PointerAction.Capture:
-                    if (Ready && !adding && !captureRequested) RequestCapture();
+                    if (CanCapture) RequestCapture();
                     break;
                 case PointerAction.Cancel:
-                    if (captureRequested || adding || RegistrationAdded) Cancel();
+                    if (CanReset) Cancel();
                     break;
             }
         }
@@ -275,11 +310,12 @@ namespace MidtermAR
 
         private void Observe(ARTrackedImage image)
         {
+            var method = session == null ? -1 : observation.GetMethod(session, image);
+            LogDetectedImage(image, method);
             if (string.IsNullOrEmpty(evidence.ImageName) || image.referenceImage.name != evidence.ImageName) return;
             var wasFirst = evidence.FirstTracking;
             var wasLost = evidence.ObservedLoss;
             var wasReacquired = evidence.Reacquired;
-            var method = session == null ? -1 : observation.GetMethod(session, image);
             evidence.Observe(image.referenceImage.name, Ready, image.trackingState, method, image.size);
             lastImageUpdate = Time.unscaledTime;
             trackedPosition = image.transform.position;
@@ -297,9 +333,9 @@ namespace MidtermAR
 
         private void SetEvidenceStatus()
         {
-            if (evidence.Reacquired) SetStatus("REACQUISITION CONFIRMED after observed loss. Check the size and pose log.");
-            else if (evidence.ObservedLoss) SetStatus("Loss observed. Bring the SAME front back into view.");
-            else if (evidence.FirstTracking) SetStatus("First FULL_TRACKING confirmed. Move the package completely OUT of view, then bring it back.");
+            if (evidence.Reacquired) SetStatus("화면 밖으로 뺐던 같은 앞면을 다시 인식했어요.");
+            else if (evidence.ObservedLoss) SetStatus("상품이 사라진 것을 확인했어요. 같은 앞면을 다시 비춰주세요.");
+            else if (evidence.FirstTracking) SetStatus("앞면을 처음 인식했어요. 상품을 완전히 화면 밖으로 빼주세요.");
         }
 
         private void SetStatus(string text)
@@ -309,35 +345,37 @@ namespace MidtermAR
             Debug.Log("[RuntimeRegistrationProbe] " + text);
         }
 
-        private void OnGUI()
+        private void RefreshView()
         {
-            var textSize = Mathf.Clamp(Screen.width / 32, 18, 40);
-            var style = new GUIStyle(GUI.skin.label) { fontSize = textSize, wordWrap = true };
-            var button = new GUIStyle(GUI.skin.button) { fontSize = textSize };
-            var top = new Rect(12, Screen.safeArea.yMin + 12, Screen.width - 24, Screen.height * .22f);
-            GUI.Box(top, GUIContent.none);
-            GUI.Label(new Rect(top.x + 12, top.y + 8, top.width - 24, top.height - 16),
-                "RUNTIME IMAGE REGISTRATION PROBE\n" + status + "\nAR: " + ARSession.state
-                + " | current tracking: " + evidence.Visible + "\nEstimated size: " + evidence.EstimatedSize.ToString("F4")
-                + " m | position: " + trackedPosition.ToString("F2"), style);
-            var guide = GuideViewport;
-            var rect = new Rect(guide.x * Screen.width, (1 - guide.yMax) * Screen.height,
-                guide.width * Screen.width, guide.height * Screen.height);
-            var previous = GUI.color;
-            GUI.color = evidence.Visible ? Color.green : Color.yellow;
-            const float edge = 4;
-            GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, edge), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(rect.x, rect.yMax - edge, rect.width, edge), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(rect.x, rect.y, edge, rect.height), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(rect.xMax - edge, rect.y, edge, rect.height), Texture2D.whiteTexture);
-            GUI.color = previous;
-            if (preview != null) GUI.DrawTexture(new Rect(12, Screen.height * .78f, Screen.width * .22f, Screen.height * .16f), preview, ScaleMode.ScaleToFit);
-            var screenSize = new Vector2Int(Screen.width, Screen.height);
-            GUI.enabled = Ready && !adding && !captureRequested;
-            GUI.Box(CaptureButtonRect(screenSize), "Capture front", button);
-            GUI.enabled = captureRequested || adding || RegistrationAdded;
-            GUI.Box(CancelButtonRect(screenSize), "Cancel / reset probe", button);
-            GUI.enabled = true;
+            if (view != null) view.Refresh(Ready, adding, captureRequested, evidence, status, preview,
+                CanCapture, CanReset, hasNativeImageAdded);
+        }
+
+        private void LogDetectedImage(ARTrackedImage image, int method)
+        {
+            var name = image.referenceImage.name ?? "unnamed";
+            var state = $"state={image.trackingState}; method={method}";
+            if (detectedImageStates.TryGetValue(name, out var previous) && previous == state) return;
+            if (nextDetectedImageLogs.TryGetValue(name, out var next) && Time.unscaledTime < next) return;
+            detectedImageStates[name] = state;
+            nextDetectedImageLogs[name] = Time.unscaledTime + 1f;
+            Debug.Log($"[RuntimeRegistrationProbe] detected image; name={name}; {state}; "
+                + $"selectedTrial={name == evidence.ImageName}; size={image.size.ToString("F4")}");
+        }
+
+        private void LogCameraDiagnostics(string reason, bool force = false)
+        {
+            var background = cameraManager.GetComponent<ARCameraBackground>();
+            var snapshot = $"session={ARSession.state}; notTrackingReason={ARSession.notTrackingReason}; "
+                + $"backgroundEnabled={background != null && background.enabled}; "
+                + $"backgroundRenderingEnabled={background != null && background.backgroundRenderingEnabled}; "
+                + $"renderingMode={(background == null ? "missing" : background.currentRenderingMode.ToString())}; "
+                + $"materialPresent={background != null && background.material != null}; textures={cameraTextureCount}; "
+                + $"configuration={cameraManager.currentConfiguration?.ToString() ?? "none"}";
+            if (!force && (snapshot == lastCameraDiagnostics || Time.unscaledTime < nextCameraDiagnostics)) return;
+            lastCameraDiagnostics = snapshot;
+            nextCameraDiagnostics = Time.unscaledTime + 1f;
+            Debug.Log("[RuntimeRegistrationProbe] camera diagnostics; reason=" + reason + "; " + snapshot);
         }
 
         private void OnDestroy()
