@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "validationDateKst": "2026-10-28T20:50:18+09:00",
+  "batchId": "ar-b-three-products-20261028-v1",
+  "status": "LOCAL_PREFLIGHT_PASS_PENDING_REMOTE_APPROVAL",
+  "sourceBoundary": {
+    "baseCommit": "37f6ca3cc18a9040d0bd41cc326a5836761ae525",
+    "branch": "feat/ui-p0-video",
+    "planPath": "docs/data/b-three-products-2026-10-28.json",
+    "planSha256": "0f10534340d1998dff909c7638cf61691389e8d68964edb89cb682d57551e0ae",
+    "label": "B registration draft; no Unity source changes"
+  },
+  "sourceEvidence": {
+    "type": "USER_PROVIDED_PHYSICAL_PACKAGE_LABEL_PHOTOS",
+    "photoCount": 4,
+    "photoHashesInPlan": true,
+    "rawPhotosTracked": false,
+    "priceInformation": "User does not know purchase price, seller or date",
+    "priceRowsToCreate": 0
+  },
+  "intendedChanges": {
+    "priceTrace": {
+      "newBrands": 1,
+      "newStandardProducts": 3,
+      "newCatalogProducts": 3,
+      "newVerifiedEanLinks": 3,
+      "priceOrPurchaseRows": 0
+    },
+    "fitnessNutrition": {
+      "newFoods": 3,
+      "newApprovedProductLinks": 3,
+      "newPublications": 3,
+      "curationOwner": "Same curator as existing public PT demo nutrition; private owner identifier is not recorded",
+      "existingFoodsModified": 0
+    },
+    "existingAppMatchedProducts": 2,
+    "targetAppMatchedProductsAfterApplication": 5
+  },
+  "preparedSql": [
+    {
+      "path": "artifacts/v0.7.0/b-three-products-pt.apply.sql",
+      "sha256": "421846d01de5a53863c5a6c5d92e318e5676dcdcc47939d0193e142a0988869a",
+      "tracked": false,
+      "remoteExecuted": false
+    },
+    {
+      "path": "artifacts/v0.7.0/b-three-products-nutrition.apply.sql",
+      "sha256": "5657339772072c6aa2061797ebccb06b70324720a4a73b4549a6c54bd8d80842",
+      "tracked": false,
+      "remoteExecuted": false
+    }
+  ],
+  "localValidation": {
+    "result": "PASS_LOCAL_PGLITE_ONLY",
+    "command": "node artifacts/v0.7.0/prepare-b-import.mjs",
+    "environment": "Two isolated local PGlite databases; actual target DDL/checks/unique indexes and public read/publication functions copied read-only",
+    "total": 41,
+    "passed": 41,
+    "failed": 0,
+    "checks": [
+      "Exactly three selected products; all prices absent",
+      "Selected EAN set is exact",
+      "All fifteen planned IDs are distinct UUIDs",
+      "One new The미식 brand is separate from product IDs",
+      "진라면 약간매운맛: EAN checksum",
+      "진라면 약간매운맛: single-package basis matches",
+      "진라면 약간매운맛: required values present and nonnegative",
+      "진라면 약간매운맛: unknown nutrients preserved",
+      "진라면 약간매운맛: photo 20261028_162528.jpg hash",
+      "스낵면: EAN checksum",
+      "스낵면: single-package basis matches",
+      "스낵면: required values present and nonnegative",
+      "스낵면: unknown nutrients preserved",
+      "스낵면: photo 20261028_162450.jpg hash",
+      "The미식 메밀비빔면: EAN checksum",
+      "The미식 메밀비빔면: single-package basis matches",
+      "The미식 메밀비빔면: required values present and nonnegative",
+      "The미식 메밀비빔면: unknown nutrients preserved",
+      "The미식 메밀비빔면: photo 20261028_162502.jpg hash",
+      "The미식 메밀비빔면: photo 20261028_162505.jpg hash",
+      "PT import rejects missing approval",
+      "PT creates only three new exact catalogs",
+      "진라면 약간매운맛: public barcode matches",
+      "진라면 약간매운맛: public exact identity and no invented price",
+      "스낵면: public barcode matches",
+      "스낵면: public exact identity and no invented price",
+      "The미식 메밀비빔면: public barcode matches",
+      "The미식 메밀비빔면: public exact identity and no invented price",
+      "PT replay creates no duplicates",
+      "PT import refuses a barcode attached to a different product",
+      "Nutrition import rejects missing approval",
+      "Nutrition import rejects missing verified product documents",
+      "Nutrition import refuses incorrect 110g specification",
+      "진라면 약간매운맛: exactly one public Nutrition result",
+      "진라면 약간매운맛: public basis and seven values match label",
+      "스낵면: exactly one public Nutrition result",
+      "스낵면: public basis and seven values match label",
+      "The미식 메밀비빔면: exactly one public Nutrition result",
+      "The미식 메밀비빔면: public basis and seven values match label",
+      "Nutrition replay does not duplicate publication events",
+      "Existing public curator fixture is preserved"
+    ],
+    "limitations": [
+      "Local auth.role and digest fixtures; not a production authorization test",
+      "Live publication and device UI require separate verification after approval",
+      "Target table definitions, check constraints, unique indexes, read and publication functions copied read-only; triggers/RLS not cloned"
+    ]
+  },
+  "remoteApplication": {
+    "approved": false,
+    "writesPerformed": false,
+    "schemaOrRlsChanged": false,
+    "productsRegistered": "NOT_RUN",
+    "nutritionPublished": "NOT_RUN",
+    "publicHttpAfterApply": "NOT_RUN"
+  },
+  "appVerification": {
+    "sourceChanged": false,
+    "rebuilt": false,
+    "deviceChecksForThreeProducts": "NOT_RUN",
+    "latestUnitySourceCommit": "ab7687ea05abd84e88274e6ddac158fdce255bb4",
+    "latestUnityTests": 378,
+    "unityTestsRerunForThisDraft": false,
+    "localPreflightAndUnityCountsCombined": false
+  },
+  "nextSteps": [
+    "Obtain explicit approval for these exact products and public nutrition",
+    "Recheck remote EAN, IDs, brands and exact category before writes",
+    "Apply PT transaction and fetch three fresh live product-read.v1 documents",
+    "Apply Nutrition transaction with actual live revisions and verify anonymous public reads",
+    "Update approved local snapshots, run Unity regression, build release and install signing-compatible -r update",
+    "Confirm three product labels/nutrition/no-price on A25; OFF nutrition physical demo remains separate"
+  ]
+}
