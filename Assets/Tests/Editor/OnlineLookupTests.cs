@@ -44,7 +44,7 @@ namespace MidtermAR.Tests
             {
                 coordinator.Tick(state, 1.2);
                 Assert.That(state.BarcodeDisplayProduct, Is.SameAs(selected));
-                Assert.That(state.SourceBadge, Does.Contain("PT 조회 중").And.Contain("PT 스냅샷 2026-10-26"));
+                Assert.That(state.SourceBadge, Does.Contain("PT 조회 중").And.Contain("PT 스냅샷 " + products.SnapshotDate));
                 completion.SetResult(Match()); coordinator.Tick(state, 1.3); state.Resolve(null, false, 1.3f);
                 Assert.That(state.BarcodeDisplayProduct.name, Is.EqualTo("온라인 상품명"));
                 Assert.That(state.Selected, Is.SameAs(selected));
