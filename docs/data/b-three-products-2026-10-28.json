@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "batchId": "ar-b-three-products-20261028-v1",
-  "status": "DRAFT_NOT_APPLIED",
+  "status": "APPLIED_PUBLIC_VERIFIED",
   "preparedDateKst": "2026-10-28",
   "scope": "Three new exact single-bag products, EAN links and package nutrition; no price or purchase records",
   "existingMatchedProducts": 2,
   "targetMatchedProducts": 5,
-  "remoteChangesApplied": false,
+  "remoteChangesApplied": true,
   "products": [
     {
       "barcode": "8801045014869",
@@ -50,7 +50,7 @@
         "calciumMg": 150,
         "source": "User-provided physical package nutrition label photos",
         "intendedProvider": "Fitness Nutrition",
-        "approvalStatus": "PENDING_USER_REVIEW_AND_REMOTE_PUBLICATION"
+        "approvalStatus": "PUBLIC_EXACT_PT_LINK_VERIFIED"
       },
       "evidence": [
         {
@@ -102,7 +102,7 @@
         "calciumMg": 148,
         "source": "User-provided physical package nutrition label photos",
         "intendedProvider": "Fitness Nutrition",
-        "approvalStatus": "PENDING_USER_REVIEW_AND_REMOTE_PUBLICATION"
+        "approvalStatus": "PUBLIC_EXACT_PT_LINK_VERIFIED"
       },
       "evidence": [
         {
@@ -154,7 +154,7 @@
         "calciumMg": null,
         "source": "User-provided physical package nutrition label photos",
         "intendedProvider": "Fitness Nutrition",
-        "approvalStatus": "PENDING_USER_REVIEW_AND_REMOTE_PUBLICATION"
+        "approvalStatus": "PUBLIC_EXACT_PT_LINK_VERIFIED"
       },
       "evidence": [
         {
@@ -171,10 +171,18 @@
   ],
   "newBrands": [
     {
+      "id": "e0868ff8-1630-4b43-81eb-7e7177fdf855",
+      "canonicalName": "하림",
+      "officialSiteUrl": "https://www.harim.com/",
+      "parentBrandId": null,
+      "status": "active",
+      "source": "User-approved parent brand for The Mishik; public brand search and archived-name read found no existing Harim identity"
+    },
+    {
       "id": "b3d52f8c-5cb0-4eda-bf94-d0c52d116289",
       "canonicalName": "The미식",
       "officialSiteUrl": "https://the-mishik.com/",
-      "parentBrandId": null,
+      "parentBrandId": "e0868ff8-1630-4b43-81eb-7e7177fdf855",
       "status": "active",
       "source": "Verified from Harim Industry official BRANDS page, official news release and The Mishik official brand mall; exact product identity remains physical-package evidence",
       "research": {
@@ -191,14 +199,21 @@
           "https://harim-foods.com/bbs/board.php?bo_table=bo1&page=6&wr_id=63",
           "https://harim-foods.com/bbs/board.php?bo_table=bo1&page=6&wr_id=68"
         ],
-        "parentBrandIdDecision": "Retain null: company operation does not by itself establish a parent-brand ID",
+        "parentBrandIdDecision": "User explicitly approved Harim -> The Mishik hierarchy; create missing Harim root and reference exact ID",
         "trademarkRegistrantVerified": false,
         "metadataOnly": [
           "operatingCompany",
           "aliases"
         ],
-        "remoteRegistrationApproved": false
+        "remoteRegistrationApproved": true
       }
     }
-  ]
+  ],
+  "approval": {
+    "dateKst": "2026-10-28",
+    "userInstruction": "The미식 브랜드 추가 후, 브랜드 하림에 연결한 뒤, 제품들도 등록해.",
+    "scope": "Harim root as required, The Mishik child, three exact products and barcodes, reviewed public nutrition and app delivery",
+    "remoteChangesApplied": true
+  },
+  "currentVerifiedMatchedProducts": 5
 }
