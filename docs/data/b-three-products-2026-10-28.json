@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "batchId": "ar-b-three-products-20261028-v1",
+  "status": "APPLIED_PUBLIC_VERIFIED",
+  "preparedDateKst": "2026-10-28",
+  "scope": "Three new exact single-bag products, EAN links and package nutrition; no price or purchase records",
+  "existingMatchedProducts": 2,
+  "targetMatchedProducts": 5,
+  "remoteChangesApplied": true,
+  "products": [
+    {
+      "barcode": "8801045014869",
+      "barcodeFormat": "EAN_13",
+      "name": "진라면 약간매운맛",
+      "brand": "오뚜기",
+      "contentAmount": 120,
+      "contentUnit": "g",
+      "packageCount": 1,
+      "packageForm": "bag",
+      "specification": "120g · 1봉",
+      "userDescription": "봉지 120g 덜매운맛. 최초 사용자 제공명과 OFF 이름은 약간매운맛.",
+      "plannedIds": {
+        "standardProductId": "599959e9-8ec1-4b46-bd97-7e0dd39d83d8",
+        "catalogProductId": "268e9335-1b73-457c-8fac-ef0228aa6489",
+        "identifierId": "a4c62615-0527-4fc8-b01f-ecfff824223e",
+        "nutritionFoodId": "6224e87f-0c02-42c1-bf4d-faf5f85ae797",
+        "nutritionLinkId": "915fa201-252f-4482-aafd-4cbd28ca871e"
+      },
+      "categoryId": "2a938560-d06b-4388-bfea-56c4e8625f20",
+      "categoryLabel": "즉석면·떡국",
+      "referenceUrl": "https://www.otoki.com/pr/news-detail?idx=830",
+      "referenceScope": "Manufacturer product/family context only. Exact barcode, single-package amount and nutrition are verified from user-provided packaging photos; not a price source.",
+      "price": null,
+      "priceReason": "User does not know purchase amount, seller or purchase date. No observations will be created.",
+      "nutrition": {
+        "basisAmount": 120,
+        "basisUnit": "g",
+        "basisDescription": "포장 총 내용량당",
+        "caloriesKcal": 510,
+        "carbsGrams": 75,
+        "proteinGrams": 12,
+        "fatGrams": 18,
+        "sugarsGrams": 4,
+        "saturatedFatGrams": 9,
+        "sodiumMg": 1760,
+        "fiberGrams": null,
+        "addedSugarsGrams": null,
+        "transFatGrams": 0,
+        "cholesterolMg": 0,
+        "calciumMg": 150,
+        "source": "User-provided physical package nutrition label photos",
+        "intendedProvider": "Fitness Nutrition",
+        "approvalStatus": "PUBLIC_EXACT_PT_LINK_VERIFIED"
+      },
+      "evidence": [
+        {
+          "fileName": "20261028_162528.jpg",
+          "sha256": "49042998b6b59c6dc474ba06cf8b081cfe108ea0c677524a1c8ad5056d25ceaf"
+        }
+      ],
+      "brandId": "89c2ec09-bc08-4127-a270-bbe432f17661"
+    },
+    {
+      "barcode": "8801045520728",
+      "barcodeFormat": "EAN_13",
+      "name": "스낵면",
+      "brand": "오뚜기",
+      "contentAmount": 108,
+      "contentUnit": "g",
+      "packageCount": 1,
+      "packageForm": "bag",
+      "specification": "108g · 1봉",
+      "userDescription": "사용자 제공 스낵면 실물. 단품 바코드·총 내용량은 포장 사진 근거.",
+      "plannedIds": {
+        "standardProductId": "ec873108-e91f-481c-ab14-366865f1b909",
+        "catalogProductId": "10ae810a-4155-4af7-9021-430ea5847277",
+        "identifierId": "04134570-6db3-482c-9eed-8977a39a1f1d",
+        "nutritionFoodId": "2c0857d1-c79e-48ed-be0a-415181415df1",
+        "nutritionLinkId": "a758ac2b-aaaf-4d9f-b0fd-357236666a98"
+      },
+      "categoryId": "2a938560-d06b-4388-bfea-56c4e8625f20",
+      "categoryLabel": "즉석면·떡국",
+      "referenceUrl": "https://www.otokimall.com/front/product/category/1",
+      "referenceScope": "Manufacturer product/family context only. Exact barcode, single-package amount and nutrition are verified from user-provided packaging photos; not a price source.",
+      "price": null,
+      "priceReason": "User does not know purchase amount, seller or purchase date. No observations will be created.",
+      "nutrition": {
+        "basisAmount": 108,
+        "basisUnit": "g",
+        "basisDescription": "포장 총 내용량당",
+        "caloriesKcal": 460,
+        "carbsGrams": 69,
+        "proteinGrams": 10,
+        "fatGrams": 16,
+        "sugarsGrams": 4,
+        "saturatedFatGrams": 8,
+        "sodiumMg": 1710,
+        "fiberGrams": null,
+        "addedSugarsGrams": null,
+        "transFatGrams": 0,
+        "cholesterolMg": 0,
+        "calciumMg": 148,
+        "source": "User-provided physical package nutrition label photos",
+        "intendedProvider": "Fitness Nutrition",
+        "approvalStatus": "PUBLIC_EXACT_PT_LINK_VERIFIED"
+      },
+      "evidence": [
+        {
+          "fileName": "20261028_162450.jpg",
+          "sha256": "03a9648248840dae453d6b560f300bc07045b1e4951b8a7fffd279f82580f1a1"
+        }
+      ],
+      "brandId": "89c2ec09-bc08-4127-a270-bbe432f17661"
+    },
+    {
+      "barcode": "8809778493005",
+      "barcodeFormat": "EAN_13",
+      "name": "The미식 메밀비빔면",
+      "brand": "The미식",
+      "contentAmount": 121,
+      "contentUnit": "g",
+      "packageCount": 1,
+      "packageForm": "bag",
+      "specification": "121g · 1봉",
+      "userDescription": "사용자 제공 The미식 메밀비빔면. 바코드와 영양표는 두 사진에서 같은 포장을 대조.",
+      "plannedIds": {
+        "standardProductId": "f5e09ac5-2686-4e57-8fa3-9dc2f104a22c",
+        "catalogProductId": "f31002f8-c226-44b2-8914-e6e7bfb059fb",
+        "identifierId": "033b3d2c-2c53-4a7d-af01-fc5390f9dc7c",
+        "nutritionFoodId": "e844d4b2-5ef1-4eb9-a1e9-3f919eeca147",
+        "nutritionLinkId": "846640f5-6b87-40cd-aa02-c4a59d99188d"
+      },
+      "categoryId": "2a938560-d06b-4388-bfea-56c4e8625f20",
+      "categoryLabel": "즉석면·떡국",
+      "referenceUrl": "https://harim.com/main/?menu=52&mode=view&no=2663&pno=34",
+      "referenceScope": "Manufacturer product/family context only. Exact barcode, single-package amount and nutrition are verified from user-provided packaging photos; not a price source.",
+      "price": null,
+      "priceReason": "User does not know purchase amount, seller or purchase date. No observations will be created.",
+      "nutrition": {
+        "basisAmount": 121,
+        "basisUnit": "g",
+        "basisDescription": "포장 총 내용량당",
+        "caloriesKcal": 405,
+        "carbsGrams": 85,
+        "proteinGrams": 9,
+        "fatGrams": 3.1,
+        "sugarsGrams": 15,
+        "saturatedFatGrams": 0.6,
+        "sodiumMg": 1200,
+        "fiberGrams": null,
+        "addedSugarsGrams": null,
+        "transFatGrams": 0,
+        "cholesterolMg": 0,
+        "calciumMg": null,
+        "source": "User-provided physical package nutrition label photos",
+        "intendedProvider": "Fitness Nutrition",
+        "approvalStatus": "PUBLIC_EXACT_PT_LINK_VERIFIED"
+      },
+      "evidence": [
+        {
+          "fileName": "20261028_162502.jpg",
+          "sha256": "fa1fade2304c3b532e0cb10c89a9357bb20253b72964a53cd8cc827750bc9b83"
+        },
+        {
+          "fileName": "20261028_162505.jpg",
+          "sha256": "5c7a5c8ca6aa24ab504f15f72dd8c84da03d52f06b4d477ea396b319b0044c1d"
+        }
+      ],
+      "brandId": "b3d52f8c-5cb0-4eda-bf94-d0c52d116289"
+    }
+  ],
+  "newBrands": [
+    {
+      "id": "e0868ff8-1630-4b43-81eb-7e7177fdf855",
+      "canonicalName": "하림",
+      "officialSiteUrl": "https://www.harim.com/",
+      "parentBrandId": null,
+      "status": "active",
+      "source": "User-approved parent brand for The Mishik; public brand search and archived-name read found no existing Harim identity"
+    },
+    {
+      "id": "b3d52f8c-5cb0-4eda-bf94-d0c52d116289",
+      "canonicalName": "The미식",
+      "officialSiteUrl": "https://the-mishik.com/",
+      "parentBrandId": "e0868ff8-1630-4b43-81eb-7e7177fdf855",
+      "status": "active",
+      "source": "Verified from Harim Industry official BRANDS page, official news release and The Mishik official brand mall; exact product identity remains physical-package evidence",
+      "research": {
+        "checkedDateKst": "2026-10-28",
+        "classification": "FOOD_BRAND_OPERATED_BY_MANUFACTURER",
+        "operatingCompany": "주식회사 하림산업",
+        "aliases": [
+          "더미식",
+          "The 미식"
+        ],
+        "evidenceUrls": [
+          "https://harim-foods.com/theme/s007/index/brand01.php",
+          "https://the-mishik.com/index.html",
+          "https://harim-foods.com/bbs/board.php?bo_table=bo1&page=6&wr_id=63",
+          "https://harim-foods.com/bbs/board.php?bo_table=bo1&page=6&wr_id=68"
+        ],
+        "parentBrandIdDecision": "User explicitly approved Harim -> The Mishik hierarchy; create missing Harim root and reference exact ID",
+        "trademarkRegistrantVerified": false,
+        "metadataOnly": [
+          "operatingCompany",
+          "aliases"
+        ],
+        "remoteRegistrationApproved": true
+      }
+    }
+  ],
+  "approval": {
+    "dateKst": "2026-10-28",
+    "userInstruction": "The미식 브랜드 추가 후, 브랜드 하림에 연결한 뒤, 제품들도 등록해.",
+    "scope": "Harim root as required, The Mishik child, three exact products and barcodes, reviewed public nutrition and app delivery",
+    "remoteChangesApplied": true
+  },
+  "currentVerifiedMatchedProducts": 5
+}

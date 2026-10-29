@@ -1,0 +1,369 @@
+{
+  "checkedAtKst": "2026-10-26",
+  "scope": "Editor-only functional verification; no player build, APK, install or physical box test",
+  "tests": {
+    "timestampUtc": "2026-10-25T15:23:21.4063327Z",
+    "unityExitCode": 0,
+    "result": "Passed",
+    "total": 97,
+    "passed": 97,
+    "failed": 0,
+    "skipped": 0,
+    "playerBuildRequested": false,
+    "results": "artifacts/editmode/20261025-152255-18ada5fe/results.xml",
+    "log": "artifacts/editmode/20261025-152255-18ada5fe/editor.log"
+  },
+  "imageInputs": "v5-image-inputs-2026-10-26.json",
+  "priceTraceRemoteIdentityVerified": false,
+  "physicalMarkerVerified": false,
+  "inputs": [
+    {
+      "path": "Assets/Scripts/App.meta",
+      "sha256": "3c6bf67d2bb2aa387f4416c7a763dce4bbfb575746a65d87cc9b6b6223c33ad0"
+    },
+    {
+      "path": "Assets/Scripts/AR.meta",
+      "sha256": "4a32ae149d772edd6bdab2ff10d7177d966681ca3004ada5159396e5bc982b65"
+    },
+    {
+      "path": "Assets/Scripts/Barcode.meta",
+      "sha256": "85e77034961605d864565b2fa488c30100ebebef203c6464194728ffbb076bc9"
+    },
+    {
+      "path": "Assets/Scripts/Data.meta",
+      "sha256": "e92d3a6b9a8e5a3d29fe4c9dd1d3178c1805b1bb61ee8df89b9efa5ff38f2220"
+    },
+    {
+      "path": "Assets/Scripts/MidtermAR.asmdef",
+      "sha256": "c6611108d17dc92d7dc5c0093772c5aabff0fdbb1fb79db2e2bc3b0119c42c3f"
+    },
+    {
+      "path": "Assets/Scripts/MidtermAR.asmdef.meta",
+      "sha256": "0715c354fa166011ea12fdc4038cf0866d40e85727106e9c11d6d625293cf415"
+    },
+    {
+      "path": "Assets/Scripts/UI.meta",
+      "sha256": "1aa1599ec9dac88a4cd498a27f9229c307c48d0aabf76556941d04c4fcbba743"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductARApp.cs",
+      "sha256": "52f159c093d811301134ccbb4aff094fdd4a132743294f9fe645cb81d3df5968"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductARApp.cs.meta",
+      "sha256": "a2516678757ef629b0129ce5b3a5624233a37a5bfdebebc4803bd7a2932f8676"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductRecognitionState.cs",
+      "sha256": "5f766e5e1153c62a2b51d60dced08e54a6e4b72307003f94ef4c9a4d67c0bfff"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductRecognitionState.cs.meta",
+      "sha256": "2ca1614c0f97abb71ef05fa1fa8077fca94584b7a6c8d0fd66cf285daa38e844"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductWorkflow.cs",
+      "sha256": "2a00dc614a5eb1951deb508162a5f85576255fde725ecfe93778ed86526adf7d"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductWorkflow.cs.meta",
+      "sha256": "8e9a48dc8ba86681b3ff2141de237e3449c1fecad71b4d5533f24b85bbb744ea"
+    },
+    {
+      "path": "Assets/Scripts/AR/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "Assets/Scripts/AR/AndroidMotionSampling.cs",
+      "sha256": "e22ae4c3c1265baef7ed50611bea7e7bbd667477bdaf83f0d1beecd7b402857f"
+    },
+    {
+      "path": "Assets/Scripts/AR/AndroidMotionSampling.cs.meta",
+      "sha256": "085e9cf40e3f8db13695d4ede47da3c57ba88d8905b6cad223ec4ac10e502986"
+    },
+    {
+      "path": "Assets/Scripts/AR/ARReadiness.cs",
+      "sha256": "020ca060f5995b5118eb187f2cb8f87de24bb8b43e105595d91b2cf7e54785e7"
+    },
+    {
+      "path": "Assets/Scripts/AR/ARReadiness.cs.meta",
+      "sha256": "65a5d1d315b7490b478f920ab8ecb4173fd41933663c6241804c21598bfac5ae"
+    },
+    {
+      "path": "Assets/Scripts/AR/ImageTrackingPolicy.cs",
+      "sha256": "b799ecc27338bf0dcf88c7dcc210112751c65e717f46335e352cafc06c08a777"
+    },
+    {
+      "path": "Assets/Scripts/AR/ImageTrackingPolicy.cs.meta",
+      "sha256": "aa8e8dcb0d864f5c2bb4e9e72c6ca16cb69db265743d4f00a95e6350c31ccef8"
+    },
+    {
+      "path": "Assets/Scripts/AR/ImageTrackingProbe.cs",
+      "sha256": "c658290d2cc7ae79529a60a98a8cbfb4a24b0f181d28601508dbea91e7ab7a7c"
+    },
+    {
+      "path": "Assets/Scripts/AR/ImageTrackingProbe.cs.meta",
+      "sha256": "24e46cefcfee1eeead8b78879236e888ff8505db45b6d6b77fda04bb75842a93"
+    },
+    {
+      "path": "Assets/Scripts/AR/ProductImageState.cs",
+      "sha256": "21eb7f5b776925c929cddcdaf9837c6f59f6971642d294b6bb6667ff65a51c41"
+    },
+    {
+      "path": "Assets/Scripts/AR/ProductImageState.cs.meta",
+      "sha256": "43c18e1943f823c9ce1cf3720ef03b57fcf58c23819f5b46fe2fe927cf046bf3"
+    },
+    {
+      "path": "Assets/Scripts/AR/ProductPlacement.cs",
+      "sha256": "98ad6e982e6965ed28c5ecc336bc00aa68de436880be4a9c5e653619b003a87f"
+    },
+    {
+      "path": "Assets/Scripts/AR/ProductPlacement.cs.meta",
+      "sha256": "1e89aff3f596681737b6c3fdb419ef135002a77f46d0d6f9e0e9254e5f9294c1"
+    },
+    {
+      "path": "Assets/Scripts/AR/TrackedImageProductPanel.cs",
+      "sha256": "0c169bd5db13f89cb0a44a5d2f5b9ce971ef7971142e2b06cf473b5ac39d2cd1"
+    },
+    {
+      "path": "Assets/Scripts/AR/TrackedImageProductPanel.cs.meta",
+      "sha256": "28be74505572c24e8c3a50fcb3f83357e0b01fd47fd8fa16ba8844f93c75d422"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/ARBarcodeScanner.cs",
+      "sha256": "b77749139ea134513681937ffcc8cec25958ff36ce377587c6f391ae5f7c31bb"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/ARBarcodeScanner.cs.meta",
+      "sha256": "4e8bd266c696c720e98f19d275861159b839b46d03859c6ce1c0cf6f0f28d451"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeConfirmation.cs",
+      "sha256": "fbbe8eb7b946fed95764ffd50f1319bc5832503abf604f11308fff69dc648cc0"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeConfirmation.cs.meta",
+      "sha256": "97adf2abaa6e078f84e1561226be4335acd730e74bee04b42ab52b5de54438df"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeDecoder.cs",
+      "sha256": "cc1d7b166ff471d6fd183c4d8a41e129f385a95936578d19a1a59fe20c66fc22"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeDecoder.cs.meta",
+      "sha256": "b823e82f9b1ff0f2ec0095427ccbb62e34a1966e9fdb6708b67b35d4f7300dbe"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeFollowState.cs",
+      "sha256": "f99fb0b53e429bb3d3776a5456831cec9e9f2bb4aa01e3c32f1f85d9d0c04fe1"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeFollowState.cs.meta",
+      "sha256": "0970f1a465fe38560e6a51bf680dd1f631221808d37b9c7453f5a6eb07a1cdaf"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeFrameDiagnostics.cs",
+      "sha256": "77c68ec3a6668f1a5c621286b7d28e1ea72345f7dbdf4e239281f67826cdc707"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeFrameDiagnostics.cs.meta",
+      "sha256": "2dec8af57c7c02248eed5726c3dbaf377dd09dd68fda83578fb881ba13959d15"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeViewportTransform.cs",
+      "sha256": "d4d3f7d975a44f4e23128ef2dfdef73735b08b532a4b2014a5afdfff47c9b0d4"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/BarcodeViewportTransform.cs.meta",
+      "sha256": "264eab156b6062f2b27510b05685eb71ac137ce46ba91e6a92981cf461e0c0ac"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/CameraResolutionPolicy.cs",
+      "sha256": "6113dbb5b33e3e5e176c2c5457e1c313967d9d5b2020d6af907cbeb1163b627c"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/CameraResolutionPolicy.cs.meta",
+      "sha256": "3d64ef5932a33244acb9212570a7c90bb968762c0c403d46e20e1f6a2b251def"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/DevelopmentDecoderCheck.cs",
+      "sha256": "dc8f5a716697edfb9357d4d50db44349a8200dd44007a49bfd0510a2b51853c0"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/DevelopmentDecoderCheck.cs.meta",
+      "sha256": "0430f5f6ff14bb7c009f7599fcd6d0ed57e00d04dba2df0ad44812a2d7612d82"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductCatalog.cs",
+      "sha256": "887c12f1a987828ed503860d279f8dae7664b63c815c40329b4e48db30f1106b"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductCatalog.cs.meta",
+      "sha256": "9b133a83616daedb1e54f70bc1f9aba78d6861c7fb9f3f0973b1b2b7c03c473c"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductImageCatalog.cs",
+      "sha256": "ae9498d1f036e6567f82725ea723ea42c642d1ea2408747486ce5ac8b58b92ed"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductImageCatalog.cs.meta",
+      "sha256": "9eaa6898cf75359351a0a465dcb018b9ceeef9bc30bf5eb32af7d5907b80b75e"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductInfoFormatter.cs",
+      "sha256": "6111ded9442119ae8e5ebe6ad44eac2527c1ff8888199251cdd931147b2c5b97"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductInfoFormatter.cs.meta",
+      "sha256": "5021300bc0bde1133a1ecb9635e42247f83554d57773f3ecbdf685ce51e0076a"
+    },
+    {
+      "path": "Assets/Scripts/UI/BarcodeProductPanel.cs",
+      "sha256": "0f97772a53e7b61c4c0a83df6a5f8cceb39211564484821bd769fd7e563f9fc5"
+    },
+    {
+      "path": "Assets/Scripts/UI/BarcodeProductPanel.cs.meta",
+      "sha256": "c89a90adf581ea86ac8312c95c25846c13bf219946745bf184eb68a1108ef46d"
+    },
+    {
+      "path": "Assets/Scripts/UI/ProductScreenView.cs",
+      "sha256": "63b7b58da805eb2446f5f1f184c4e83d351cdb901895899028fc5a024521c8a0"
+    },
+    {
+      "path": "Assets/Scripts/UI/ProductScreenView.cs.meta",
+      "sha256": "e03087716dbb6719840caf39f2cab27ca57d95a7ecee46752e6b6852d965e920"
+    },
+    {
+      "path": "Assets/Scripts/UI/SafeArea.cs",
+      "sha256": "2cf852bb6ebe9dd2187083de55f0429ceb0cd68bb652024e601ba54342eaaed3"
+    },
+    {
+      "path": "Assets/Scripts/UI/SafeArea.cs.meta",
+      "sha256": "37646fdfb834209107123eb0a8515135629b2e074bbf34a93fc7afc6e7855bb2"
+    },
+    {
+      "path": "Assets/Scripts/UI/WorldProductPanel.cs",
+      "sha256": "85902e6fa0ec5fb9e0831d924be125b006b7160b31fe72a14f78351470ca5c67"
+    },
+    {
+      "path": "Assets/Scripts/UI/WorldProductPanel.cs.meta",
+      "sha256": "9ed72aed71d6c98ceef9bce21b8da6d6ef63b393123215fcb25e08a2729492df"
+    },
+    {
+      "path": "Assets/Editor/BarcodeImageAnalysis.cs",
+      "sha256": "d5c21750e01309e5199ad846bab849465b680c885f89cb3c91b714614c4c15d0"
+    },
+    {
+      "path": "Assets/Editor/BarcodeImageAnalysis.cs.meta",
+      "sha256": "9239ff5857776783ebfac81aed330493c4a57e7999427daaf7afc50091542353"
+    },
+    {
+      "path": "Assets/Editor/ImageTrackingProbeBuilder.cs",
+      "sha256": "b16f50a7caeca6e0df386f49a06c297ec6382a4a31b59960cccd4958a5de4208"
+    },
+    {
+      "path": "Assets/Editor/ImageTrackingProbeBuilder.cs.meta",
+      "sha256": "b4884b3c7e4958550768a140f9187aa57afee0939584a3336245cf4173b04a67"
+    },
+    {
+      "path": "Assets/Editor/MidtermAR.Editor.asmdef",
+      "sha256": "62d7927db57b846c42a9f874d1792abf92b10d23e3ed777ab4589adde1ccf32a"
+    },
+    {
+      "path": "Assets/Editor/MidtermAR.Editor.asmdef.meta",
+      "sha256": "6c5622344afaa931da8ffb0583e85228a0e4a53212e976b6095759b3aa8af37d"
+    },
+    {
+      "path": "Assets/Editor/ProjectBuilder.cs",
+      "sha256": "d7f700a46a8a21e6badb3193fb7eff0a6b30bcf0fe39c5ad2bcad8d60cc9ff2c"
+    },
+    {
+      "path": "Assets/Editor/ProjectBuilder.cs.meta",
+      "sha256": "d33b91447075d3c19a21114027b5212d02ac849449d73190790efacd934adf48"
+    },
+    {
+      "path": "Assets/Tests/Editor.meta",
+      "sha256": "13f083177b4705d45def91bfe670127e136c247c0689c615b70b8f961d4e11d6"
+    },
+    {
+      "path": "Assets/Tests/Editor/ImageTrackingProbeTests.cs",
+      "sha256": "75737fa3c562b1d17de55d2068b13e3afc35f0109d720ea0278a00a177326f84"
+    },
+    {
+      "path": "Assets/Tests/Editor/ImageTrackingProbeTests.cs.meta",
+      "sha256": "3dddf6c64f9efb23cc450e6381d0e4b64df440c0568de1b4c17996e3ea6f2f9a"
+    },
+    {
+      "path": "Assets/Tests/Editor/MidtermAR.Tests.asmdef",
+      "sha256": "f2453af7ead6d2d2a3ba211d9d62af708be32e76e7b224dda4a4a5d54a4e62d9"
+    },
+    {
+      "path": "Assets/Tests/Editor/MidtermAR.Tests.asmdef.meta",
+      "sha256": "09228fc0ccda82ec6fbf37483fe334d7699d88bddc132076284c40a8eed71075"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductARTests.cs",
+      "sha256": "b641265b687db4340b9485b41f4fae5e57261554578f99f89a9b214e2c719fa1"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductARTests.cs.meta",
+      "sha256": "94a4f599e88bd3dc98e6bd4ecaeebf08687db13437129a696ef24d49a62d7971"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductImageTests.cs",
+      "sha256": "0b39dd798c67f2a0c71e47c3a9c7d44c190de2a0e79b5ccbf5a9d3a35c041eeb"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductImageTests.cs.meta",
+      "sha256": "8660584d326a383ac8d640d68049fa29834186e76073e566886849bb0bdac26f"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductRecognitionV5Tests.cs",
+      "sha256": "93bd5ebaebf1c12e5970bea43c77bd9bbeee882e11b7df87dd73ee7a2609672a"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductRecognitionV5Tests.cs.meta",
+      "sha256": "6d8f555b77996ced641f91af539d556745d7a4d9b93a5d9dff4fd9b6af03c322"
+    },
+    {
+      "path": "Assets/Data/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "Assets/Data/demo-products.json",
+      "sha256": "016f063ed37246a40a2bd890c8f9128c5ddde9719c0b34f7454230c56603bcbf"
+    },
+    {
+      "path": "Assets/Data/demo-products.json.meta",
+      "sha256": "52eea60f65b8cd54e9152540f9a6c0c779f304c05e4526cdfe0b81df460303fa"
+    },
+    {
+      "path": "Assets/Data/product-images.json",
+      "sha256": "7f0c260954c734fdadb42c2ef1ae6be93050e1517f90132c598b07a26839cb73"
+    },
+    {
+      "path": "Assets/Data/product-images.json.meta",
+      "sha256": "c028e9ec75142f417eaee826215ff0a5ec383c1807364cc664ad1f3dc34f3b71"
+    },
+    {
+      "path": "Assets/Scenes/ProductAR.unity",
+      "sha256": "e21d2551cf75be2da640a932181ff6f9708893b60bb2593e874e959086cb978e"
+    },
+    {
+      "path": "Assets/Images/ProductImageLibrary.asset",
+      "sha256": "1b79530a5a2fabf331b09a74d0e5e6d9bf0c16fb481f2800b03121a2de327875"
+    },
+    {
+      "path": "Assets/Prefabs/ProductInfoPanel.prefab",
+      "sha256": "3860eff8025c8879c45e06f726013f80a325ae1a3380ed69c3a182f64192f6cd"
+    },
+    {
+      "path": "Assets/Fonts/Generated/NotoSansKR SDF.asset",
+      "sha256": "21ab7000f6c8b1184565354d0040c188566811d52fbb57a6b53253c476f62718"
+    }
+  ]
+}

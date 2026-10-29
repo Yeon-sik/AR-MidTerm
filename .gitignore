@@ -3,6 +3,7 @@
 /[Tt]emp/
 /[Oo]bj/
 /[Ll]ogs/
+/Packages/Logs/
 /[Uu]ser[Ss]ettings/
 /[Bb]uild/
 /[Bb]uilds/
@@ -10,6 +11,8 @@
 /[Rr]ecordings/
 
 # IDE and local tooling
+__pycache__/
+*.pyc
 /.vs/
 /.vscode/
 /.idea/
@@ -45,3 +48,7 @@
 /Assets/AddressableAssetsData/*/*.bin*
 sysinfo.txt
 crashlytics-build.properties
+
+# Publishable keys are supplied locally and embedded only in the local player build.
+/Assets/Config/remote-lookup.local.json
+/Assets/Config/remote-lookup.local.json.meta

@@ -1,0 +1,336 @@
+{
+  "schemaVersion": 1,
+  "status": "REMOTE_APPLIED_RELEASE_BUILT_DEVICE_NOT_RUN",
+  "dateKst": "2026-10-28",
+  "branch": "feat/ui-p0-video",
+  "sourceBoundary": {
+    "sourceCommit": "c710097cf3cf66f353f9afd3c6f0132e83d920a1",
+    "approvedPlanSha256": "6aa034d29615790b3f0e6fa42f3f3ce8113156cbab989edcb32f35565a3f31ad",
+    "appliedPlanSha256": "1445ab222e787e17c682e1ffcfbe051b9e1f7db2d71e0bc9b8cdcbe4355dfdd3"
+  },
+  "approval": {
+    "userInstruction": "The미식 브랜드 추가 후, 브랜드 하림에 연결한 뒤, 제품들도 등록해.",
+    "newParentRequiredBecauseNoExistingHarim": true,
+    "separateRepeatedApprovalRequired": false
+  },
+  "localImportChecks": {
+    "result": "PASS_LOCAL_PGLITE_ONLY",
+    "total": 46,
+    "passed": 46,
+    "checks": [
+      "Exactly three selected products; all prices absent",
+      "Selected EAN set is exact",
+      "All fifteen planned IDs are distinct UUIDs",
+      "Two new brand IDs are separate from product IDs",
+      "User-approved Harim -> The Mishik hierarchy is explicit",
+      "진라면 약간매운맛: EAN checksum",
+      "진라면 약간매운맛: single-package basis matches",
+      "진라면 약간매운맛: required values present and nonnegative",
+      "진라면 약간매운맛: unknown nutrients preserved",
+      "진라면 약간매운맛: photo 20261028_162528.jpg hash",
+      "스낵면: EAN checksum",
+      "스낵면: single-package basis matches",
+      "스낵면: required values present and nonnegative",
+      "스낵면: unknown nutrients preserved",
+      "스낵면: photo 20261028_162450.jpg hash",
+      "The미식 메밀비빔면: EAN checksum",
+      "The미식 메밀비빔면: single-package basis matches",
+      "The미식 메밀비빔면: required values present and nonnegative",
+      "The미식 메밀비빔면: unknown nutrients preserved",
+      "The미식 메밀비빔면: photo 20261028_162502.jpg hash",
+      "The미식 메밀비빔면: photo 20261028_162505.jpg hash",
+      "PT import rejects missing approval",
+      "The Mishik brand is linked to exact Harim parent",
+      "PT creates only three new exact catalogs",
+      "진라면 약간매운맛: public barcode matches",
+      "진라면 약간매운맛: public exact identity and no invented price",
+      "진라면 약간매운맛: most specific approved brand identity",
+      "스낵면: public barcode matches",
+      "스낵면: public exact identity and no invented price",
+      "스낵면: most specific approved brand identity",
+      "The미식 메밀비빔면: public barcode matches",
+      "The미식 메밀비빔면: public exact identity and no invented price",
+      "The미식 메밀비빔면: most specific approved brand identity",
+      "PT replay creates no duplicates",
+      "PT import refuses a barcode attached to a different product",
+      "Nutrition import rejects missing approval",
+      "Nutrition import rejects missing verified product documents",
+      "Nutrition import refuses incorrect 110g specification",
+      "진라면 약간매운맛: exactly one public Nutrition result",
+      "진라면 약간매운맛: public basis and seven values match label",
+      "스낵면: exactly one public Nutrition result",
+      "스낵면: public basis and seven values match label",
+      "The미식 메밀비빔면: exactly one public Nutrition result",
+      "The미식 메밀비빔면: public basis and seven values match label",
+      "Nutrition replay does not duplicate publication events",
+      "Existing public curator fixture is preserved"
+    ],
+    "remoteWrites": false,
+    "planSha256": "6aa034d29615790b3f0e6fa42f3f3ce8113156cbab989edcb32f35565a3f31ad",
+    "limitations": [
+      "Local auth.role and digest fixtures; not a production authorization test",
+      "Live publication and device UI require separate verification after approval",
+      "Target table definitions, check constraints, unique indexes, read and publication functions copied read-only; triggers/RLS not cloned"
+    ]
+  },
+  "remote": {
+    "priceTraceApplied": true,
+    "nutritionApplied": true,
+    "newBrands": 2,
+    "newStandardProducts": 3,
+    "newCatalogProducts": 3,
+    "newVerifiedEanLinks": 3,
+    "newFoods": 3,
+    "newApprovedNutritionLinks": 3,
+    "newNutritionPublications": 3,
+    "newPriceOrPurchaseRows": 0,
+    "existingFoodsModified": 0,
+    "schemaOrRlsChanged": false,
+    "freshLivePtDocumentsForPublication": true,
+    "publicHttp": {
+      "brand": {
+        "status": "PASS_ANONYMOUS_HTTP",
+        "brandId": "b3d52f8c-5cb0-4eda-bf94-d0c52d116289",
+        "name": "The미식",
+        "parentBrandId": "e0868ff8-1630-4b43-81eb-7e7177fdf855",
+        "parentName": "하림",
+        "checkedAtUtc": "2026-10-28T12:16:29.7066838Z"
+      },
+      "checkedAtUtc": "2026-10-28T21:15:25.1286506+09:00",
+      "ptMatched": 5,
+      "newNutritionFound": 3,
+      "products": [
+        {
+          "barcode": "8809375984692",
+          "ptStatus": "matched",
+          "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
+          "name": "테아닌과 밀크씨슬 활력솔루션",
+          "serverPrice": null,
+          "nutrition": {
+            "status": "not_found",
+            "source": "Fitness Nutrition public RPC",
+            "httpStatus": 200,
+            "present": false,
+            "rowCount": 0
+          }
+        },
+        {
+          "barcode": "8801104671507",
+          "ptStatus": "matched",
+          "catalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0",
+          "name": "더단백 크런치바 초코",
+          "serverPrice": null,
+          "nutrition": {
+            "status": "found",
+            "source": "Fitness Nutrition public RPC",
+            "httpStatus": 200,
+            "present": true,
+            "rowCount": 1,
+            "catalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0",
+            "sourceType": "pricetrace_manual",
+            "basisAmount": 40,
+            "basisUnit": "g",
+            "values": {
+              "calories_kcal": 185,
+              "protein_grams": 15,
+              "carbs_grams": 15,
+              "fat_grams": 7,
+              "sodium_mg": 200,
+              "saturated_fat_grams": 5,
+              "sugars_grams": 7,
+              "fiber_grams": null
+            }
+          }
+        },
+        {
+          "barcode": "8801045014869",
+          "ptStatus": "matched",
+          "catalogProductId": "268e9335-1b73-457c-8fac-ef0228aa6489",
+          "name": "진라면 약간매운맛",
+          "serverPrice": null,
+          "nutrition": {
+            "status": "found",
+            "source": "Fitness Nutrition public RPC",
+            "httpStatus": 200,
+            "present": true,
+            "rowCount": 1,
+            "catalogProductId": "268e9335-1b73-457c-8fac-ef0228aa6489",
+            "sourceType": "pricetrace_manual",
+            "basisAmount": 120,
+            "basisUnit": "g",
+            "values": {
+              "calories_kcal": 510,
+              "protein_grams": 12,
+              "carbs_grams": 75,
+              "fat_grams": 18,
+              "sodium_mg": 1760,
+              "saturated_fat_grams": 9,
+              "sugars_grams": 4,
+              "fiber_grams": null
+            }
+          }
+        },
+        {
+          "barcode": "8801045520728",
+          "ptStatus": "matched",
+          "catalogProductId": "10ae810a-4155-4af7-9021-430ea5847277",
+          "name": "스낵면",
+          "serverPrice": null,
+          "nutrition": {
+            "status": "found",
+            "source": "Fitness Nutrition public RPC",
+            "httpStatus": 200,
+            "present": true,
+            "rowCount": 1,
+            "catalogProductId": "10ae810a-4155-4af7-9021-430ea5847277",
+            "sourceType": "pricetrace_manual",
+            "basisAmount": 108,
+            "basisUnit": "g",
+            "values": {
+              "calories_kcal": 460,
+              "protein_grams": 10,
+              "carbs_grams": 69,
+              "fat_grams": 16,
+              "sodium_mg": 1710,
+              "saturated_fat_grams": 8,
+              "sugars_grams": 4,
+              "fiber_grams": null
+            }
+          }
+        },
+        {
+          "barcode": "8809778493005",
+          "ptStatus": "matched",
+          "catalogProductId": "f31002f8-c226-44b2-8914-e6e7bfb059fb",
+          "name": "The미식 메밀비빔면",
+          "serverPrice": null,
+          "nutrition": {
+            "status": "found",
+            "source": "Fitness Nutrition public RPC",
+            "httpStatus": 200,
+            "present": true,
+            "rowCount": 1,
+            "catalogProductId": "f31002f8-c226-44b2-8914-e6e7bfb059fb",
+            "sourceType": "pricetrace_manual",
+            "basisAmount": 121,
+            "basisUnit": "g",
+            "values": {
+              "calories_kcal": 405,
+              "protein_grams": 9,
+              "carbs_grams": 85,
+              "fat_grams": 3.1,
+              "sodium_mg": 1200,
+              "saturated_fat_grams": 0.6,
+              "sugars_grams": 15,
+              "fiber_grams": null
+            }
+          }
+        }
+      ]
+    }
+  },
+  "unity": {
+    "status": "PASS_EDITMODE",
+    "command": "scripts/Test-EditMode.ps1",
+    "summaryPath": "artifacts/editmode/20261028-121745-f1bd6c6f/summary.json",
+    "previousTests": 378,
+    "additionalCases": 3,
+    "total": 381,
+    "passed": 381,
+    "failed": 0,
+    "skipped": 0,
+    "unityExitCode": 0
+  },
+  "apk": {
+    "versionName": "0.7.0",
+    "versionCode": 16,
+    "buildType": "release",
+    "status": "BUILD_AND_ARTIFACT_VERIFICATION_PASS",
+    "path": "Builds/Android/ProductAR.apk",
+    "preservedPath": "artifacts/v0.7.0/b-five-products-release/ProductAR.apk",
+    "sha256": "12dd7317bbc3bd5da7b790266632457d8cced65fbdd1c2662e5b1450d913159f",
+    "sizeBytes": 53036676,
+    "signerSha256": "cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135",
+    "signerMatchesLastVerifiedA25Build": true,
+    "debuggable": false,
+    "productionRegistrationController": true,
+    "sessionRegistry": true,
+    "developmentRegistrationProbe": false,
+    "developmentLookupProbe": false,
+    "comparedSourceFiles": 125,
+    "sourceMismatches": 0,
+    "sensitiveBuildLogMatches": 0,
+    "installedApkSha256": null,
+    "installedHashCheck": "NOT_RUN"
+  },
+  "device": {
+    "status": "NOT_RUN",
+    "reason": "User confirmed A25 cannot be connected now",
+    "installAttempted": false,
+    "uninstalled": false,
+    "dataCleared": false,
+    "checks": [
+      {
+        "item": "Three new PT barcodes, whole-package nutrition and no-price UI",
+        "status": "NOT_RUN"
+      },
+      {
+        "item": "Theanine front AR and fixed 12mm/15deg geometry regression",
+        "status": "NOT_RUN"
+      },
+      {
+        "item": "Jin front registration with new PT identity and nutrition, hide/reacquire",
+        "status": "NOT_RUN"
+      },
+      {
+        "item": "Offline snapshots for three new products",
+        "status": "NOT_RUN"
+      }
+    ]
+  },
+  "remaining": [
+    "A25 signing-compatible -r update and installed hash verification when connected",
+    "Physical checks of new barcode nutrition and offline snapshots",
+    "OFF nutrition physical demo uses a separate product",
+    "Final video/report/tag/ZIP are separate unfinished deliverables"
+  ],
+  "preparedSql": [
+    {
+      "path": "artifacts/v0.7.0/b-three-products-pt.apply.sql",
+      "sha256": "f75f5543a03704aee59d23d14b4dbe9a13a31c0f703db83d2d1546e57600385d",
+      "tracked": false
+    },
+    {
+      "path": "artifacts/v0.7.0/b-three-products-nutrition.apply.sql",
+      "sha256": "99fcbba811a283aca7dc18b10ac7cc40bc27253570321aa7b7fcae3b1f62a4a1",
+      "tracked": false
+    },
+    {
+      "path": "artifacts/v0.7.0/b-approved-pt-execute.sql",
+      "sha256": "297bc5ea9f013bb44cd40fe941d106667a2757239aed84824d2880d9dcfe428a",
+      "tracked": false
+    },
+    {
+      "path": "artifacts/v0.7.0/b-approved-nutrition-execute.sql",
+      "sha256": "dbb15dc8a14a2981c67d131f274b7b21da0cb46b3e0c1f8e92abec8cd42472cb",
+      "tracked": false
+    }
+  ],
+  "actualPtRevisionsUsedForPublication": [
+    {
+      "catalogProductId": "10ae810a-4155-4af7-9021-430ea5847277",
+      "standardProductId": "ec873108-e91f-481c-ab14-366865f1b909",
+      "revision": "sha256:9ee5675e78b12fba0c3cd358f07ff4577922eab2e2ea3d0185b8cc5f0a8068cb"
+    },
+    {
+      "catalogProductId": "268e9335-1b73-457c-8fac-ef0228aa6489",
+      "standardProductId": "599959e9-8ec1-4b46-bd97-7e0dd39d83d8",
+      "revision": "sha256:744ab80c5a200a6c042b40026d5c9d6a88f65585576300a20fb256510cc14782"
+    },
+    {
+      "catalogProductId": "f31002f8-c226-44b2-8914-e6e7bfb059fb",
+      "standardProductId": "f5e09ac5-2686-4e57-8fa3-9dc2f104a22c",
+      "revision": "sha256:b608db197189cb95e53c90910914e785fad37da5722ed3b0f89ddea3d9a68a39"
+    }
+  ]
+}

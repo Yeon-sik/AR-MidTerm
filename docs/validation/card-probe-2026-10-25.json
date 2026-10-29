@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-25",
+  "timezone": "Asia/Seoul",
+  "application": {
+    "package": "com.yeonsik.midtermar",
+    "name": "이미지 추적 검증",
+    "versionName": "0.1.1",
+    "versionCode": 2,
+    "platform": "Android ARM64 IL2CPP Development",
+    "unity": "6000.3.22f1",
+    "arFoundation": "6.3.5",
+    "arCore": "6.3.5"
+  },
+  "marker": {
+    "source": "test.jpg",
+    "asset": "Assets/Images/test-card.jpg",
+    "name": "test-card",
+    "sha256": "4dca0d093e69a5b7208907d1a158d6f6d98cfaebfccd497831a9da39994b7813",
+    "arcoreimgScore": 85,
+    "alternateSource": "test2.jpg",
+    "alternateScore": 40,
+    "physicalSizeSpecified": false
+  },
+  "build": {
+    "result": "Succeeded",
+    "errors": 0,
+    "unityExitCode": 0,
+    "apk": "Builds/Android/ImageTrackingProbe.apk",
+    "sizeBytes": 62265590,
+    "sha256": "a2b7772f9239c8fa5bd8811f435d45318209add078742958786b2a94e5ff9837",
+    "mode": "existing-project-cache-settings-restored",
+    "productSceneAndProjectSettingsPreserved": true
+  },
+  "tests": {
+    "suite": "MidtermAR.Tests EditMode",
+    "result": "Passed",
+    "total": 51,
+    "passed": 51,
+    "failed": 0,
+    "skipped": 0,
+    "unityExitCode": 0
+  },
+  "device": {
+    "model": "Samsung Galaxy A25 SM-A256N",
+    "os": "Android 16",
+    "installedApkHashMatches": true,
+    "installation": "replaced-incompatible-signer-after-backup",
+    "launchIssue": "restored-il2cpp-cache-owned-by-shell",
+    "recovery": "preserve-old-cache-and-regenerate-as-application-uid",
+    "readyTarget": "test-card",
+    "sessionTrackingObserved": true,
+    "fullTrackingFirstObservedKst": "2026-10-25T18:34:32+09:00",
+    "reacquisitionObservedKst": "2026-10-25T18:35:15+09:00",
+    "userConfirmed": ["cube-on-card", "camera-rotation", "camera-distance-change"],
+    "notCompleted": ["ten-trial-recognition-test", "controlled-occlusion-test", "long-duration-test"]
+  },
+  "scope": {
+    "retailBarcode3dPoseImplemented": false,
+    "dynamicPackagingImageRegistrationImplemented": false,
+    "productInformationPanelIntegratedWithImagePose": false
+  }
+}

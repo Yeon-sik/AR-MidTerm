@@ -6,6 +6,8 @@
       "name": "더단백 크런치바 초코",
       "brand": "빙그레",
       "specification": "40g · 1개",
+      "contentAmount": 40,
+      "contentUnit": "g",
       "barcode": "8801104671507",
       "barcodeFormat": "EAN_13",
       "mapping": {
@@ -19,6 +21,7 @@
         "observedAt": "2026-05-08",
         "source": "PriceTrace public product-observations.v3 snapshot revision e6e6315772fcfc71; exact seller + sourceProductCode 260190 join; not verified current/global-latest price",
         "confidence": "medium",
+        "displaySource": "PriceTrace 관측 기록",
         "observationId": "e78107dfe0379bff"
       },
       "nutrition": {
@@ -35,8 +38,164 @@
         "fiberGrams": null,
         "source": "Nutrition approved public pricetrace exact-ID link; pricetrace_manual; revision 1; package nutrition label not independently verified",
         "nutritionFoodId": "17637a49-e3c6-45d9-8425-48b47612152b",
+        "displaySource": "PriceTrace 승인 영양자료 · 포장 표기 대조 전",
         "sourceCatalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0"
       }
+    },
+    {
+      "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
+      "name": "테아닌과 밀크씨슬 활력솔루션",
+      "brand": "Dr.Elizabeth’s",
+      "specification": "1,000 mg × 60정 (60 g)",
+      "contentAmount": 60,
+      "contentUnit": "g",
+      "servingCount": 60,
+      "servingUnit": "정",
+      "servingCountSource": "포장 표기: 1,000 mg × 60정 (60 g)",
+      "barcode": "8809375984692",
+      "barcodeFormat": "EAN_13",
+      "mapping": {
+        "scope": "demo-only",
+        "source": "2026-10-27 사용자 동일 상품 확인. PT 공개 카탈로그 v4의 정확 규격 ID와 실물 바코드·앞면 사진을 연결한 로컬 시연 매핑. 운영 바코드 연결은 공개 함수 배포 전으로 UNVERIFIED.",
+        "physicalDecodeVerification": "PENDING_DEVICE_TEST",
+        "catalogIdentityVerification": "PT_PUBLIC_CATALOG_USER_CONFIRMED"
+      },
+      "price": {
+        "unitPriceKrw": 13210,
+        "seller": "와마트 일산점",
+        "observedAt": "2026-07-14",
+        "source": "PriceTrace public product-observations.v3 snapshot revision e6e6315772fcfc71; sourceProductCode 190077; not verified current/global-latest price",
+        "confidence": "user_verified",
+        "displaySource": "PriceTrace 관측 기록",
+        "observationId": "b88e89f58a6c9737"
+      },
+      "priceObservations": [
+        {
+          "unitPriceKrw": 13210,
+          "seller": "국군복지단 바다마을마트",
+          "observedAt": "2026-05-08",
+          "source": "PriceTrace public product-observations.v3 snapshot revision e6e6315772fcfc71; sourceProductCode 190077",
+          "confidence": "low",
+          "displaySource": "PriceTrace 관측 기록 · 신뢰도 낮음",
+          "observationId": "2ca8f6e026827bee"
+        },
+        {
+          "unitPriceKrw": 13210,
+          "seller": "와마트 일산점",
+          "observedAt": "2026-07-14",
+          "source": "PriceTrace public product-observations.v3 snapshot revision e6e6315772fcfc71; sourceProductCode 190077",
+          "confidence": "user_verified",
+          "displaySource": "PriceTrace 관측 기록",
+          "observationId": "b88e89f58a6c9737"
+        }
+      ],
+      "nutrition": null
+    },
+    {
+      "catalogProductId": "268e9335-1b73-457c-8fac-ef0228aa6489",
+      "name": "진라면 약간매운맛",
+      "brand": "오뚜기",
+      "specification": "120g · 1봉",
+      "contentAmount": 120,
+      "contentUnit": "g",
+      "barcode": "8801045014869",
+      "barcodeFormat": "EAN_13",
+      "mapping": {
+        "scope": "demo-only",
+        "source": "2026-10-28 사용자 포장 바코드·규격·영양표 확인 및 등록 승인. PT 검증 EAN·정확 상품 ID와 익명 공개 RPC matched를 대조.",
+        "physicalDecodeVerification": "PENDING_DEVICE_TEST",
+        "catalogIdentityVerification": "PT_PUBLIC_BARCODE_EXACT_ID_VERIFIED"
+      },
+      "price": null,
+      "nutrition": {
+        "basisAmount": 120,
+        "basisUnit": "g",
+        "prepState": "unspecified",
+        "caloriesKcal": 510,
+        "carbsGrams": 75,
+        "proteinGrams": 12,
+        "fatGrams": 18,
+        "sugarsGrams": 4,
+        "saturatedFatGrams": 9,
+        "sodiumMg": 1760,
+        "fiberGrams": null,
+        "source": "Fitness Nutrition approved public exact PT-ID link; user-provided package label; pricetrace_manual; revision 1; verified 2026-10-28",
+        "provider": "Fitness Nutrition",
+        "displaySource": "Fitness Nutrition · PT 승인",
+        "nutritionFoodId": "6224e87f-0c02-42c1-bf4d-faf5f85ae797",
+        "sourceCatalogProductId": "268e9335-1b73-457c-8fac-ef0228aa6489"
+      }
+    },
+    {
+      "catalogProductId": "10ae810a-4155-4af7-9021-430ea5847277",
+      "name": "스낵면",
+      "brand": "오뚜기",
+      "specification": "108g · 1봉",
+      "contentAmount": 108,
+      "contentUnit": "g",
+      "barcode": "8801045520728",
+      "barcodeFormat": "EAN_13",
+      "mapping": {
+        "scope": "demo-only",
+        "source": "2026-10-28 사용자 포장 바코드·규격·영양표 확인 및 등록 승인. PT 검증 EAN·정확 상품 ID와 익명 공개 RPC matched를 대조.",
+        "physicalDecodeVerification": "PENDING_DEVICE_TEST",
+        "catalogIdentityVerification": "PT_PUBLIC_BARCODE_EXACT_ID_VERIFIED"
+      },
+      "price": null,
+      "nutrition": {
+        "basisAmount": 108,
+        "basisUnit": "g",
+        "prepState": "unspecified",
+        "caloriesKcal": 460,
+        "carbsGrams": 69,
+        "proteinGrams": 10,
+        "fatGrams": 16,
+        "sugarsGrams": 4,
+        "saturatedFatGrams": 8,
+        "sodiumMg": 1710,
+        "fiberGrams": null,
+        "source": "Fitness Nutrition approved public exact PT-ID link; user-provided package label; pricetrace_manual; revision 1; verified 2026-10-28",
+        "provider": "Fitness Nutrition",
+        "displaySource": "Fitness Nutrition · PT 승인",
+        "nutritionFoodId": "2c0857d1-c79e-48ed-be0a-415181415df1",
+        "sourceCatalogProductId": "10ae810a-4155-4af7-9021-430ea5847277"
+      }
+    },
+    {
+      "catalogProductId": "f31002f8-c226-44b2-8914-e6e7bfb059fb",
+      "name": "The미식 메밀비빔면",
+      "brand": "The미식",
+      "specification": "121g · 1봉",
+      "contentAmount": 121,
+      "contentUnit": "g",
+      "barcode": "8809778493005",
+      "barcodeFormat": "EAN_13",
+      "mapping": {
+        "scope": "demo-only",
+        "source": "2026-10-28 사용자 포장 바코드·규격·영양표 확인 및 등록 승인. PT 검증 EAN·정확 상품 ID와 익명 공개 RPC matched를 대조.",
+        "physicalDecodeVerification": "PENDING_DEVICE_TEST",
+        "catalogIdentityVerification": "PT_PUBLIC_BARCODE_EXACT_ID_VERIFIED"
+      },
+      "price": null,
+      "nutrition": {
+        "basisAmount": 121,
+        "basisUnit": "g",
+        "prepState": "unspecified",
+        "caloriesKcal": 405,
+        "carbsGrams": 85,
+        "proteinGrams": 9,
+        "fatGrams": 3.1,
+        "sugarsGrams": 15,
+        "saturatedFatGrams": 0.6,
+        "sodiumMg": 1200,
+        "fiberGrams": null,
+        "source": "Fitness Nutrition approved public exact PT-ID link; user-provided package label; pricetrace_manual; revision 1; verified 2026-10-28",
+        "provider": "Fitness Nutrition",
+        "displaySource": "Fitness Nutrition · PT 승인",
+        "nutritionFoodId": "e844d4b2-5ef1-4eb9-a1e9-3f919eeca147",
+        "sourceCatalogProductId": "f31002f8-c226-44b2-8914-e6e7bfb059fb"
+      }
     }
-  ]
+  ],
+  "snapshotDate": "2026-10-28"
 }

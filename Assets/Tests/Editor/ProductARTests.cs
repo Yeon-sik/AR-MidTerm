@@ -130,8 +130,8 @@ namespace MidtermAR.Tests
             else
             {
                 Assert.That(Display("price"), Is.EqualTo(dataState == "partial" ? "0원" : "1,400원"));
-                Assert.That(Display("seller"), Is.EqualTo("판매처  국군복지단 바다마을마트"));
-                Assert.That(Display("observedAt"), Is.EqualTo("2026-05-08 관측 · 개당 가격"));
+                Assert.That(Display("seller"), Is.EqualTo("PriceTrace 관측가 · 2026-05-08 · 국군복지단 바다마을마트"));
+                Assert.That(Display("observedAt"), Is.EqualTo(ProductInfoFormatter.PriceDisclaimer));
                 Assert.That(Display("nutritionBasis"), Is.EqualTo("40g 기준"));
                 Assert.That(Display("calories"), Is.EqualTo("185 kcal"));
                 Assert.That(Display("sodium"), Is.EqualTo("200 mg"));
@@ -386,7 +386,11 @@ namespace MidtermAR.Tests
                 var iterator = new SerializedObject(component).GetIterator();
                 while (iterator.NextVisible(true))
                     if (iterator.propertyType == SerializedPropertyType.ObjectReference)
+                    {
+                        // 제출 원본에는 로컬 키 파일이 없다. 이 연결만 선택 사항이며 나머지는 필수다.
+                        if (component is ProductARApp && iterator.propertyPath == "remoteLookupJson") continue;
                         Assert.That(iterator.objectReferenceValue, Is.Not.Null, component.name + ": " + iterator.propertyPath);
+                    }
             }
         }
 

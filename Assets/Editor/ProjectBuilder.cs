@@ -7,6 +7,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.Events;
 using UnityEditor.SceneManagement;
+using UnityEditor.XR.ARSubsystems;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -25,7 +26,12 @@ namespace MidtermAR.Editor
     {
         public const string ScenePath = "Assets/Scenes/ProductAR.unity";
         public const string PanelPath = "Assets/Prefabs/ProductInfoPanel.prefab";
+        public const string AnnotationPath = "Assets/Prefabs/ProductAnnotationLabel.prefab";
+        public const string ImageLibraryPath = "Assets/Images/ProductImageLibrary.asset";
         public const string PackageId = "com.yeonsik.midtermar";
+        // 영상에서 약 40cm 거리 4~6px 목표, 측정값 아님. 최종 두께는 실물·영상 확인 후 결정한다.
+        public const float OutlineWidthMetres = 0.0025f;
+        public const float ConnectorWidthMetres = 0.002f;
         private static readonly Color Ink = new Color32(18, 34, 43, 255);
         private static readonly Color Paper = new Color32(249, 248, 241, 255);
         private static readonly Color Green = new Color32(37, 126, 92, 255);
@@ -60,9 +66,19 @@ namespace MidtermAR.Editor
             foreach (var root in scene.GetRootGameObjects())
                 if (root.name == "Camera UI" || root.name == "UI Event System") UnityEngine.Object.DestroyImmediate(root);
             Assign(app, "screen", CreateOverlay(EnsureFont(), app));
+            ConfigureImageTracking(app, CreatePanel(EnsureFont()));
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
             Debug.Log("[ProductAR Build] Compact camera UI updated.");
+        }
+
+        [MenuItem("Product AR/Prepare Image Tracking Scene (No Build)")]
+        public static void PrepareImageTrackingScene()
+        {
+            // 씬·프리팹만 갱신한다. PlayerSettings, 빌드 목록, APK 생성 경로는 실행하지 않는다.
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            UpdateCameraUI();
+            Debug.Log("[ProductAR] Image tracking scene prepared; no player build requested.");
         }
 
         public static void CaptureBarcodeFollowPreviews()
@@ -80,6 +96,7 @@ namespace MidtermAR.Editor
                 price = new PriceSnapshot { unitPriceKrw = 0, seller = product.price.seller, observedAt = product.price.observedAt },
                 nutrition = new NutritionSnapshot { basisAmount = 40, basisUnit = "g", sugarsGrams = 0, sodiumMg = 0 }
             };
+            var off = OffProductClient.Parse(@"{""code"":""8809778493005"",""status"":""success"",""result"":{""id"":""product_found""},""errors"":[],""product"":{""product_name"":""OFF 영양 검증용 식품"",""brands"":""검증용"",""quantity"":""400 g"",""product_quantity_unit"":""g"",""last_modified_t"":1793145600,""nutriments"":{""energy-kcal_100g"":250,""proteins_100g"":5,""sugars_100g"":0,""sodium_100g"":0.4}}}", "8809778493005");
             var canvas = view.GetComponent<Canvas>();
             var camera = new GameObject("Follow UI Preview", typeof(Camera)).GetComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor;
@@ -99,12 +116,14 @@ namespace MidtermAR.Editor
                 Capture("lost", null, true);
                 Capture("data-missing", new Vector2(0.5f, 0.45f), sample: missing);
                 Capture("data-partial-zero", new Vector2(0.5f, 0.45f), sample: partial);
+                Capture("off-nutrition", new Vector2(0.5f, 0.45f), sample: off);
                 camera.targetTexture = null;
                 UnityEngine.Object.DestroyImmediate(target);
 
                 void Capture(string name, Vector2? position, bool lost = false, ProductSnapshot sample = null)
                 {
-                    follow.SetProduct(position.HasValue || lost ? sample ?? product : null);
+                    follow.SetProduct(position.HasValue || lost ? sample ?? product : null,
+                        sourceBadge: sample == off ? "Open Food Facts 정보 · PT 바코드 연결 필요" : null);
                     view.Show(position.HasValue ? "2 / 2 · 바코드 따라가는 중" : lost ? "2 / 2 · 바코드 위치 찾는 중" : "1 / 2 · 바코드 스캔",
                         position.HasValue ? "상품정보를 자동으로 표시해요" : lost ? "바코드를 다시 비춰주세요" : "바코드를 비춰주세요",
                         position.HasValue ? "바코드가 보이는 동안 정보창이 따라가요." : "바코드 전체가 선명하게 보이도록\n휴대폰을 잠시 멈춰주세요.",
@@ -195,7 +214,12 @@ namespace MidtermAR.Editor
         }
 
         [MenuItem("Product AR/Build Android APK")]
-        public static void BuildAndroid() // 지정 실행 씬을 Android APK로 빌드
+        public static void BuildAndroid() => BuildAndroidPlayer(false);
+
+        [MenuItem("Product AR/Build Android Release APK")]
+        public static void BuildAndroidRelease() => BuildAndroidPlayer(true);
+
+        private static void BuildAndroidPlayer(bool release)
         {
             if (!File.Exists(ScenePath)) PrepareProject();
             ConfigureAndroid();
@@ -205,7 +229,7 @@ namespace MidtermAR.Editor
                 scenes = new[] { ScenePath },
                 locationPathName = "Builds/Android/ProductAR.apk",
                 target = BuildTarget.Android,
-                options = BuildOptions.Development
+                options = release ? BuildOptions.None : BuildOptions.Development
             });
             Debug.Log($"[ProductAR Build] {report.summary.result}; bytes={report.summary.totalSize}; errors={report.summary.totalErrors}");
             if (report.summary.result != BuildResult.Succeeded) throw new Exception("Android APK build failed.");
@@ -238,13 +262,81 @@ namespace MidtermAR.Editor
             Debug.Log("[ProductAR Build] Editor-only world panel preview captured.");
         }
 
-        private static void ConfigureAndroid()
+        public static void CaptureAnnotationPreviews()
+        {
+            // 글자·줄바꿈 검사용 정면 렌더다. 카메라 추적 성공과 구분한다.
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            var cameraObject = new GameObject("Annotation typography preview", typeof(Camera));
+            var camera = cameraObject.GetComponent<Camera>();
+            camera.transform.position = new Vector3(0, 0, -1);
+            camera.orthographic = true; camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = Ink;
+            Directory.CreateDirectory("artifacts/ui-annotations");
+            var catalog = new ProductCatalog(File.ReadAllText("Assets/Data/demo-products.json"));
+            catalog.TryFind("8809375984692", out var product);
+            try
+            {
+                foreach (var kind in new[] { "servingPrice", "observationSummary" })
+                {
+                    var widget = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(AnnotationPath));
+                    try
+                    {
+                        widget.GetComponent<WorldProductAnnotation>().SetContent(ProductInsightCalculator.AnnotationText(product, kind));
+                        var rect = (RectTransform)widget.transform.Find("Label");
+                        rect.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                        rect.localScale = Vector3.one * (ProductAnnotationLayout.Width / rect.rect.width);
+                        widget.SetActive(true);
+                        Capture(widget, "editor-" + kind, 1080, 360, .02f);
+                    }
+                    finally { UnityEngine.Object.DestroyImmediate(widget); }
+                }
+                var panel = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(PanelPath));
+                try
+                {
+                    panel.GetComponent<WorldProductPanel>().Bind(product);
+                    panel.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                    panel.transform.localScale = Vector3.one * (.0928f / ((RectTransform)panel.transform).rect.width);
+                    Capture(panel, "editor-world-price", 1080, 960, .05f);
+                }
+                finally { UnityEngine.Object.DestroyImmediate(panel); }
+            }
+            finally { UnityEngine.Object.DestroyImmediate(cameraObject); }
+
+            void Capture(GameObject root, string name, int width, int height, float orthographicSize)
+            {
+                camera.orthographicSize = orthographicSize;
+                var target = new RenderTexture(width, height, 24); camera.targetTexture = target;
+                var pixels = new Texture2D(width, height, TextureFormat.RGB24, false);
+                var previous = RenderTexture.active;
+                try
+                {
+                    Canvas.ForceUpdateCanvases();
+                    foreach (var text in root.GetComponentsInChildren<TMP_Text>())
+                    {
+                        text.ForceMeshUpdate(true, true);
+                        if (text.isTextOverflowing) throw new InvalidOperationException("Annotation preview text overflow: " + text.name);
+                        foreach (var c in text.text.Where(c => !char.IsWhiteSpace(c)))
+                            if (!text.font.HasCharacter(c, true, true)) throw new InvalidOperationException("Annotation preview missing glyph: " + c);
+                    }
+                    camera.Render(); RenderTexture.active = target;
+                    pixels.ReadPixels(new Rect(0, 0, width, height), 0, 0); pixels.Apply();
+                    File.WriteAllBytes("artifacts/ui-annotations/" + name + ".png", pixels.EncodeToPNG());
+                    Debug.Log("[ProductAR Annotation Preview] " + name + " PASS (Editor typography only)");
+                }
+                finally
+                {
+                    RenderTexture.active = previous; camera.targetTexture = null;
+                    UnityEngine.Object.DestroyImmediate(pixels); UnityEngine.Object.DestroyImmediate(target);
+                }
+            }
+        }
+
+        internal static void ConfigureAndroid()
         {
             PlayerSettings.companyName = "Yeonsik";
             PlayerSettings.productName = "상품정보 AR";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageId);
-            PlayerSettings.bundleVersion = "0.1.0";
-            PlayerSettings.Android.bundleVersionCode = 1;
+            PlayerSettings.bundleVersion = "0.7.0";
+            PlayerSettings.Android.bundleVersionCode = 16;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel30;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel35;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -256,7 +348,7 @@ namespace MidtermAR.Editor
             PlayerSettings.allowedAutorotateToLandscapeLeft = false;
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
-            PlayerSettings.Android.forceInternetPermission = false;
+            PlayerSettings.Android.forceInternetPermission = true;
             PlayerSettings.runInBackground = false;
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
         }
@@ -278,20 +370,23 @@ namespace MidtermAR.Editor
         private static TMP_FontAsset EnsureFont()
         {
             const string path = "Assets/Fonts/Generated/NotoSansKR SDF.asset";
-            var existing = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
-            if (existing != null) return existing;
-            var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NotoSansCJKkr-Regular.otf");
-            if (font == null) throw new InvalidOperationException("Korean font is missing.");
-            var asset = TMP_FontAsset.CreateFontAsset(font, 60, 6, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
-            asset.name = "NotoSansKR SDF";
-            AssetDatabase.CreateAsset(asset, path);
+            var asset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(path);
+            if (asset == null)
+            {
+                var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NotoSansCJKkr-Regular.otf");
+                if (font == null) throw new InvalidOperationException("Korean font is missing.");
+                asset = TMP_FontAsset.CreateFontAsset(font, 60, 6, GlyphRenderMode.SDFAA, 2048, 2048, AtlasPopulationMode.Dynamic, true);
+                asset.name = "NotoSansKR SDF";
+                AssetDatabase.CreateAsset(asset, path);
+            }
             var source = string.Join("\n", Directory.GetFiles("Assets/Scripts", "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText))
                 + File.ReadAllText("Assets/Data/demo-products.json")
+                + File.ReadAllText("Assets/Data/product-images.json")
                 + string.Concat(Enumerable.Range(32, 95).Select(x => (char)x));
             var characters = new string(source.Where(c => !char.IsControl(c)).Distinct().ToArray());
             asset.TryAddCharacters(characters, out var missing);
             if (!string.IsNullOrEmpty(missing)) Debug.LogWarning("[ProductAR Build] Font missing chars: " + missing);
-            AssetDatabase.AddObjectToAsset(asset.material, asset);
+            if (!AssetDatabase.Contains(asset.material)) AssetDatabase.AddObjectToAsset(asset.material, asset);
             foreach (var texture in asset.atlasTextures)
             {
                 texture.name = "NotoSansKR Atlas";
@@ -306,22 +401,52 @@ namespace MidtermAR.Editor
 
         private static WorldProductPanel CreatePanel(TMP_FontAsset font)
         {
-            var root = new GameObject("ProductInfoPanel", typeof(RectTransform), typeof(Canvas), typeof(WorldProductPanel));
+            var root = new GameObject("ProductInfoPanel", typeof(RectTransform), typeof(Canvas), typeof(UnityEngine.UI.GraphicRaycaster), typeof(WorldProductPanel));
             var rect = (RectTransform)root.transform;
-            rect.sizeDelta = new Vector2(640, 940);
+            rect.sizeDelta = new Vector2(640, 960);
             rect.localScale = Vector3.one * 0.00042f;
             root.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
             var background = root.AddComponent<UnityEngine.UI.Image>();
             background.color = Paper;
             background.raycastTarget = false;
             var view = root.GetComponent<WorldProductPanel>();
-            Assign(view, "productTitle", Text(rect, "Title", "더단백 크런치바 초코", font, 44, Ink, 28, 26, 584, 120));
-            Assign(view, "specification", Text(rect, "Specification", "빙그레 · 40g · 1개", font, 29, Ink, 28, 156, 584, 48));
-            Text(rect, "PriceLabel", "관측 가격", font, 27, Green, 28, 230, 584, 42);
-            Assign(view, "price", Text(rect, "Price", "1,400원", font, 72, Ink, 28, 274, 584, 128));
-            Assign(view, "priceSource", Text(rect, "PriceSource", "", font, 27, Ink, 28, 416, 584, 112));
-            Assign(view, "nutrition", Text(rect, "Nutrition", "", font, 31, Ink, 28, 566, 584, 250));
-            Assign(view, "provenance", Text(rect, "Provenance", "", font, 24, Ink, 28, 842, 584, 80));
+            Assign(view, "productTitle", Text(rect, "Title", "", font, 34, Ink, 24, 20, 592, 100));
+            Assign(view, "specification", Text(rect, "Specification", "", font, 26, Ink, 24, 124, 592, 44));
+            var tabs = Rect("Information Tabs", rect);
+            tabs.anchorMin = new Vector2(0, 1); tabs.anchorMax = Vector2.one;
+            tabs.offsetMin = new Vector2(24, -256); tabs.offsetMax = new Vector2(-24, -184);
+            var layout = tabs.gameObject.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
+            layout.spacing = 12; layout.childControlWidth = layout.childControlHeight = layout.childForceExpandWidth = true;
+            var nutritionButton = Button(tabs, "Nutrition Tab", "영양", font, Green, 1, out _);
+            var priceButton = Button(tabs, "Price Tab", "가격", font, Ink, 1, out _);
+            nutritionButton.GetComponent<UnityEngine.UI.LayoutElement>().minHeight = 72;
+            priceButton.GetComponent<UnityEngine.UI.LayoutElement>().minHeight = 72;
+            Assign(view, "nutritionTab", nutritionButton); Assign(view, "priceTab", priceButton);
+            Assign(view, "tabs", tabs);
+            UnityEventTools.AddPersistentListener(nutritionButton.onClick, view.ShowNutrition);
+            UnityEventTools.AddPersistentListener(priceButton.onClick, view.ShowPrice);
+            var nutritionPage = Rect("Nutrition Page", rect);
+            var pricePage = Rect("Price Page", rect);
+            foreach (var page in new[] { nutritionPage, pricePage })
+            {
+                page.anchorMin = new Vector2(0, 1); page.anchorMax = Vector2.one;
+                page.offsetMin = new Vector2(0, -676); page.offsetMax = new Vector2(0, -280);
+            }
+            Assign(view, "nutritionPage", nutritionPage.gameObject); Assign(view, "pricePage", pricePage.gameObject);
+            Assign(view, "nutrition", Text(nutritionPage, "Nutrition", "", font, 30, Ink, 24, 0, 592, 240));
+            Assign(view, "nutritionSource", Text(nutritionPage, "NutritionSource", "", font, 20, Ink, 24, 250, 592, 146));
+            Text(pricePage, "PriceLabel", "관측 가격 · 개당", font, 26, Green, 24, 0, 592, 40);
+            var priceText = Text(pricePage, "Price", "", font, 50, Ink, 24, 44, 592, 92);
+            priceText.enableAutoSizing = true; priceText.fontSizeMin = 34; priceText.fontSizeMax = 50;
+            priceText.textWrappingMode = TextWrappingModes.NoWrap;
+            Assign(view, "price", priceText);
+            var source = Text(pricePage, "PriceSource", "", font, 21, Ink, 24, 146, 592, 36);
+            source.enableAutoSizing = true; source.fontSizeMin = 18; source.fontSizeMax = 21;
+            source.textWrappingMode = TextWrappingModes.NoWrap;
+            Assign(view, "priceSource", source);
+            Assign(view, "priceDisclaimer", Text(pricePage, "PriceDisclaimer", "", font, 23, Ink, 24, 190, 592, 36));
+            Assign(view, "provenance", Text(rect, "Provenance", "", font, 23, Ink, 24, 696, 592, 120));
+            Assign(view, "emptyInformation", Text(rect, "Empty Information", "", font, 26, Ink, 24, 184, 592, 44));
             var catalog = new ProductCatalog(File.ReadAllText("Assets/Data/demo-products.json"));
             catalog.TryFind("8801104671507", out var product);
             view.Bind(product);
@@ -387,7 +512,129 @@ namespace MidtermAR.Editor
             Assign(app, "readiness", readiness);
             Assign(app, "scanner", scanner);
             Assign(app, "screen", screen);
+            ConfigureImageTracking(app, panel);
             EditorSceneManager.SaveScene(scene, ScenePath);
+        }
+
+        private static void ConfigureImageTracking(ProductARApp app, WorldProductPanel panel)
+        {
+            var library = AssetDatabase.LoadAssetAtPath<XRReferenceImageLibrary>(ImageLibraryPath);
+            if (library == null)
+            {
+                library = ScriptableObject.CreateInstance<XRReferenceImageLibrary>();
+                AssetDatabase.CreateAsset(library, ImageLibraryPath);
+                library.Add();
+                library.SetName(0, ImageTrackingProbe.TargetName);
+                library.SetTexture(0, AssetDatabase.LoadAssetAtPath<Texture2D>(ImageTrackingProbeBuilder.MarkerPath), false);
+                library.SetSpecifySize(0, false); // 개발용 카드의 실측값은 아직 없다.
+                EditorUtility.SetDirty(library);
+            }
+            var json = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Data/product-images.json");
+            RegisterPackageCrop(library, "theanine-top", "Assets/Images/theanine-top.jpg", 0.058f);
+            RegisterPackageCrop(library, "theanine-bottom", "Assets/Images/theanine-bottom.jpg", 0.058f);
+            var catalog = new ProductImageCatalog(json.text, new ProductCatalog(File.ReadAllText("Assets/Data/demo-products.json")));
+            catalog.ValidateLibrary(library);
+            var origin = UnityEngine.Object.FindFirstObjectByType<XROrigin>();
+            origin.GetComponent<ARPlaneManager>().enabled = false;
+            origin.GetComponent<ARRaycastManager>().enabled = false;
+            origin.GetComponent<ARAnchorManager>().enabled = false;
+            var images = origin.GetComponent<ARTrackedImageManager>() ?? origin.gameObject.AddComponent<ARTrackedImageManager>();
+            images.referenceLibrary = library;
+            images.requestedMaxNumberOfMovingImages = 2; // 다른 등록 이미지가 동시에 보이면 숨길 수 있도록 한다.
+            var presenter = app.GetComponent<TrackedImageProductPanel>() ?? app.gameObject.AddComponent<TrackedImageProductPanel>();
+            var camera = origin.Camera;
+            Assign(presenter, "imageManager", images);
+            Assign(presenter, "session", UnityEngine.Object.FindFirstObjectByType<ARSession>());
+            Assign(presenter, "readiness", app.GetComponent<ARReadiness>());
+            Assign(presenter, "cameraManager", camera.GetComponent<ARCameraManager>());
+            Assign(presenter, "arCamera", camera);
+            Assign(presenter, "panelPrefab", panel);
+            var registration = app.GetComponent<RuntimeProductRegistrationController>()
+                ?? app.gameObject.AddComponent<RuntimeProductRegistrationController>();
+            registration.Configure(camera.GetComponent<ARCameraManager>(), images, camera,
+                UnityEngine.Object.FindFirstObjectByType<ARSession>(), EnsureFont());
+            Assign(app, "frontRegistration", registration);
+            var oldVisuals = app.transform.Find("Tracking Visuals");
+            if (oldVisuals != null) UnityEngine.Object.DestroyImmediate(oldVisuals.gameObject);
+            var visuals = new GameObject("Tracking Visuals"); visuals.transform.SetParent(app.transform, false);
+            Directory.CreateDirectory("Assets/Materials");
+            const string linePath = "Assets/Materials/ProductTrackingLine.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(linePath);
+            if (material == null) { material = new Material(Shader.Find("Universal Render Pipeline/Unlit")); AssetDatabase.CreateAsset(material, linePath); }
+            material.SetColor("_BaseColor", new Color32(40, 205, 132, 255));
+            EditorUtility.SetDirty(material);
+            var annotations = visuals.AddComponent<ProductAnnotationPresenter>();
+            Assign(annotations, "annotationPrefab", CreateAnnotationLabel(EnsureFont(), material));
+            Assign(presenter, "annotations", annotations);
+            var annotationSettings = new SerializedObject(presenter);
+            // 포장 표기 주석은 보류한다. 원본 연구 코드는 보존하되 제출 앱에는 표시하지 않는다.
+            annotationSettings.FindProperty("showAnnotations").boolValue = false;
+            annotationSettings.ApplyModifiedPropertiesWithoutUndo();
+            Assign(presenter, "cropOutline", Line("Crop Outline", 4, true, OutlineWidthMetres));
+            Assign(presenter, "connector", Line("Product Connector", 2, false, ConnectorWidthMetres));
+            LineRenderer Line(string name, int points, bool loop, float width)
+            {
+                var go = new GameObject(name); go.transform.SetParent(visuals.transform, false);
+                var line = go.AddComponent<LineRenderer>(); line.sharedMaterial = material;
+                line.useWorldSpace = true; line.loop = loop; line.positionCount = points;
+                line.startWidth = line.endWidth = width;
+                line.alignment = LineAlignment.View;
+                line.numCornerVertices = 4;
+                line.numCapVertices = loop ? 0 : 4; // 닫힌 윤곽은 끝이 없고, 연결선의 양 끝만 둥글게 한다.
+                line.shadowCastingMode = ShadowCastingMode.Off; line.receiveShadows = false; line.enabled = false;
+                return line;
+            }
+            Assign(app, "imagePanel", presenter);
+            Assign(app, "imageBindingsJson", json);
+            // 파일이 없으면 null을 직렬화한다. 키를 포함한 예제 파일을 대신 사용하지 않는다.
+            Assign(app, "remoteLookupJson", AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Config/remote-lookup.local.json"));
+            Assign(app, "barcodePanel", UnityEngine.Object.FindFirstObjectByType<BarcodeProductPanel>());
+            var scannerSettings = new SerializedObject(app.GetComponent<ARBarcodeScanner>());
+            scannerSettings.FindProperty("captureViewportCoordinates").boolValue = true;
+            scannerSettings.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static WorldProductAnnotation CreateAnnotationLabel(TMP_FontAsset font, Material material)
+        {
+            var root = new GameObject("Product Annotation", typeof(WorldProductAnnotation));
+            var panel = new GameObject("Label", typeof(RectTransform), typeof(Canvas), typeof(UnityEngine.UI.Image));
+            panel.transform.SetParent(root.transform, false);
+            var rect = (RectTransform)panel.transform;
+            // UI 1단위당 0.125mm, 40단위 글자 em 높이 5mm. 실제 가독성은 실물로 확인한다.
+            rect.sizeDelta = new Vector2(920, 208);
+            panel.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+            panel.GetComponent<UnityEngine.UI.Image>().color = Paper;
+            panel.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
+            var text = Text(rect, "Annotation Text", "", font, 40, Ink, 32, 16, 856, 176);
+            text.alignment = TextAlignmentOptions.Center; text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.richText = false; text.raycastTarget = false;
+            // 선은 축소하는 Canvas의 형제가 되어 월드 단위 두께 2mm를 유지한다.
+            var leader = new GameObject("Leader").AddComponent<LineRenderer>(); leader.transform.SetParent(root.transform, false);
+            leader.sharedMaterial = material; leader.useWorldSpace = true; leader.positionCount = 2;
+            leader.startWidth = leader.endWidth = ConnectorWidthMetres;
+            leader.alignment = LineAlignment.View; leader.numCornerVertices = 4;
+            leader.numCapVertices = 0; // 끝 캡이 앵커를 지나 인쇄 안쪽까지 덮지 않게 한다.
+            leader.shadowCastingMode = ShadowCastingMode.Off; leader.receiveShadows = false; leader.enabled = false;
+            var widget = root.GetComponent<WorldProductAnnotation>();
+            Assign(widget, "label", text); Assign(widget, "labelPanel", rect); Assign(widget, "leader", leader);
+            PrefabUtility.SaveAsPrefabAsset(root, AnnotationPath);
+            UnityEngine.Object.DestroyImmediate(root);
+            AssetDatabase.ImportAsset(AnnotationPath, ImportAssetOptions.ForceSynchronousImport);
+            return AssetDatabase.LoadAssetAtPath<GameObject>(AnnotationPath).GetComponent<WorldProductAnnotation>();
+        }
+
+        private static void RegisterPackageCrop(XRReferenceImageLibrary library, string name, string path, float width)
+        {
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (texture == null) throw new InvalidOperationException("상품 크롭 이미지가 없습니다: " + path);
+            var index = -1;
+            for (var i = 0; i < library.count; i++) if (library[i].name == name) index = i;
+            if (index < 0) { library.Add(); index = library.count - 1; }
+            library.SetName(index, name);
+            library.SetTexture(index, texture, false);
+            library.SetSpecifySize(index, true);
+            library.SetSize(index, new Vector2(width, width * texture.height / texture.width));
+            EditorUtility.SetDirty(library);
         }
 
         private static GameObject CreatePlanePrefab()
@@ -433,7 +680,7 @@ namespace MidtermAR.Editor
             var follow = canvasObject.AddComponent<BarcodeProductPanel>();
             Assign(follow, "safeArea", safe); Assign(follow, "header", top); Assign(follow, "footer", bottom);
             CreateFollowingCard(font, safe, follow);
-            Assign(app, "followPanel", follow);
+            follow.enabled = true; // 바코드 단독 인식 경로의 화면 정보판
             Assign(view, "statusStep", Text(top, "Step", "카메라 준비 중", font, 27, new Color(1f, 0.82f, 0.43f), 24, 14, 940, 40));
             Assign(view, "statusTitle", Text(top, "Status", "카메라를 준비하고 있어요", font, 38, Color.white, 24, 58, 940, 56));
             Assign(view, "statusMessage", Text(bottom, "Instruction", "주변을 천천히 비춰주세요.", font, 30, Color.white, 24, 20, 940, 76));
@@ -444,13 +691,14 @@ namespace MidtermAR.Editor
             var layout = buttons.gameObject.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
             layout.spacing = 18; layout.childControlWidth = true; layout.childControlHeight = true; layout.childForceExpandWidth = true;
             var primary = Button(buttons, "Primary", "다시 스캔", font, Green, 1.4f, out var primaryLabel);
-            var move = Button(buttons, "Reposition", "재배치", font, new Color(0.2f, 0.3f, 0.34f), 1, out var moveLabel);
+            var move = Button(buttons, "Reposition", "앞면 등록", font, Green, 1, out var moveLabel);
             var delete = Button(buttons, "Delete", "삭제", font, new Color(0.2f, 0.3f, 0.34f), 1, out _);
             Assign(view, "primaryLabel", primaryLabel); Assign(view, "primaryButton", primary);
             Assign(view, "moveLabel", moveLabel);
             Assign(view, "moveButton", move); Assign(view, "deleteButton", delete);
             Assign(view, "instructionPanel", bottom); Assign(view, "buttons", buttons);
             UnityEventTools.AddPersistentListener(primary.onClick, app.PrimaryAction);
+            UnityEventTools.AddPersistentListener(move.onClick, app.BeginFrontRegistration);
             var events = new GameObject("UI Event System", typeof(EventSystem), typeof(InputSystemUIInputModule));
             events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
             Canvas.ForceUpdateCanvases();
@@ -463,7 +711,7 @@ namespace MidtermAR.Editor
             var card = Plate("Barcode Product", safe, Paper);
             card.anchorMin = card.anchorMax = new Vector2(0.5f, 0.5f);
             card.pivot = Vector2.zero;
-            card.sizeDelta = new Vector2(720, 648);
+            card.sizeDelta = new Vector2(720, 770);
             card.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
             Assign(follow, "card", card);
             Assign(follow, "productTitle", Text(card, "ProductTitle", "", font, 32, Ink, 24, 12, 672, 54));
@@ -474,39 +722,50 @@ namespace MidtermAR.Editor
             priceBlock.offsetMin = new Vector2(24, -256); priceBlock.offsetMax = new Vector2(-24, -116);
             priceBlock.GetComponent<UnityEngine.UI.Image>().raycastTarget = false;
             var priceLabel = Text(priceBlock, "PriceLabel", "관측 가격", font, 24, Green, 16, 12, 640, 40);
+            Assign(follow, "priceLabel", priceLabel);
             priceLabel.rectTransform.anchorMax = new Vector2(0.45f, 1);
             var amount = Text(priceBlock, "Price", "", font, 40, Ink, 16, 0, 640, 66);
             amount.rectTransform.anchorMin = new Vector2(0.45f, 1);
             amount.alignment = TextAlignmentOptions.TopRight;
             amount.fontStyle = FontStyles.Bold;
             Assign(follow, "price", amount);
-            Assign(follow, "seller", Text(priceBlock, "Seller", "", font, 24, Ink, 16, 62, 640, 38));
+            var sellerSource = Text(priceBlock, "Seller", "", font, 22, Ink, 16, 62, 640, 38);
+            sellerSource.enableAutoSizing = true; sellerSource.fontSizeMin = 18; sellerSource.fontSizeMax = 22;
+            sellerSource.textWrappingMode = TextWrappingModes.NoWrap;
+            Assign(follow, "seller", sellerSource);
             Assign(follow, "observedAt", Text(priceBlock, "ObservedAt", "", font, 22, Ink, 16, 100, 640, 36));
+            Assign(follow, "priceSection", priceBlock);
+            var nutritionBlock = Rect("Nutrition Section", card);
+            Assign(follow, "nutritionSection", nutritionBlock);
 
-            var nutritionTitle = Text(card, "NutritionTitle", "영양정보", font, 32, Ink, 24, 266, 672, 50);
+            var nutritionTitle = Text(nutritionBlock, "NutritionTitle", "영양정보", font, 32, Ink, 0, 0, 672, 50);
             nutritionTitle.fontStyle = FontStyles.Bold;
             nutritionTitle.rectTransform.anchorMax = new Vector2(0.5f, 1);
-            var basis = Text(card, "NutritionBasis", "", font, 24, Ink, 24, 276, 672, 38);
+            var basis = Text(nutritionBlock, "NutritionBasis", "", font, 24, Ink, 0, 10, 672, 38);
             basis.rectTransform.anchorMin = new Vector2(0.5f, 1);
             basis.alignment = TextAlignmentOptions.TopRight;
             Assign(follow, "nutritionBasis", basis);
-            Rule(card, "Nutrition Top Rule", 320, 6, Ink);
+            Rule(nutritionBlock, "Nutrition Top Rule", 54, 6, Ink);
             NutritionRow("Calories", "열량", "calories", 328, 42, 27, true);
-            Rule(card, "Calories Rule", 372, 4, Ink);
+            Rule(nutritionBlock, "Calories Rule", 106, 4, Ink);
             NutritionRow("Sodium", "나트륨", "sodium", 378, 36);
             NutritionRow("Carbs", "탄수화물", "carbs", 414, 36);
             NutritionRow("Sugars", "당류", "sugars", 450, 36, indent: true);
             NutritionRow("Fat", "지방", "fat", 486, 36);
             NutritionRow("SaturatedFat", "포화지방", "saturatedFat", 522, 36, indent: true);
             NutritionRow("Protein", "단백질", "protein", 558, 36);
-            Rule(card, "Nutrition Bottom Rule", 596, 4, Ink);
-            Text(card, "Provenance", "시연용 연결 · 로컬 데이터", font, 22, Ink, 24, 606, 672, 36);
+            Rule(nutritionBlock, "Nutrition Bottom Rule", 330, 4, Ink);
+            Assign(follow, "nutritionSource", Text(nutritionBlock, "Nutrition Source", "", font, 21, Ink, 0, 340, 672, 34));
+            Assign(follow, "provenance", Text(card, "Provenance", "", font, 20, Ink, 24, 606, 672, 38));
+            Assign(follow, "registrationStatus", Text(card, "Registration", "", font, 20, Ink, 24, 668, 672, 90));
+            Assign(follow, "emptyInformation", Text(card, "Empty Information", "", font, 24, Ink, 24, 116, 672, 52));
 
             void NutritionRow(string name, string label, string field, float y, float height, float size = 24, bool bold = false, bool indent = false)
             {
-                var row = Rect(name + " Row", card);
+                y -= 266;
+                var row = Rect(name + " Row", nutritionBlock);
                 row.anchorMin = new Vector2(0, 1); row.anchorMax = Vector2.one;
-                row.offsetMin = new Vector2(24, -y - height); row.offsetMax = new Vector2(-24, -y);
+                row.offsetMin = new Vector2(0, -y - height); row.offsetMax = new Vector2(0, -y);
                 var heading = Text(row, "Label", label, font, size, Ink, indent ? 20 : 0, 0, 672, height);
                 heading.rectTransform.anchorMax = new Vector2(0.6f, 1);
                 var value = Text(row, "Amount", "", font, size, Ink, 0, 0, 672, height);
@@ -515,7 +774,7 @@ namespace MidtermAR.Editor
                 value.alignment = TextAlignmentOptions.MidlineRight;
                 if (bold) heading.fontStyle = value.fontStyle = FontStyles.Bold;
                 Assign(follow, field, value);
-                if (!bold && name != "Protein") Rule(card, name + " Rule", y + height, 1, new Color32(183, 191, 187, 255));
+                if (!bold && name != "Protein") Rule(nutritionBlock, name + " Rule", y + height, 1, new Color32(183, 191, 187, 255));
             }
             var marker = Plate("Barcode Position", safe, Green);
             marker.anchorMin = marker.anchorMax = new Vector2(0.5f, 0.5f);

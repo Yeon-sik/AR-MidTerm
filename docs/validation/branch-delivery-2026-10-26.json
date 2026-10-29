@@ -1,0 +1,155 @@
+{
+  "checkedAtKst": "2026-10-26T14:26:02.211036+09:00",
+  "branch": "feat/image-tracking-probe",
+  "sourceBoundary": "Feature commit c8147a1, with documentation-only delivery changes on the same branch",
+  "tests": {
+    "timestampUtc": "2026-10-26T05:24:51.4429094Z",
+    "unityExitCode": 0,
+    "result": "Passed",
+    "total": 105,
+    "passed": 105,
+    "failed": 0,
+    "skipped": 0,
+    "playerBuildRequested": false,
+    "results": "artifacts/editmode/20261026-052428-102293e6/results.xml",
+    "log": "artifacts/editmode/20261026-052428-102293e6/editor.log"
+  },
+  "initialRestrictedAttempt": {
+    "result": "INTERRUPTED_BEFORE_TEST_RESULTS",
+    "reason": "Unity Licensing Client connection refused",
+    "evidenceDirectory": "artifacts/editmode/20261026-052051-514e6c21"
+  },
+  "staticChecks": {
+    "reportRelativeLinks": "PASS",
+    "jsonParsing": "PASS",
+    "jsonFilesChecked": 9,
+    "newUnityMetaPairs": "PASS",
+    "changedTextCredentialPatternScan": "PASS",
+    "sourceAndDocumentTrailingWhitespace": "PASS",
+    "changedMarkdownRelativeLinks": "PASS",
+    "markdownFilesChecked": 11,
+    "relativeLinksChecked": 88
+  },
+  "gitWhitespaceCheck": "Strict C#/JSON/Markdown/.gitignore check passed; generated Unity scene/prefab/meta files retain blank scalar trailing spaces",
+  "generatedLogsExcluded": "Packages/Logs/",
+  "externalApiProductLookupsPerformed": false,
+  "priceTraceProductionSchemaVerified": false,
+  "newApkBuildPerformed": false,
+  "deviceInstallPerformed": false,
+  "physicalProductRetestPerformed": false,
+  "inputs": [
+    {
+      "path": "Assets/Data/demo-products.json",
+      "sha256": "016f063ed37246a40a2bd890c8f9128c5ddde9719c0b34f7454230c56603bcbf"
+    },
+    {
+      "path": "Assets/Data/product-images.json",
+      "sha256": "7f0c260954c734fdadb42c2ef1ae6be93050e1517f90132c598b07a26839cb73"
+    },
+    {
+      "path": "Assets/Editor/ProjectBuilder.cs",
+      "sha256": "b289069a1f2e4db48453fbdc950d57deed8813db0862e8b9cc8ec6c8837017c0"
+    },
+    {
+      "path": "Assets/Fonts/Generated/NotoSansKR SDF.asset",
+      "sha256": "21ab7000f6c8b1184565354d0040c188566811d52fbb57a6b53253c476f62718"
+    },
+    {
+      "path": "Assets/Images/ProductImageLibrary.asset",
+      "sha256": "1b79530a5a2fabf331b09a74d0e5e6d9bf0c16fb481f2800b03121a2de327875"
+    },
+    {
+      "path": "Assets/Images/theanine-bottom.jpg",
+      "sha256": "96ee06dfa3148fcdb2d42222012250bcd1993db9faf9d8c46dfae5275ba04582"
+    },
+    {
+      "path": "Assets/Images/theanine-bottom.jpg.meta",
+      "sha256": "f4f2338e09fbe006dcab7423d2d50007169b945ec0a2439c5cd8353dae259f6b"
+    },
+    {
+      "path": "Assets/Images/theanine-top.jpg",
+      "sha256": "af2d377182d6963e5edc3352c0beee862942fa99292b6e7a6a7081fbf52ee860"
+    },
+    {
+      "path": "Assets/Images/theanine-top.jpg.meta",
+      "sha256": "c88541a71e5dcd3e816fc1f174420c0f890a1e58c604631d29abdf3fdca8ac50"
+    },
+    {
+      "path": "Assets/Prefabs/ProductInfoPanel.prefab",
+      "sha256": "3860eff8025c8879c45e06f726013f80a325ae1a3380ed69c3a182f64192f6cd"
+    },
+    {
+      "path": "Assets/Scenes/ProductAR.unity",
+      "sha256": "e21d2551cf75be2da640a932181ff6f9708893b60bb2593e874e959086cb978e"
+    },
+    {
+      "path": "Assets/Scripts/AR/ProductImageState.cs",
+      "sha256": "21eb7f5b776925c929cddcdaf9837c6f59f6971642d294b6bb6667ff65a51c41"
+    },
+    {
+      "path": "Assets/Scripts/AR/TrackedImageProductPanel.cs",
+      "sha256": "c130a369e0e443bfe11ac39ed1295489ac1b7620355ca5d2cfdadbb6fb2dc9ba"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductARApp.cs",
+      "sha256": "8f40d3826a31bac3db0c4a4dab4b80c4e317b7dcb364a72a413797c6c4073949"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductRecognitionState.cs",
+      "sha256": "3c3533ddd2f4d52b33ee047fd3a23f294c5584a89ad385b7f926fb94bc65e17e"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductRecognitionState.cs.meta",
+      "sha256": "2ca1614c0f97abb71ef05fa1fa8077fca94584b7a6c8d0fd66cf285daa38e844"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/ARBarcodeScanner.cs",
+      "sha256": "b77749139ea134513681937ffcc8cec25958ff36ce377587c6f391ae5f7c31bb"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductCatalog.cs",
+      "sha256": "887c12f1a987828ed503860d279f8dae7664b63c815c40329b4e48db30f1106b"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductImageCatalog.cs",
+      "sha256": "ae9498d1f036e6567f82725ea723ea42c642d1ea2408747486ce5ac8b58b92ed"
+    },
+    {
+      "path": "Assets/Scripts/UI/BarcodeProductPanel.cs",
+      "sha256": "0f97772a53e7b61c4c0a83df6a5f8cceb39211564484821bd769fd7e563f9fc5"
+    },
+    {
+      "path": "Assets/Scripts/UI/WorldProductPanel.cs",
+      "sha256": "85902e6fa0ec5fb9e0831d924be125b006b7160b31fe72a14f78351470ca5c67"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductImageTests.cs",
+      "sha256": "25a56a6c4a1b6788f257177f631a98e7467672e2bac70a85cc5a5cbb6d147f7b"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductRecognitionV5Tests.cs",
+      "sha256": "bd2312222b1fcc9ebc360b0fc79b91f612ccf6435181b76ae49db83f84b468ee"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductRecognitionV5Tests.cs.meta",
+      "sha256": "6d8f555b77996ced641f91af539d556745d7a4d9b93a5d9dff4fd9b6af03c322"
+    },
+    {
+      "path": "galaxy-t1.jpg",
+      "sha256": "1337f642b7d0e37f585fbb8770ba8344d26f6fda9c125ca63b3e5ad6b553e7d1"
+    },
+    {
+      "path": "iphone-t1.jpg",
+      "sha256": "77b87ec91116535aff963106b6dfc904207d1663bf4cde3dc37ffeb721d75229"
+    },
+    {
+      "path": "iphone-t2.jpg",
+      "sha256": "342b7e42917a5e64fdf6dbe6ec5574f69d8bd7dd64e0085c63a3c49f78abccdd"
+    },
+    {
+      "path": "phone-t1.jpg",
+      "sha256": "1a7a359e27d400ebcbd64c4ddb5f0bd3e7043862790a201527e7635de54c83cf"
+    }
+  ],
+  "sourceCommit": "c8147a1767569f44022285f4a5eba6c983cd02d8"
+}

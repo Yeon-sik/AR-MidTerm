@@ -11,20 +11,27 @@ namespace MidtermAR
     public sealed class CatalogDocument
     {
         public int schemaVersion;
+        public string snapshotDate; // 조회 기준일. 가격 관측일과 구분한다.
         public ProductSnapshot[] products;
     }
 
     [Preserve, Serializable]
     public sealed class ProductSnapshot
     {
-        public string catalogProductId; // 가격·영양정보 연결의 기준 상품 ID
+        public string catalogProductId; // 스냅샷 안의 상품 키. 원격 ID 검증 여부는 mapping에 보존한다.
         public string name;
         public string brand;
         public string specification;
+        public double? contentAmount;
+        public string contentUnit;
+        public double? servingCount;
+        public string servingUnit;
+        public string servingCountSource;
         public string barcode; // 숫자로 변환하지 않는 정확한 식별 문자열
         public string barcodeFormat;
         public MappingEvidence mapping; // 시연용 연결의 범위와 근거
         public PriceSnapshot price;
+        public PriceSnapshot[] priceObservations; // 로컬 시연에 사용한 복수 관측의 근거. 대표 가격과 구분한다.
         public NutritionSnapshot nutrition;
     }
 
@@ -34,6 +41,7 @@ namespace MidtermAR
         public string scope;
         public string source;
         public string physicalDecodeVerification;
+        public string catalogIdentityVerification;
     }
 
     [Preserve, Serializable]
@@ -43,8 +51,10 @@ namespace MidtermAR
         public string seller;
         public string observedAt;
         public string source;
+        public string displaySource;
         public string confidence;
         public string observationId;
+        public string kind; // 온라인 observed/listed를 구분한다. 로컬 관측은 null.
     }
 
     [Preserve, Serializable]
@@ -62,14 +72,19 @@ namespace MidtermAR
         public double? sodiumMg;
         public double? fiberGrams;
         public string source;
+        public string displaySource;
+        public string provider; // 영양값 제공 서비스. 원자료의 source와 구분한다.
+        public string sourceUpdatedAt; // OFF 상품 레코드 수정 시각. 영양 검증일이나 조회일이 아니다.
         public string nutritionFoodId;
         public string sourceCatalogProductId; // 영양정보의 연결 상품 일치 검증에 사용
     }
 
     public sealed class ProductCatalog
     {
-        private readonly Dictionary<string, ProductSnapshot> products = new Dictionary<string, ProductSnapshot>(StringComparer.Ordinal); // 정확한 바코드 문자열만 키로 사용
-        public int Count => products.Count;
+        private readonly Dictionary<string, ProductSnapshot> products = new Dictionary<string, ProductSnapshot>(StringComparer.Ordinal);
+        private readonly Dictionary<string, ProductSnapshot> productsById = new Dictionary<string, ProductSnapshot>(StringComparer.Ordinal);
+        public int Count => productsById.Count;
+        public string SnapshotDate { get; }
 
         public ProductCatalog(string json)
         {
@@ -77,13 +92,17 @@ namespace MidtermAR
                 new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Error, DateParseHandling = DateParseHandling.None });
             if (document == null || document.schemaVersion != 1 || document.products == null || document.products.Length == 0)
                 throw new FormatException("시연 상품 데이터 형식이 올바르지 않습니다.");
+            if (!DateTime.TryParseExact(document.snapshotDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+                throw new FormatException("로컬 카탈로그 스냅샷 날짜가 올바르지 않습니다.");
+            SnapshotDate = document.snapshotDate;
             var ids = new HashSet<string>(StringComparer.Ordinal);
             foreach (var product in document.products)
             {
                 Validate(product);
-                if (products.ContainsKey(product.barcode) || !ids.Add(product.catalogProductId))
+                if ((!string.IsNullOrEmpty(product.barcode) && products.ContainsKey(product.barcode)) || !ids.Add(product.catalogProductId))
                     throw new FormatException("시연 상품 데이터에 중복 식별자가 있습니다.");
-                products.Add(product.barcode, product);
+                productsById.Add(product.catalogProductId, product);
+                if (!string.IsNullOrEmpty(product.barcode)) products.Add(product.barcode, product);
             }
         }
 
@@ -93,14 +112,25 @@ namespace MidtermAR
             return BarcodeIdentity.TryNormalizeEan13(barcode, out var normalized) && products.TryGetValue(normalized, out product);
         }
 
+        public bool TryFindById(string id, out ProductSnapshot product)
+        {
+            product = null;
+            return id != null && productsById.TryGetValue(id, out product);
+        }
+
         private static void Validate(ProductSnapshot product)
         {
             if (product == null || !Guid.TryParse(product.catalogProductId, out _) || string.IsNullOrWhiteSpace(product.name)
                 || string.IsNullOrWhiteSpace(product.brand) || string.IsNullOrWhiteSpace(product.specification)
-                || product.barcodeFormat != "EAN_13" || !BarcodeIdentity.TryNormalizeEan13(product.barcode, out var normalized)
-                || normalized != product.barcode || product.mapping == null || product.mapping.scope != "demo-only"
+                || product.mapping == null || product.mapping.scope != "demo-only"
                 || string.IsNullOrWhiteSpace(product.mapping.source) || string.IsNullOrWhiteSpace(product.mapping.physicalDecodeVerification))
                 throw new FormatException("상품 식별 근거가 부족합니다.");
+            ValidateQuantities(product);
+            if (product.barcode != null && (product.barcodeFormat != "EAN_13"
+                || !BarcodeIdentity.TryNormalizeEan13(product.barcode, out var normalized) || normalized != product.barcode))
+                throw new FormatException("상품 바코드 형식이 올바르지 않습니다.");
+            if (product.barcode == null && !string.IsNullOrEmpty(product.barcodeFormat))
+                throw new FormatException("바코드 없이 바코드 형식만 지정할 수 없습니다.");
             if (product.price != null)
             {
                 if (product.price.unitPriceKrw.HasValue && (!IsValidNumber(product.price.unitPriceKrw) || string.IsNullOrWhiteSpace(product.price.seller)
@@ -117,6 +147,19 @@ namespace MidtermAR
                     throw new FormatException("영양정보의 상품 연결·기준량·값이 올바르지 않습니다.");
             }
         }
+
+        public static void ValidateQuantities(ProductSnapshot product)
+        {
+            if (product.contentAmount.HasValue != (product.contentUnit != null)
+                || product.contentAmount.HasValue && (!Positive(product.contentAmount.Value)
+                    || product.contentUnit != "g" && product.contentUnit != "ml" && product.contentUnit != "each"))
+                throw new FormatException("용량과 단위는 양수 g/ml/each 쌍이어야 합니다.");
+            if (product.servingCount.HasValue
+                ? !Positive(product.servingCount.Value) || string.IsNullOrWhiteSpace(product.servingUnit) || string.IsNullOrWhiteSpace(product.servingCountSource)
+                : product.servingUnit != null || product.servingCountSource != null)
+                throw new FormatException("정 수·단위·포장 표기 근거가 필요합니다.");
+        }
+        private static bool Positive(double value) => value > 0 && !double.IsNaN(value) && !double.IsInfinity(value);
 
         private static bool IsValidNumber(double? value) => !value.HasValue || (!double.IsNaN(value.Value) && !double.IsInfinity(value.Value) && value.Value >= 0);
     }
