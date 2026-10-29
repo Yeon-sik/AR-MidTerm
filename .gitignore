@@ -11,6 +11,8 @@
 /[Rr]ecordings/
 
 # IDE and local tooling
+__pycache__/
+*.pyc
 /.vs/
 /.vscode/
 /.idea/

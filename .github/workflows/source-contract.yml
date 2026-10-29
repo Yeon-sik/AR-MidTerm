@@ -1,0 +1,20 @@
+name: Source contract (Unity not executed)
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check tracked sources, package locks and key exclusion
+        run: python3 scripts/cloud/check_repo.py
+      - name: Check Python runner syntax
+        run: python3 -m py_compile scripts/cloud/check_repo.py scripts/cloud/test_editmode.py

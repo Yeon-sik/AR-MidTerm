@@ -47,6 +47,8 @@ PT 공개 바코드 함수 → `not_linked`일 때만 Open Food Facts v3를 조�
 
 ## 개발 환경
 
+Codex / Claude 클라우드의 공통 명령과 Unity·기기 검증 경계는 [클라우드 개발 안내](docs/CLOUD-DEVELOPMENT.md)를 따른다. 비밀값 없는 source-contract CI는 Unity 실행을 포함하지 않는다.
+
 - Unity **6000.3.22f1 LTS**, AR Mobile Template **2.1.2** 기반.
 - AR Foundation / ARCore XR Plugin **6.3.5**. 실제 패키지 버전은 `Packages/manifest.json`과 `Packages/packages-lock.json` 참조.
 - ZXing.Net **0.16.11**, Unity Newtonsoft JSON **3.2.2**, OFL Noto Sans CJK KR을 사용한다. 바코드는 동일 AR 카메라의 CPU 이미지에서 판독한다.
