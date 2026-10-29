@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "images": [
+    {
+      "referenceImageName": "test-card",
+      "displayName": "브이젤 카드 · 개발용",
+      "developmentOnly": true,
+      "catalogProductId": "1516c3eb-3dfb-4e11-8040-d23fadcdaad0"
+    },
+    {
+      "referenceImageName": "theanine-top",
+      "productWidthMetres": 0.058,
+      "productWidthSource": "2026-10-26 사용자 제공 테아닌 포장 공통 폭 약 58mm",
+      "productHeightMetres": 0.1164,
+      "productHeightSource": "iphone-t1.jpg 2425px × (58mm / 1208px) ≈ 116.4mm, 사진 기반 환산·실측 아님",
+      "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
+      "displayName": "테아닌 밀크씨슬 · 상단",
+      "developmentOnly": false,
+      "offsetZMetres": 0.029120033
+    },
+    {
+      "referenceImageName": "theanine-bottom",
+      "productWidthMetres": 0.058,
+      "productWidthSource": "2026-10-26 사용자 제공 테아닌 포장 공통 폭 약 58mm",
+      "productHeightMetres": 0.1164,
+      "productHeightSource": "iphone-t1.jpg 2425px × (58mm / 1208px) ≈ 116.4mm, 사진 기반 환산·실측 아님",
+      "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
+      "displayName": "테아닌 밀크씨슬 · 하단",
+      "developmentOnly": false,
+      "offsetZMetres": -0.029096026
+    }
+  ],
+  "productAnnotations": [
+    {
+      "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
+      "id": "serving-price",
+      "kind": "servingPrice",
+      "anchorXMetres": -0.027223510,
+      "anchorZMetres": 0.045948675,
+      "side": "left",
+      "pixelEvidence": "2026-10-28 iphone-t1.jpg SHA256 77b87ec91116535aff963106b6dfc904207d1663bf4cde3dc37ffeb721d75229; 규격 줄 bbox [43,2129,728,2210), 왼쪽 6px 바깥 x37·중앙 y2169.5; 폭 58mm/1208px, 원점 (604,1212.5), +Z 아래. docs/ANNOTATION-ANCHORS.md"
+    },
+    {
+      "catalogProductId": "18e83c5c-86a4-4e95-a131-411381789687",
+      "id": "observed-sellers",
+      "kind": "observationSummary",
+      "anchorXMetres": 0.019829470,
+      "anchorZMetres": -0.055167219,
+      "side": "top",
+      "pixelEvidence": "2026-10-28 iphone-t1.jpg 동일 원본; 군마트용 상자 bbox [880,62,1154,153), 가로 중앙 x1017, x1009~1025의 상단 검은 경계 중앙값 y63.5; 폭 58mm/1208px, 원점 (604,1212.5), +Z 아래. docs/ANNOTATION-ANCHORS.md"
+    }
+  ]
+}

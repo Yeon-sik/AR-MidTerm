@@ -47,14 +47,16 @@ namespace MidtermAR
                 cursor += 54;
             }
             var width = Mathf.Max(1f, instructionPanel.rect.width - 48);
-            var messageHeight = Mathf.Max(44f, statusMessage.GetPreferredValues(message, width, Mathf.Infinity).y);
+            var hasMessage = !string.IsNullOrEmpty(message);
+            statusMessage.gameObject.SetActive(hasMessage);
+            var messageHeight = hasMessage ? Mathf.Max(44f, statusMessage.GetPreferredValues(message, width, Mathf.Infinity).y) : 0;
             Position((RectTransform)statusMessage.transform, cursor, messageHeight);
             cursor += messageHeight;
             var hasActions = primaryEnabled || moveEnabled || deleteEnabled;
             buttons.gameObject.SetActive(hasActions);
             if (hasActions)
             {
-                cursor += 18;
+                if (hasMessage || hasProduct) cursor += 18;
                 Position(buttons, cursor, 132);
                 cursor += 132;
             }

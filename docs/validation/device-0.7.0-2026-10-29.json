@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "dateKst": "2026-10-29",
+  "status": "THREE_PT_BARCODE_UIS_VERIFIED_INITIAL_NUTRITION_FAILURE_RECORDED",
+  "sourceCommit": "c710097cf3cf66f353f9afd3c6f0132e83d920a1",
+  "branch": "feat/ui-p0-video",
+  "apk": {
+    "versionName": "0.7.0",
+    "versionCode": 16,
+    "sourceSha256": "12dd7317bbc3bd5da7b790266632457d8cced65fbdd1c2662e5b1450d913159f",
+    "installedSha256": "12dd7317bbc3bd5da7b790266632457d8cced65fbdd1c2662e5b1450d913159f",
+    "installedHashMatches": true,
+    "signerSha256": "cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135"
+  },
+  "installation": {
+    "device": "Galaxy A25 SM-A256N",
+    "mode": "compatible-update-r",
+    "timestampUtc": "2026-10-28T15:31:37.0943906Z",
+    "previousVersionCode": 15,
+    "installedVersionCode": 16,
+    "signaturesCompared": true,
+    "firstInstallTimeUnchanged": true,
+    "uninstalled": false,
+    "dataCleared": false,
+    "permanentDataIntegrity": "No app data backup comparison; compatible -r update and unchanged first-install time confirmed",
+    "startupScreenBeforeUnlock": "DOZING; black capture; physical camera startup not yet verified",
+    "androidVersion": "16",
+    "androidApiLevel": 36,
+    "keyguardShowingBeforeUserUnlock": true,
+    "startupAfterUserUnlock": "PASS_SCREENSHOT_AND_LOG: camera, online mode, 5-product snapshot, SessionTracking and autofocus 1920x1080 source"
+  },
+  "checks": [
+    {
+      "id": "pt-the-mishik",
+      "barcode": "8809778493005",
+      "status": "PASS_ON_RETRY_VIDEO_AND_LOG",
+      "captures": [
+        "the-mishik-first-failure",
+        "the-mishik-retry-pass"
+      ],
+      "evidence": "First video showed PT matched with nutrition lookup unavailable. Fresh-process retry video showed full approved 121g nutrition. Initial failure is retained in this record.",
+      "userReply": "캡쳐완 (fresh-process retry)"
+    },
+    {
+      "id": "pt-snack",
+      "barcode": "8801045520728",
+      "status": "PASS_VIDEO_AND_LOG",
+      "captures": "snack-pass",
+      "userReply": "완료 (three-product trial)"
+    },
+    {
+      "id": "pt-jin",
+      "barcode": "8801045014869",
+      "status": "PASS_ON_RETRY_VIDEO_AND_LOG",
+      "captures": "jin-retry-pass",
+      "userReply": "캡쳐완 (fresh-process retry)"
+    },
+    {
+      "id": "theanine-front-ar",
+      "status": "NOT_RUN",
+      "captures": []
+    },
+    {
+      "id": "jin-pt-front-registration",
+      "status": "NOT_RUN",
+      "captures": []
+    },
+    {
+      "id": "offline-snapshot",
+      "status": "NOT_RUN",
+      "captures": []
+    },
+    {
+      "id": "off-nutrition-real-food",
+      "status": "NOT_RUN",
+      "captures": []
+    }
+  ],
+  "captures": [
+    {
+      "id": "camera-startup",
+      "path": "artifacts/v0.7.0/device-2026-10-29/camera-startup.png",
+      "sha256": "3d56cc4fd5a085c151b887735457af98a6ac6589e8028bbbe5cb0c585d19aee8",
+      "inspection": "Camera and scanner UI visible; no product card at this frame"
+    },
+    {
+      "id": "the-mishik-first-failure",
+      "path": "artifacts/v0.7.0/device-2026-10-29/the-mishik-37s.png",
+      "sha256": "1fd80072bce2d009b88d5d97d7fcdf85c0899faf0bebedfb3bc18606d48386e9",
+      "inspection": "The Mishik matched 121g, nutrition unavailable, front registration button visible"
+    },
+    {
+      "id": "snack-pass",
+      "path": "artifacts/v0.7.0/device-2026-10-29/snack-63s.png",
+      "sha256": "d881b9727c2f6ecdaa0fd8dd2b3a5744ed6f1f919c879d1307f0cc912fd2ab4f",
+      "inspection": "108g 460kcal, sodium1710/carbs69/sugars4/fat16/saturated8/protein10, Fitness Nutrition, PT registered, no price"
+    },
+    {
+      "id": "the-mishik-retry-pass",
+      "path": "artifacts/v0.7.0/device-2026-10-29/the-mishik-retry-pass.png",
+      "sha256": "d2837da003ef3bb5ece506bbc3f03aeb7023ec1792be25019cab4fa038d8aa3c",
+      "inspection": "121g 405kcal, sodium1200/carbs85/sugars15/fat3.1/saturated0.6/protein9, Fitness Nutrition, PT registered, no price"
+    },
+    {
+      "id": "jin-retry-pass",
+      "path": "artifacts/v0.7.0/device-2026-10-29/jin-retry-pass.png",
+      "sha256": "0315c522c7f4ed63a68cac45336b494712012302e11f9409e8336dd61be9892c",
+      "inspection": "120g 510kcal, sodium1760/carbs75/sugars4/fat18/saturated9/protein12, Fitness Nutrition, PT registered, no price"
+    }
+  ],
+  "evidenceRoot": "artifacts/v0.7.0/device-2026-10-29",
+  "notes": [
+    "User physical confirmation, screenshot inspection and logs will be recorded separately",
+    "Prior 15-build physical success is not used as PASS for version 16",
+    "No code changes or rebuild requested for this verification"
+  ],
+  "publicLookup": {
+    "checkedAt": "2026-10-29T00:34:13.1634072+09:00",
+    "scope": "Public HTTP read, separate from device camera",
+    "ptMatched": 5,
+    "nutritionFound": 4,
+    "theanineNutritionAbsent": true,
+    "artifactPath": "artifacts/v0.7.0/device-2026-10-29/public-lookup.json"
+  },
+  "previousCodeTests": {
+    "total": 381,
+    "passed": 381,
+    "sourceCommit": "c710097cf3cf66f353f9afd3c6f0132e83d920a1",
+    "rerunForDeviceQa": false
+  },
+  "nutritionFailureDiagnosis": {
+    "sourceUnchanged": true,
+    "currentPublicResponses": "PASS_HTTP_200_AND_ACTUAL_COMPILED_APP_PARSER",
+    "desktopTheMishikHttpMs": 669,
+    "desktopJinHttpMs": 248,
+    "confirmedPersistenceCause": "ProductLookup catches nutrition exceptions and returns Matched + detail. ProductLookupResult.Cacheable accepts all Matched; LookupCoordinator caches this partial failure for 300 seconds.",
+    "originalFailureType": "UNKNOWN: old production build logs neither exception category nor HTTP outcome for this catch",
+    "notEstablished": [
+      "No proof that the original failure was a timeout",
+      "No proof of a server-data or product-ID error",
+      "Desktop HTTP/parser success does not prove original Android transport success"
+    ],
+    "freshProcessRetry": "PASS for both products on installed version16; no code or data clear",
+    "codeFixApplied": false,
+    "recommendation": "Do not success-cache partial Matched nutrition failures; preserve legitimate empty nutrition and existing bounded retry behavior. Add safe failure-category logging.",
+    "artifactPath": "artifacts/v0.7.0/device-2026-10-29/nutrition-diagnosis-noon.json",
+    "originalSessionCacheHitTrace": "Not logged directly; confirmed mechanism from unchanged source and compiled Cacheable flag reproduction"
+  },
+  "videos": [
+    {
+      "path": "artifacts/v0.7.0/device-2026-10-29/pt-three.mp4",
+      "sha256": "908ca54054b002e2a293f1cd739082876fc3882032b44640140b7efa3ebdac71",
+      "scope": "First trial, captured nutrition failure for The Mishik and success for Snack"
+    },
+    {
+      "path": "artifacts/v0.7.0/device-2026-10-29/pt-retry-ar-only.mp4",
+      "sha256": "816a3802bc989656d4c7addd60e0c54be5a59cce3504da8a48f2f11f03ec4665",
+      "scope": "Fresh-process retry, AR app segment only",
+      "trimmedPrefixSeconds": 61,
+      "fullRecordingDiscardedLocallyAndOnDevice": true
+    }
+  ],
+  "limitations": [
+    "The initial The Mishik failure was not erased or marked PASS",
+    "Three new barcode panels are verified; theanine AR, PT-linked Jin runtime front registration, offline fallback and physical OFF nutrition remain NOT_RUN on version16",
+    "No code change, rebuild, new EditMode run, app uninstall, app data clear or remote database write in this diagnosis"
+  ]
+}

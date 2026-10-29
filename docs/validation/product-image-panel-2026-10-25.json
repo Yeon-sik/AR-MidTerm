@@ -1,0 +1,119 @@
+{
+  "timestampUtc": "2026-10-25T11:26:09.3456838Z",
+  "validation": "UNITY_EDITMODE_FUNCTIONAL_ONLY",
+  "unityVersion": "6000.3.22f1",
+  "result": "Passed",
+  "total": 76,
+  "passed": 76,
+  "failed": 0,
+  "skipped": 0,
+  "unityExitCode": 0,
+  "fixtures": [
+    {
+      "name": "ImageTrackingProbeTests",
+      "passed": 9,
+      "failed": 0
+    },
+    {
+      "name": "ProductARTests",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "name": "ProductImageTests",
+      "passed": 25,
+      "failed": 0
+    }
+  ],
+  "appBuildRequested": false,
+  "apkGenerated": false,
+  "deviceInstalled": false,
+  "existingApkInventoryUnchanged": true,
+  "currentMarker": "test-card",
+  "markerMapping": "DEVELOPMENT_ONLY_NOT_PRODUCT_PACKAGING_RECOGNITION",
+  "physicalWidth": "UNMEASURED_ESTIMATED_DEVELOPMENT_MARKER_ONLY",
+  "limitations": [
+    "No new device image-tracking, alignment or touch validation.",
+    "Pointer rectangle/camera/EventSystem dispatch tested; native rendered Graphic.depth hit sorting not tested.",
+    "RuntimeOnly callbacks enabled only on test instances in EditMode."
+  ],
+  "localResults": "artifacts/editmode/20261025-112507-34d4b9d9/results.xml",
+  "sourceSha256": [
+    {
+      "path": "Assets/Scripts/App/ProductARApp.cs",
+      "sha256": "1c9bb1dc48564077d4c822709ca206d5fbcaaa38ca0c73bbb5671143cade2792"
+    },
+    {
+      "path": "Assets/Scripts/App/ProductWorkflow.cs",
+      "sha256": "2a00dc614a5eb1951deb508162a5f85576255fde725ecfe93778ed86526adf7d"
+    },
+    {
+      "path": "Assets/Scripts/AR/TrackedImageProductPanel.cs",
+      "sha256": "3c253d61eb2eb8fee2558524d5ac7c972b380cc38162f7e5fdc9af4434869f16"
+    },
+    {
+      "path": "Assets/Scripts/AR/ProductImageState.cs",
+      "sha256": "cdb733b2f95f741e5e1fdc79efd62546b6a3a2a1c497ad258aba8be4f768813d"
+    },
+    {
+      "path": "Assets/Scripts/AR/ImageTrackingPolicy.cs",
+      "sha256": "b799ecc27338bf0dcf88c7dcc210112751c65e717f46335e352cafc06c08a777"
+    },
+    {
+      "path": "Assets/Scripts/AR/ImageTrackingProbe.cs",
+      "sha256": "c658290d2cc7ae79529a60a98a8cbfb4a24b0f181d28601508dbea91e7ab7a7c"
+    },
+    {
+      "path": "Assets/Scripts/UI/WorldProductPanel.cs",
+      "sha256": "74467a596084f399a40c3be310582fde9335f92382a326a713f8cc67c888123e"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductImageCatalog.cs",
+      "sha256": "888ca3bbc814eb1808fe11f668030ad5e45f316b65dee7d372308741dde5c584"
+    },
+    {
+      "path": "Assets/Scripts/Data/ProductCatalog.cs",
+      "sha256": "015ed7dae95a670a91c5bb86891324952f4c624ed172efaa3fbe10aedad3fc3b"
+    },
+    {
+      "path": "Assets/Scripts/Barcode/ARBarcodeScanner.cs",
+      "sha256": "2e28be5fa774636337d0efd43d5ef84e6352def061e0e4d6ec900fc03f0f1316"
+    },
+    {
+      "path": "Assets/Editor/ProjectBuilder.cs",
+      "sha256": "4d1427f772f60131fbf5073887baf4b9727c6e100df96c2a5de55a8dcc721d1d"
+    },
+    {
+      "path": "Assets/Data/demo-products.json",
+      "sha256": "7d3e3d94b5fb6016c33977ab83e48f213bab9b7b7b79f40f2c1584f97cc6224e"
+    },
+    {
+      "path": "Assets/Data/product-images.json",
+      "sha256": "5fb9858ea46a2fae7cea3d21c53ef33b509b19c77aff27e975591e91f86cb01f"
+    },
+    {
+      "path": "Assets/Scenes/ProductAR.unity",
+      "sha256": "ad68bc9cce56f1be086555271ab1df7ff4de1887b6b882a81f14e125826b6626"
+    },
+    {
+      "path": "Assets/Prefabs/ProductInfoPanel.prefab",
+      "sha256": "eabd9e3f908910ea8fce6f246b87a2b3ff671a9d1e35c46c036375bcc63b0c48"
+    },
+    {
+      "path": "Assets/Images/ProductImageLibrary.asset",
+      "sha256": "16159404a212a2439dfd96b3d68f8cb7ba6ced8235d68711edca20ddff81fb79"
+    },
+    {
+      "path": "Assets/Tests/Editor/ProductImageTests.cs",
+      "sha256": "61b7fa3a14362611483cbba2bbd01e003c5ba72a929368c5388f526baa81a5b0"
+    },
+    {
+      "path": "scripts/Test-EditMode.ps1",
+      "sha256": "70143d1ba4288e2c50bc9d57c586b27fe8d72ea1214d7361ed2c9e4ad90e6d43"
+    }
+  ],
+  "postVerificationFormatting": [
+    "Unity YAML trailing whitespace removed; no functional changes.",
+    "Source line endings normalized to LF for Git; no functional changes."
+  ]
+}

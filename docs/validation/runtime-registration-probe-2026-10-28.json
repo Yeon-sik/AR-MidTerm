@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "recordedDateKst": "2026-10-28",
+  "sourceCommit": "3313647d82e2601a4f5616994ef35d13b420ad02",
+  "branch": "feat/ui-p0-video",
+  "purpose": "Development-only C feasibility; not the submission APK",
+  "changes": [
+    "Korean TMP instructions with Noto font",
+    "Separate registration from first tracking and reacquisition",
+    "Lock capture after native add success, including cancelled late success",
+    "Reuse existing high-resolution camera initialization without barcode decoding",
+    "Camera render/session/image state diagnostics"
+  ],
+  "tests": {
+    "total": 305,
+    "passed": 305,
+    "failed": 0,
+    "skipped": 0,
+    "previous": 302,
+    "missingPrevious": [],
+    "added": 3,
+    "unityExitCode": 0,
+    "evidence": "artifacts/editmode/20261028-041846-9c570d7c/summary.json"
+  },
+  "apk": {
+    "versionName": "0.7.0-probe.2",
+    "versionCode": 13,
+    "buildType": "development",
+    "sha256": "8819660e27b296a2d2a40d226e3cb15009058a75e6c73b124dd1650f67fb780c",
+    "sizeBytes": 62751886,
+    "buildSucceeded": true,
+    "installMode": "compatible-update-r",
+    "signerSha256": "cad84c2b4d6f3ad776d880794e00333953840746fb27424531c9f5a6e2846135",
+    "installedApkMatches": true,
+    "launch": "PASS",
+    "path": "artifacts/v0.7.0/registration-probe-2/RegistrationProbe.apk"
+  },
+  "observed": {
+    "startupKoreanText": "PASS_CAPTURE",
+    "startupButtonLayout": "PASS_CAPTURE",
+    "requestedCpuConfiguration": "1920x1080 at 30 Hz",
+    "cameraTextures": 1,
+    "backgroundRenderingEnabled": true,
+    "startupScreenshot": "artifacts/v0.7.0/registration-probe-2/startup.png",
+    "startupCameraImage": "BLACK_IN_CAPTURE; physical camera orientation not confirmed",
+    "actualBrightSceneBeforeCapture": "USER_COMPLETED_CAPTURE; not independently captured before shutter",
+    "registration": "PASS_LOG_AND_USER",
+    "firstFullTracking": "PASS_LOG",
+    "physicalReacquisition": "PASS_LOG_AND_USER",
+    "evidence": "artifacts/v0.7.0/registration-probe-2/reacquisition.log",
+    "reacquisitionCapture": "artifacts/v0.7.0/registration-probe-2/reacquisition.png",
+    "sequenceKst": {
+      "registered": "13:37:12.708",
+      "firstTracking": "13:37:25.008",
+      "loss": "13:37:30.552",
+      "reacquired": "13:37:32.775",
+      "estimatedWidthMetres": 0.1297,
+      "estimatedHeightMetres": 0.207,
+      "sizeIsMeasured": false
+    }
+  },
+  "previousAttempt": {
+    "versionName": "0.7.0-probe",
+    "nativeAddsSucceeded": 3,
+    "firstFullTrackingConfirmed": false,
+    "physicalReacquisitionConfirmed": false,
+    "userReportedCameraBlackAfterCapture": true,
+    "loggedTrackingLossReason": "InsufficientLight",
+    "repeatedCaptureInvalidatedTrialSelection": true,
+    "cameraCpuResolution": "640x480",
+    "evidence": "artifacts/v0.7.0/registration-probe/capture-attempt.log",
+    "screenshot": "artifacts/v0.7.0/registration-probe/capture-attempt.png"
+  },
+  "physicalConfirmed": [
+    "User: captured the front and reached reacquisition complete",
+    "Native Success followed by valid FULL_TRACKING, Limited/method2 loss, and FULL_TRACKING reacquisition",
+    "Screenshot progress: registration, first recognition and reacquisition complete; later frame is dark and session is initializing"
+  ],
+  "notRun": [
+    "C integration with identified PT/OFF product and 3D panel",
+    "Final release build including C",
+    "Controlled repeated trials and quantitative size accuracy"
+  ],
+  "noChangesTo": [
+    "recognition confirmation/conflict/loss rules",
+    "12mm gap and 15 degree panel geometry",
+    "remote data",
+    "existing tags"
+  ],
+  "userData": {
+    "uninstall": false,
+    "dataClear": false
+  },
+  "cutoffKst": "2026-10-28T22:00:00+09:00"
+}
