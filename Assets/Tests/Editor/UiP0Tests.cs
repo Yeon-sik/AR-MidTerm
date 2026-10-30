@@ -106,13 +106,17 @@ namespace MidtermAR.Tests
                 Set(presenter, "selectedImage", tracked);
                 state.BeginFrame(true); state.ObserveImage(front, TrackingState.Tracking, 1); state.EndFrame();
                 presenter.Present(true);
-                var outline = Field<LineRenderer>(presenter, "cropOutline");
+                var outline = Field<LineRenderer>(presenter, "productOutline");
                 var connector = Field<LineRenderer>(presenter, "connector");
                 Assert.That(presenter.HasVisibleTarget && outline.enabled && connector.enabled, Is.True);
                 Assert.That(outline.loop && outline.useWorldSpace, Is.True);
                 Assert.That(outline.positionCount, Is.EqualTo(4));
-                Assert.That(Vector3.Distance(outline.GetPosition(0), tracked.transform.TransformPoint(new Vector3(-size.x / 2, .001f, -size.y / 2))), Is.LessThan(.000001f));
-                Assert.That(Vector3.Distance(outline.GetPosition(2), tracked.transform.TransformPoint(new Vector3(size.x / 2, .001f, size.y / 2))), Is.LessThan(.000001f));
+                // 등록 치수가 있는 포장은 추적 크롭이 아니라 상품 전체 영역을 그린다.
+                Assert.That(images.TryFindByImage(front, out var binding), Is.True);
+                var half = new Vector2(binding.productWidthMetres, binding.productHeightMetres) / 2;
+                var origin = new Vector3(binding.offsetXMetres, .001f, binding.offsetZMetres);
+                Assert.That(Vector3.Distance(outline.GetPosition(0), tracked.transform.TransformPoint(origin + new Vector3(-half.x, 0, -half.y))), Is.LessThan(.000001f));
+                Assert.That(Vector3.Distance(outline.GetPosition(2), tracked.transform.TransformPoint(origin + new Vector3(half.x, 0, half.y))), Is.LessThan(.000001f));
                 if (reason == "pause") Call(presenter, "OnApplicationPause", true);
                 else
                 {

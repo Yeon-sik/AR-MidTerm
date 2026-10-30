@@ -15,7 +15,7 @@ namespace MidtermAR
         [SerializeField] private ARCameraManager cameraManager;
         [SerializeField] private Camera arCamera;
         [SerializeField] private WorldProductPanel panelPrefab;
-        [SerializeField] private LineRenderer cropOutline;
+        [SerializeField] private LineRenderer productOutline; // 등록 치수가 있으면 상품 전체, 없으면 추적 크롭
         [SerializeField] private LineRenderer connector;
         [SerializeField] private ProductAnnotationPresenter annotations;
         [SerializeField] private bool showAnnotations = false;
@@ -35,6 +35,10 @@ namespace MidtermAR
         private bool paused;
         private float lastCameraFrame = float.NegativeInfinity;
         public bool HasVisibleTarget => panel != null && panel.gameObject.activeSelf;
+        // 지금 화면에 보이는 정보판의 내용이다. 상세보기는 이 값만 화면 안에 옮겨 표시한다.
+        public ProductSnapshot VisibleProduct => HasVisibleTarget ? boundProduct : null;
+        public string VisibleProductKey => HasVisibleTarget ? boundDisplayKey : null;
+        public string VisibleSourceBadge => HasVisibleTarget ? boundSourceBadge : null;
         public ProductImageBinding Binding { get; private set; }
         public ImageProductTarget ImageTarget => state?.CanDisplay == true ? state.Target : null;
         public ProductSnapshot CurrentProduct => state?.CanDisplay == true ? state.Product : null;
@@ -145,7 +149,7 @@ namespace MidtermAR
             }
             invalidRuntimePoseLogged = false;
             panel.gameObject.SetActive(true);
-            if (cropOutline != null) cropOutline.enabled = true;
+            if (productOutline != null) productOutline.enabled = true;
             if (connector != null) connector.enabled = true;
             annotations?.SetVisible(showAnnotations);
         }
@@ -168,9 +172,12 @@ namespace MidtermAR
             rect.SetPositionAndRotation(image.TransformPoint(layout.Center), image.rotation * ProductPanelLayout.Rotation);
             rect.localScale = Vector3.one * (layout.Width / rect.rect.width);
             if (connector != null) connector.SetPositions(new[] { image.TransformPoint(layout.ConnectorStart), image.TransformPoint(layout.ConnectorEnd) });
-            var x = size.x * .5f; var z = size.y * .5f;
-            if (cropOutline != null) cropOutline.SetPositions(new[] { image.TransformPoint(new Vector3(-x, .001f, -z)), image.TransformPoint(new Vector3(x, .001f, -z)),
-                image.TransformPoint(new Vector3(x, .001f, z)), image.TransformPoint(new Vector3(-x, .001f, z)) });
+            if (productOutline != null)
+            {
+                var corners = ProductPanelLayout.OutlineCorners(Binding, size);
+                for (var i = 0; i < corners.Length; i++) corners[i] = image.TransformPoint(corners[i]);
+                productOutline.SetPositions(corners);
+            }
             var height = layout.Width * rect.rect.height / rect.rect.width;
             annotations?.ApplyPose(image, Binding, new Rect(Binding.productWidthMetres * .5f + ProductPanelLayout.GapMetres,
                 -height * .5f, layout.Width * Mathf.Cos(ProductPanelLayout.TiltDegrees * Mathf.Deg2Rad), height));
@@ -179,7 +186,7 @@ namespace MidtermAR
         private void Hide()
         {
             if (panel != null) panel.gameObject.SetActive(false);
-            if (cropOutline != null) cropOutline.enabled = false;
+            if (productOutline != null) productOutline.enabled = false;
             if (connector != null) connector.enabled = false;
             annotations?.SetVisible(false);
         }

@@ -15,12 +15,17 @@ namespace MidtermAR
         [SerializeField] private Button moveButton; // 기존 정보판 재배치
         [SerializeField] private Button deleteButton; // 배치된 정보판 삭제
         [SerializeField] private TMP_Text moveLabel;
+        [SerializeField] private Button detailButton; // 화면 안 상세보기
+        [SerializeField] private RectTransform header; // 단계·상태 안내 바
         [SerializeField] private RectTransform instructionPanel;
         [SerializeField] private RectTransform buttons;
 
         public void Show(string step, string title, string message, string summary, string action,
-            bool primaryEnabled, bool moveEnabled, bool deleteEnabled, bool error, bool attention = false, string moveAction = "재배치", bool secondaryAction = false)
+            bool primaryEnabled, bool moveEnabled, bool deleteEnabled, bool error, bool attention = false, string moveAction = "재배치", bool secondaryAction = false,
+            bool detailEnabled = false, bool showHeader = true)
         {
+            // 3D 정보판이 보이는 동안은 상단 안내가 정보판을 가리지 않도록 접는다.
+            header.gameObject.SetActive(showHeader);
             statusStep.text = step;
             statusStep.color = error ? new Color(1f, 0.65f, 0.58f)
                 : attention ? new Color(1f, 0.82f, 0.43f) : new Color(0.48f, 0.9f, 0.72f);
@@ -34,9 +39,11 @@ namespace MidtermAR
             primaryButton.gameObject.SetActive(primaryEnabled);
             moveButton.gameObject.SetActive(moveEnabled);
             deleteButton.gameObject.SetActive(deleteEnabled);
+            detailButton.gameObject.SetActive(detailEnabled);
             primaryButton.interactable = primaryEnabled;
             moveButton.interactable = moveEnabled;
             deleteButton.interactable = deleteEnabled;
+            detailButton.interactable = detailEnabled;
             var hasProduct = !string.IsNullOrEmpty(summary);
             primaryButton.targetGraphic.color = (hasProduct || secondaryAction) && !error ? new Color(0.2f, 0.3f, 0.34f) : (Color)new Color32(37, 126, 92, 255);
             productSummary.gameObject.SetActive(hasProduct);
@@ -52,7 +59,7 @@ namespace MidtermAR
             var messageHeight = hasMessage ? Mathf.Max(44f, statusMessage.GetPreferredValues(message, width, Mathf.Infinity).y) : 0;
             Position((RectTransform)statusMessage.transform, cursor, messageHeight);
             cursor += messageHeight;
-            var hasActions = primaryEnabled || moveEnabled || deleteEnabled;
+            var hasActions = primaryEnabled || moveEnabled || deleteEnabled || detailEnabled;
             buttons.gameObject.SetActive(hasActions);
             if (hasActions)
             {

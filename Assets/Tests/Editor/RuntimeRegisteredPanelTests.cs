@@ -162,7 +162,7 @@ namespace MidtermAR.Tests
                     presenter.Present(true);
                     Assert.That(panel.CurrentTab, Is.EqualTo(ProductInfoTab.Price));
                 }
-                var outline = Field<LineRenderer>(presenter, "cropOutline");
+                var outline = Field<LineRenderer>(presenter, "productOutline");
                 var connector = Field<LineRenderer>(presenter, "connector");
                 Assert.That(outline.enabled && connector.enabled, Is.True);
                 Assert.That(outline.GetPosition(0), Is.EqualTo(new Vector3(-.0375f, .001f, -.06f)));

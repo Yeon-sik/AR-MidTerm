@@ -570,7 +570,8 @@ namespace MidtermAR.Editor
             // 포장 표기 주석은 보류한다. 원본 연구 코드는 보존하되 제출 앱에는 표시하지 않는다.
             annotationSettings.FindProperty("showAnnotations").boolValue = false;
             annotationSettings.ApplyModifiedPropertiesWithoutUndo();
-            Assign(presenter, "cropOutline", Line("Crop Outline", 4, true, OutlineWidthMetres));
+            // 등록한 상품 공통 영역(없으면 추적 크롭)의 윤곽이다. 크롭 경계와 표시 경계를 분리한다.
+            Assign(presenter, "productOutline", Line("Product Outline", 4, true, OutlineWidthMetres));
             Assign(presenter, "connector", Line("Product Connector", 2, false, ConnectorWidthMetres));
             LineRenderer Line(string name, int points, bool loop, float width)
             {
@@ -692,18 +693,49 @@ namespace MidtermAR.Editor
             layout.spacing = 18; layout.childControlWidth = true; layout.childControlHeight = true; layout.childForceExpandWidth = true;
             var primary = Button(buttons, "Primary", "다시 스캔", font, Green, 1.4f, out var primaryLabel);
             var move = Button(buttons, "Reposition", "앞면 등록", font, Green, 1, out var moveLabel);
+            var detailButton = Button(buttons, "Detail", "상세 보기", font, Green, 1, out _);
             var delete = Button(buttons, "Delete", "삭제", font, new Color(0.2f, 0.3f, 0.34f), 1, out _);
             Assign(view, "primaryLabel", primaryLabel); Assign(view, "primaryButton", primary);
             Assign(view, "moveLabel", moveLabel);
             Assign(view, "moveButton", move); Assign(view, "deleteButton", delete);
+            Assign(view, "detailButton", detailButton); Assign(view, "header", top);
             Assign(view, "instructionPanel", bottom); Assign(view, "buttons", buttons);
             UnityEventTools.AddPersistentListener(primary.onClick, app.PrimaryAction);
             UnityEventTools.AddPersistentListener(move.onClick, app.BeginFrontRegistration);
+            UnityEventTools.AddPersistentListener(detailButton.onClick, app.ShowDetail);
+            Assign(app, "detail", CreateDetailSheet(font, safe));
             var events = new GameObject("UI Event System", typeof(EventSystem), typeof(InputSystemUIInputModule));
             events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
             Canvas.ForceUpdateCanvases();
             view.Show("카메라 준비 중", "카메라를 준비하고 있어요", "잠시만 기다려 주세요.", "", "다시 확인", false, false, false, false, true);
             return view;
+        }
+
+        // 안전 영역 전체를 덮는 불투명 시트다. 마지막 자식이라 안내·정보판 위에 그려지고 뒤쪽 터치를 막는다.
+        private static ProductDetailView CreateDetailSheet(TMP_FontAsset font, RectTransform safe)
+        {
+            var detail = safe.GetComponentInParent<Canvas>().gameObject.AddComponent<ProductDetailView>();
+            var sheet = Plate("Product Detail", safe, Paper);
+            sheet.offsetMin = new Vector2(24, 24); sheet.offsetMax = new Vector2(-24, -24);
+            var title = Text(sheet, "DetailTitle", "", font, 40, Ink, 32, 32, 968, 108);
+            title.fontStyle = FontStyles.Bold;
+            title.enableAutoSizing = true; title.fontSizeMin = 30; title.fontSizeMax = 40;
+            var specification = Text(sheet, "DetailSpecification", "", font, 28, Ink, 32, 144, 968, 44);
+            Rule(sheet, "Detail Rule", 200, 3, Ink);
+            var body = Text(sheet, "DetailBody", "", font, 30, Ink, 32, 220, 968, 0);
+            // 본문은 닫기 버튼 위까지 늘린다. 긴 관측 목록은 글자를 줄여 시트 안에 모두 담는다.
+            body.rectTransform.anchorMin = Vector2.zero;
+            body.rectTransform.offsetMin = new Vector2(32, 180);
+            body.enableAutoSizing = true; body.fontSizeMin = 20; body.fontSizeMax = 30;
+            var close = Button(sheet, "Close", "닫기", font, Ink, 1, out _);
+            var closeRect = (RectTransform)close.transform;
+            closeRect.anchorMin = Vector2.zero; closeRect.anchorMax = new Vector2(1, 0);
+            closeRect.offsetMin = new Vector2(24, 24); closeRect.offsetMax = new Vector2(-24, 156);
+            Assign(detail, "sheet", sheet); Assign(detail, "productTitle", title);
+            Assign(detail, "specification", specification); Assign(detail, "body", body);
+            UnityEventTools.AddPersistentListener(close.onClick, detail.Hide);
+            sheet.gameObject.SetActive(false);
+            return detail;
         }
 
         private static void CreateFollowingCard(TMP_FontAsset font, RectTransform safe, BarcodeProductPanel follow)

@@ -33,6 +33,21 @@ namespace MidtermAR
             layout = new ProductPanelLayout(width, center, start, end);
             return true;
         }
+
+        // 표시 윤곽은 추적 크롭과 분리한다. 등록한 공통 폭·높이가 모두 있으면 상품 전체 영역을,
+        // 없으면(현장 등록·개발 카드) 실제 추적 크롭 경계를 이미지 평면 위 1mm에 그린다.
+        public static bool OutlinesWholeProduct(ProductImageBinding binding)
+            => binding != null && Positive(binding.productWidthMetres) && Positive(binding.productHeightMetres);
+
+        public static Vector3[] OutlineCorners(ProductImageBinding binding, Vector2 cropSize)
+        {
+            var whole = OutlinesWholeProduct(binding);
+            var center = whole ? new Vector3(binding.offsetXMetres, 0, binding.offsetZMetres) : Vector3.zero;
+            var x = (whole ? binding.productWidthMetres : cropSize.x) * .5f;
+            var z = (whole ? binding.productHeightMetres : cropSize.y) * .5f;
+            return new[] { center + new Vector3(-x, .001f, -z), center + new Vector3(x, .001f, -z),
+                center + new Vector3(x, .001f, z), center + new Vector3(-x, .001f, z) };
+        }
         private static bool Positive(float value) => value > 0 && !float.IsNaN(value) && !float.IsInfinity(value);
     }
 }

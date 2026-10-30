@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace MidtermAR
@@ -46,6 +48,36 @@ namespace MidtermAR
             if (nutrition.provider == "Fitness Nutrition" || !string.IsNullOrEmpty(nutrition.sourceCatalogProductId))
                 return "Fitness Nutrition · PT 승인";
             return nutrition.displaySource ?? "영양자료 · 출처 미확인";
+        }
+        // 3D 정보판에서 한 줄로 줄이는 관측 목록·출처·안내를 줄임 없이 모은다. 없는 값은 만들지 않는다.
+        public static string Detail(ProductSnapshot product, ProductImageBinding binding, string sourceBadge)
+        {
+            if (product == null) return "";
+            var lines = new List<string> { "가격" };
+            if (HasPrice(product))
+            {
+                lines.Add(WorldPrice(product));
+                var listed = 0;
+                foreach (var observation in product.priceObservations ?? Array.Empty<PriceSnapshot>())
+                {
+                    if (observation?.unitPriceKrw.HasValue != true || observation.kind != null && observation.kind != "observed") continue;
+                    lines.Add("· " + observation.unitPriceKrw.Value.ToString("N0", Korean) + "원 · " + PriceDate(observation.observedAt)
+                        + " · " + (string.IsNullOrWhiteSpace(observation.seller) ? "판매처 정보 없음" : observation.seller)
+                        + " · " + (string.IsNullOrWhiteSpace(observation.displaySource) ? "PriceTrace 관측가" : observation.displaySource));
+                    listed++;
+                }
+                if (listed == 0) lines.Add(PriceSource(product)); // 관측 목록이 없으면 대표 관측가의 출처를 그대로 쓴다.
+                lines.Add(PriceDisclaimer);
+            }
+            else lines.Add("가격 정보 없음");
+            lines.Add("");
+            lines.Add("영양정보");
+            if (HasNutrition(product)) { lines.Add(Nutrition(product)); lines.Add(NutritionSource(product)); }
+            else lines.Add("영양정보 없음");
+            var notice = Honesty(product, binding);
+            if (!string.IsNullOrWhiteSpace(sourceBadge)) notice = sourceBadge + (string.IsNullOrEmpty(notice) ? "" : "\n" + notice);
+            if (!string.IsNullOrEmpty(notice)) { lines.Add(""); lines.Add("출처"); lines.Add(notice); }
+            return string.Join("\n", lines);
         }
         public static string Nutrition(ProductSnapshot product)
         {

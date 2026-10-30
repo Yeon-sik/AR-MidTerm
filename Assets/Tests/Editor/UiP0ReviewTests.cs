@@ -22,11 +22,11 @@ namespace MidtermAR.Tests
         }
 
         [Test]
-        public void GeneratedSceneConnectsTwoRoundedLinesAndKeepsOutlineCentersOnCropBoundary()
+        public void GeneratedSceneConnectsTwoRoundedLinesAndOutlinesTheRegisteredWholeProduct()
         {
             EditorSceneManager.OpenScene(ProjectBuilder.ScenePath);
             var presenter = Object.FindFirstObjectByType<TrackedImageProductPanel>();
-            var outline = Field<LineRenderer>(presenter, "cropOutline");
+            var outline = Field<LineRenderer>(presenter, "productOutline");
             var connector = Field<LineRenderer>(presenter, "connector");
             Assert.That(outline, Is.Not.Null);
             Assert.That(connector, Is.Not.Null.And.Not.EqualTo(outline));
@@ -64,19 +64,29 @@ namespace MidtermAR.Tests
                     Assert.That(products.TryFindById(binding.catalogProductId, out var product), Is.True);
                     presenter.SetProduct(product, binding);
                     Assert.That(presenter.TryApplyPose(pose.transform, crop.size), Is.True);
+                    // 어느 크롭을 추적해도 같은 상품 전체 영역을 그린다. 높이는 사진 환산값이라 실물 확인 대상이다.
+                    Assert.That(ProductPanelLayout.OutlinesWholeProduct(binding), Is.True);
+                    var halfWidth = binding.productWidthMetres * .5f; var halfHeight = binding.productHeightMetres * .5f;
                     for (var corner = 0; corner < outline.positionCount; corner++)
                     {
                         var local = pose.transform.InverseTransformPoint(outline.GetPosition(corner));
-                        Assert.That(Mathf.Abs(local.x), Is.EqualTo(crop.size.x * .5f).Within(.000001f));
-                        Assert.That(Mathf.Abs(local.z), Is.EqualTo(crop.size.y * .5f).Within(.000001f));
+                        Assert.That(Mathf.Abs(local.x - binding.offsetXMetres), Is.EqualTo(halfWidth).Within(.000001f));
+                        Assert.That(Mathf.Abs(local.z - binding.offsetZMetres), Is.EqualTo(halfHeight).Within(.000001f));
                         Assert.That(local.y, Is.EqualTo(.001f).Within(.000001f));
+                        // 추적 크롭은 표시 윤곽 안에 들어간다. 등록 치수와 크롭 이미지의 차이는 0.1mm 이내다.
+                        Assert.That(Mathf.Abs(local.x), Is.GreaterThanOrEqualTo(crop.size.x * .5f - .0001f));
                     }
+                    Assert.That(Mathf.Abs(binding.offsetZMetres) + crop.size.y * .5f, Is.LessThanOrEqualTo(halfHeight + .0001f));
+                    // 연결선 시작점은 표시 윤곽의 오른쪽 변 위에 있다.
+                    var connectorStart = pose.transform.InverseTransformPoint(connector.GetPosition(0));
+                    Assert.That(connectorStart.x, Is.EqualTo(binding.offsetXMetres + halfWidth).Within(.000001f));
+                    Assert.That(Mathf.Abs(connectorStart.z - binding.offsetZMetres), Is.LessThan(halfHeight));
                     // 정면 기하의 경계 안쪽 침범은 선 폭의 절반(1.25mm)이다.
                     // 인쇄 가림·실제 영상 픽셀 폭의 합격 판정은 실물 시험에서 한다.
                     var inwardBorder = outline.startWidth * .5f;
                     Assert.That(inwardBorder, Is.EqualTo(.00125f).Within(.000001f));
-                    Assert.That(inwardBorder * 2 / crop.size.x, Is.LessThan(.05f));
-                    Assert.That(inwardBorder * 2 / crop.size.y, Is.LessThan(.05f));
+                    Assert.That(inwardBorder * 2 / binding.productWidthMetres, Is.LessThan(.05f));
+                    Assert.That(inwardBorder * 2 / binding.productHeightMetres, Is.LessThan(.05f));
                     testedCrops++;
                 }
                 Assert.That(testedCrops, Is.EqualTo(2));
@@ -101,17 +111,17 @@ namespace MidtermAR.Tests
                     new Vector2(.058f, .058f), TrackingState.Tracking, IntPtr.Zero);
                 typeof(ARTrackable<XRTrackedImage, ARTrackedImage>).GetProperty("sessionRelativeData", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(tracked, data);
                 Set(presenter, "state", state); Set(presenter, "selectedImage", tracked);
-                if (missingOutline) Set(presenter, "cropOutline", null);
+                if (missingOutline) Set(presenter, "productOutline", null);
                 if (missingConnector) Set(presenter, "connector", null);
                 state.BeginFrame(true); state.ObserveImage("theanine-top", TrackingState.Tracking, 1); state.EndFrame();
                 Assert.That(state.CanDisplay, Is.True);
                 Assert.DoesNotThrow(() => presenter.Present(true));
                 Assert.That(presenter.HasVisibleTarget, Is.True);
-                if (!missingOutline) Assert.That(Field<LineRenderer>(presenter, "cropOutline").enabled, Is.True);
+                if (!missingOutline) Assert.That(Field<LineRenderer>(presenter, "productOutline").enabled, Is.True);
                 if (!missingConnector) Assert.That(Field<LineRenderer>(presenter, "connector").enabled, Is.True);
                 Assert.DoesNotThrow(() => presenter.Present(false));
                 Assert.That(presenter.HasVisibleTarget, Is.False);
-                if (!missingOutline) Assert.That(Field<LineRenderer>(presenter, "cropOutline").enabled, Is.False);
+                if (!missingOutline) Assert.That(Field<LineRenderer>(presenter, "productOutline").enabled, Is.False);
                 if (!missingConnector) Assert.That(Field<LineRenderer>(presenter, "connector").enabled, Is.False);
                 Assert.DoesNotThrow(presenter.InvalidatePose);
                 Assert.DoesNotThrow(presenter.ResetSelection);

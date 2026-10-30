@@ -16,6 +16,7 @@ namespace MidtermAR
         [SerializeField] private TrackedImageProductPanel imagePanel;
         [SerializeField] private BarcodeProductPanel barcodePanel;
         [SerializeField] private RuntimeProductRegistrationController frontRegistration;
+        [SerializeField] private ProductDetailView detail;
         private ProductCatalog localCatalog;
         private ProductImageCatalog imageCatalog;
         private SessionImageRegistry sessionImages;
@@ -91,6 +92,7 @@ namespace MidtermAR
                 frontRegistration.Cancel();
             }
             ClearPendingRegistration();
+            detail?.Hide();
             scanner.SetContinuous(false);
             recognition?.Suspend();
             imagePanel.InvalidatePose();
@@ -102,6 +104,7 @@ namespace MidtermAR
             if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 if (frontRegistration?.IsActive == true) frontRegistration.Cancel();
+                else if (detail?.IsOpen == true) detail.Hide();
                 else if (recognition?.DisplayProduct != null || recognition?.ConfirmedBarcode != null) RestartScan();
                 else Application.Quit();
             }
@@ -156,6 +159,8 @@ namespace MidtermAR
         {
             // 선택은 소실 즉시 해제하되, 숨긴 정보판의 탭은 같은 상품 재획득 때 재사용한다.
             var displayedKey = recognition.DisplayProductKey;
+            // 상세보기는 화면 고정 내용이라 같은 상품의 소실 중에는 유지하고, 다른 상품이 표시되면 닫는다.
+            if (detail?.IsOpen == true && displayedKey != null && displayedKey != detail.ProductKey) detail.Hide();
             if (displayedKey != null && lastDisplayedProductKey != displayedKey)
             {
                 lastDisplayedProductKey = displayedKey;
@@ -185,6 +190,7 @@ namespace MidtermAR
         {
             frontRegistration?.Cancel();
             ClearPendingRegistration();
+            detail?.Hide();
             registrationNotice = null;
             registrationSucceeded = false;
             scanner.SetContinuous(false);
@@ -198,6 +204,18 @@ namespace MidtermAR
             Refresh();
         }
 
+        // 지금 보이는 3D 정보판과 같은 상품을 화면 안에 연다. 정보판의 위치·회전은 바꾸지 않는다.
+        public void ShowDetail()
+        {
+            if (paused || detail == null || frontRegistration?.IsActive == true
+                || recognition?.Route != ProductDisplayRoute.Image3D || imagePanel.VisibleProduct == null) return;
+            detail.Show(imagePanel.VisibleProduct, imagePanel.Binding, imagePanel.VisibleProductKey, imagePanel.VisibleSourceBadge);
+        }
+
+        // 정보판이 실제로 보일 때만 상단 안내를 접고 상세보기를 제공한다.
+        public static bool ShowsWorldPanel(bool ready, ProductDisplayRoute route, bool panelVisible)
+            => ready && route == ProductDisplayRoute.Image3D && panelVisible;
+
         // 등록 버튼을 누른 시점의 상품을 고정한다. 앞면으로 돌려 바코드가 사라져도 대상은 바뀌지 않는다.
         public void BeginFrontRegistration()
         {
@@ -210,6 +228,7 @@ namespace MidtermAR
             localCatalog.TryFindById(product.catalogProductId, out pendingRegistrationLocalProduct);
             pendingRegistrationSource = recognition.SourceBadge;
             if (!frontRegistration.Begin(key, product.name)) { ClearPendingRegistration(); return; }
+            detail?.Hide();
             recognition.Suspend();
             scanner.SetContinuous(false);
             imagePanel.InvalidatePose();
@@ -335,8 +354,9 @@ namespace MidtermAR
             { title = registrationSucceeded ? "등록한 앞면을 비춰주세요" : "앞면 등록"; message = registrationNotice; }
             var canRegister = ready && frontRegistration != null && frontRegistration.CanBegin(ProductIdentity.Key(recognition?.BarcodeDisplayProduct))
                 && CanOfferFrontRegistration(recognition, imageCatalog, sessionImages);
+            var worldPanel = ShowsWorldPanel(ready, recognition?.Route ?? ProductDisplayRoute.None, imagePanel.HasVisibleTarget);
             screen.Show(step, title, message, summary, action, primary, canRegister, false, error, attention, moveAction: "앞면 등록",
-                secondaryAction: recognition?.DisplayProduct != null && ready);
+                secondaryAction: recognition?.DisplayProduct != null && ready, detailEnabled: worldPanel && detail != null, showHeader: !worldPanel);
         }
 
         private void OnApplicationPause(bool value)
