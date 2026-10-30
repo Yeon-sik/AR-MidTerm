@@ -113,6 +113,37 @@ namespace MidtermAR.Tests
             }
         }
 
+        [TestCase("영양 조회 확인 불가")]
+        [TestCase("영양 연결 확인 불가")]
+        public void NutritionPartialFailureIsReusedOnlyForRetryCooldown(string detail)
+        {
+            var fake = new FakeLookup { Read = (_, __) => Task.FromResult(new ProductLookupResult(A, LookupStatus.Matched, Product(), detail)) };
+            using (var coordinator = new LookupCoordinator(fake))
+            {
+                Confirm(A); coordinator.Tick(state, 1.2); coordinator.Tick(state, 1.3);
+                Assert.That(state.LookupResult.PartialFailure, Is.True);
+                state.Reset(); Confirm(A, 10); coordinator.Tick(state, 10.2);
+                Assert.That(state.LookupResult.Status, Is.EqualTo(LookupStatus.Matched));
+                Assert.That(state.LookupResult.Detail, Is.EqualTo(detail));
+                Assert.That(fake.Calls, Is.EqualTo(1));
+                state.Reset(); Confirm(A, 20); coordinator.Tick(state, 20.2);
+                Assert.That(fake.Calls, Is.EqualTo(2));
+            }
+        }
+
+        [Test]
+        public async Task NutritionExceptionKeepsPtMatchAsPartialFailure()
+        {
+            var result = await new ProductLookup(new FakePt { Reply = new PtBarcodeReply { Status = "matched", Product = Product() } }, null,
+                new FakeNutrition { Error = true }, products).Lookup(A, CancellationToken.None);
+            Assert.That(result.Status, Is.EqualTo(LookupStatus.Matched));
+            Assert.That(result.Product.nutrition, Is.Null);
+            Assert.That(result.Detail, Is.EqualTo("영양 조회 확인 불가"));
+            Assert.That(result.Cacheable, Is.True);
+            Assert.That(result.PartialFailure, Is.True);
+            Assert.That(Match().PartialFailure, Is.False);
+        }
+
         [Test]
         public void SameConfirmedNumberHasOneRequestAcrossFramesAndReconfirmation()
         {
@@ -412,8 +443,9 @@ namespace MidtermAR.Tests
         }
         private sealed class FakeNutrition : IPublicNutritionClient
         {
-            public NutritionSnapshot Snapshot; public int Calls;
-            public Task<NutritionSnapshot> Lookup(string id, CancellationToken cancellation) { Calls++; return Task.FromResult(Snapshot); }
+            public NutritionSnapshot Snapshot; public int Calls; public bool Error;
+            public Task<NutritionSnapshot> Lookup(string id, CancellationToken cancellation)
+            { Calls++; return Error ? Task.FromException<NutritionSnapshot>(new IOException()) : Task.FromResult(Snapshot); }
         }
         private sealed class FakeHttp : ILookupHttp
         {

@@ -1,5 +1,9 @@
 # 상품정보 AR 구현·검증 기록
 
+## 2026-10-30 영양 부분 실패 캐시 보완 (소스만)
+
+`ProductLookupResult.PartialFailure`(Matched + 영양 실패 detail)는 300초 성공 캐시 대신 15초만 재사용한다. 시험 3개 추가. **소스 계약 검사만 PASS**, EditMode·Android 빌드·설치·실물 시험은 Unity Editor가 없는 클라우드 세션이라 NOT_RUN이다. Windows에서 `scripts/Test-EditMode.ps1`로 전체(기존 381 + 신규 3 예상)를 실행해 확인해야 한다.
+
 ## 2026-10-29 새 라면 3종 바코드 화면 확인·The미식 재시험
 
 16번의 카메라 영상·온라인 모드·5종 스냅샷·1920×1080 CPU 입력·SessionTracking을 확인했다. 최초 영상에서 스낵면의 108g·460kcal 영양표·Fitness Nutrition 출처·PT 등록 상품·가격 없음과 두 하단 버튼을 읽었다. The미식은 PT 등록 상태였지만 **영양 조회 확인 불가**였으며 이 실패를 보존한다. 최초 진라면은 정확 번호의 3회 확인 로그만 있어 정보판 PASS로 기록하지 않았다.
