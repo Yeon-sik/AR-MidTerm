@@ -9,6 +9,7 @@ namespace MidtermAR
     public sealed class LookupCoordinator : IDisposable
     {
         public const double TimeoutSeconds = 5;
+        public const double SuccessCacheSeconds = 300, NotFoundCacheSeconds = 60, RetryCooldownSeconds = 15;
         private sealed class Pending
         {
             public Task<ProductLookupResult> Task;
@@ -51,13 +52,15 @@ namespace MidtermAR
                 if (result.Cacheable)
                 {
                     if (cache.Count >= 128) cache.Clear();
-                    cache[barcode] = new Cached { Result = result, Expires = now + (result.Status == LookupStatus.NotFound ? 60 : 300) };
+                    // 영양 부분 실패는 오류 쿨다운과 같은 15초만 재사용해 PT 식별은 유지하고 이후 재확정에서 다시 조회한다.
+                    var ttl = result.PartialFailure ? RetryCooldownSeconds : result.Status == LookupStatus.NotFound ? NotFoundCacheSeconds : SuccessCacheSeconds;
+                    cache[barcode] = new Cached { Result = result, Expires = now + ttl };
                     cooldown.Remove(barcode);
                 }
                 else
                 {
                     if (cooldown.Count >= 128) cooldown.Clear();
-                    cooldown[barcode] = now + 15; // 오류는 미발견 캐시가 아니다. 재확정 폭주만 막는다.
+                    cooldown[barcode] = now + RetryCooldownSeconds; // 오류는 미발견 캐시가 아니다. 재확정 폭주만 막는다.
                 }
                 recognition.ApplyLookup(result, request.Generation);
             }

@@ -12,6 +12,8 @@ namespace MidtermAR
         public ProductSnapshot Product { get; }
         public string Detail { get; }
         public bool Cacheable => Status == LookupStatus.Matched || Status == LookupStatus.ExternalFound || Status == LookupStatus.NotFound;
+        // PT 식별은 성공했지만 영양 조회·연결이 실패한 결과다. 완전한 성공처럼 오래 저장하지 않는다.
+        public bool PartialFailure => Status == LookupStatus.Matched && Detail != null;
         public ProductLookupResult(string barcode, LookupStatus status, ProductSnapshot product = null, string detail = null)
         { Barcode = barcode; Status = status; Product = product; Detail = detail; }
 
