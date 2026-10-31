@@ -63,8 +63,9 @@ namespace MidtermAR.Tests
                 Assert.That(presenter.TryApplyPose(input.transform, new Vector2(.058f, .058f)), Is.True);
                 var panel = (RectTransform)Field<WorldProductPanel>(presenter, "panel").transform;
                 var worldCorners = new Vector3[4]; panel.GetWorldCorners(worldCorners);
-                var origin = new Vector3(binding.offsetXMetres, 0, binding.offsetZMetres);
-                var points = worldCorners.Select(p => input.transform.InverseTransformPoint(p) - origin).ToArray();
+                // 실제 투영 정보판을 사진 좌표(+Z 아래)로 되돌려 주석 배치와 비교한다.
+                var origin = ProductPanelLayout.CommonOrigin(binding);
+                var points = worldCorners.Select(p => ProductPanelLayout.ImageLocal(input.transform.InverseTransformPoint(p) - origin)).ToArray();
                 var basic = Rect.MinMaxRect(points.Min(p => p.x), points.Min(p => p.z), points.Max(p => p.x), points.Max(p => p.z));
                 var package = new Rect(-.029f, -.0582f, .058f, .1164f);
                 var connector = new Rect(.029f, -.001f, .012f, .002f);
@@ -96,16 +97,15 @@ namespace MidtermAR.Tests
                 foreach (var imageName in new[] { "theanine-top", "theanine-bottom" })
                 {
                     images.TryFindByImage(imageName, out var binding);
-                    var offset = new Vector3(binding.offsetXMetres, 0, binding.offsetZMetres);
-                    input.transform.SetPositionAndRotation(common - rotation * offset, rotation);
+                    input.transform.SetPositionAndRotation(common - rotation * ProductPanelLayout.CommonOrigin(binding), rotation);
                     Assert.That(ProductAnnotationLayout.TryCreate(binding, annotation, new Rect(.041f, -.04f, .09f, .08f), out var layout), Is.True);
                     widget.SetContent(ProductInsightCalculator.AnnotationText(Product(), annotation.kind));
                     widget.ApplyPose(input.transform, binding, layout); widget.SetVisible(true);
                     var position = Field<RectTransform>(widget, "labelPanel").position;
                     if (previous.HasValue) Assert.That(Vector3.Distance(position, previous.Value), Is.LessThan(.000001f));
                     previous = position;
-                    Assert.That(Vector3.Distance(Field<LineRenderer>(widget, "leader").GetPosition(0), common + rotation * layout.Anchor), Is.LessThan(.000001f));
-                    Assert.That(Vector3.Distance(Field<LineRenderer>(widget, "leader").GetPosition(1), common + rotation * layout.LabelEdge), Is.LessThan(.000001f));
+                    Assert.That(Vector3.Distance(Field<LineRenderer>(widget, "leader").GetPosition(0), common + rotation * ProductPanelLayout.ImageLocal(layout.Anchor)), Is.LessThan(.000001f));
+                    Assert.That(Vector3.Distance(Field<LineRenderer>(widget, "leader").GetPosition(1), common + rotation * ProductPanelLayout.ImageLocal(layout.LabelEdge)), Is.LessThan(.000001f));
                 }
             }
             finally { Object.DestroyImmediate(input); PrefabUtility.UnloadPrefabContents(root); }

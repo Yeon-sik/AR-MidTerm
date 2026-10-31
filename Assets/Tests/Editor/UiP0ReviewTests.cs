@@ -71,7 +71,7 @@ namespace MidtermAR.Tests
                     {
                         var local = pose.transform.InverseTransformPoint(outline.GetPosition(corner));
                         Assert.That(Mathf.Abs(local.x - binding.offsetXMetres), Is.EqualTo(halfWidth).Within(.000001f));
-                        Assert.That(Mathf.Abs(local.z - binding.offsetZMetres), Is.EqualTo(halfHeight).Within(.000001f));
+                        Assert.That(Mathf.Abs(local.z + binding.offsetZMetres), Is.EqualTo(halfHeight).Within(.000001f));
                         Assert.That(local.y, Is.EqualTo(.001f).Within(.000001f));
                         // 추적 크롭은 표시 윤곽 안에 들어간다. 등록 치수와 크롭 이미지의 차이는 0.1mm 이내다.
                         Assert.That(Mathf.Abs(local.x), Is.GreaterThanOrEqualTo(crop.size.x * .5f - .0001f));
@@ -80,7 +80,7 @@ namespace MidtermAR.Tests
                     // 연결선 시작점은 표시 윤곽의 오른쪽 변 위에 있다.
                     var connectorStart = pose.transform.InverseTransformPoint(connector.GetPosition(0));
                     Assert.That(connectorStart.x, Is.EqualTo(binding.offsetXMetres + halfWidth).Within(.000001f));
-                    Assert.That(Mathf.Abs(connectorStart.z - binding.offsetZMetres), Is.LessThan(halfHeight));
+                    Assert.That(connectorStart.z, Is.EqualTo(-binding.offsetZMetres).Within(.000001f));
                     // 정면 기하의 경계 안쪽 침범은 선 폭의 절반(1.25mm)이다.
                     // 인쇄 가림·실제 영상 픽셀 폭의 합격 판정은 실물 시험에서 한다.
                     var inwardBorder = outline.startWidth * .5f;

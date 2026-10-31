@@ -11,6 +11,13 @@ namespace MidtermAR
         public readonly Vector3 Center, ConnectorStart, ConnectorEnd;
         public static Quaternion Rotation => Quaternion.AngleAxis(TiltDegrees, Vector3.forward) * Quaternion.Euler(90, 0, 0);
 
+        // 등록 JSON의 크롭 오프셋·주석 위치는 사진 좌표(+Z가 사진 아래)다. ARCore 이미지 자세의 +Z는 이미지 위→아래지만
+        // AR Foundation이 왼손 좌표계로 바꾸며 Z를 뒤집어 ARTrackedImage 로컬 +Z는 이미지 위쪽이다.
+        // 부호를 그대로 쓰면 A25에서 상단 크롭은 위로, 하단 크롭은 아래로 상품 높이의 절반씩 밀렸다(2026-10-31).
+        public static Vector3 ImageLocal(Vector3 photo) => new Vector3(photo.x, photo.y, -photo.z);
+        public static Vector3 CommonOrigin(ProductImageBinding binding)
+            => ImageLocal(new Vector3(binding.offsetXMetres, 0, binding.offsetZMetres));
+
         private ProductPanelLayout(float width, Vector3 center, Vector3 start, Vector3 end)
         { Width = width; Center = center; ConnectorStart = start; ConnectorEnd = end; }
 
@@ -26,7 +33,7 @@ namespace MidtermAR
             // 58mm 포장은 92.8mm 창. 640단위 창의 30단위 본문이 약 4.4mm가 되도록 최소 90mm를 둔다.
             // 160mm 상한은 큰 개발용 마커의 UI 과대 확대를 막는 표시 기준이며 상품 실측값이 아니다.
             var width = Mathf.Clamp(productWidth * 1.6f, 0.09f, 0.16f);
-            var origin = new Vector3(binding.offsetXMetres, 0, binding.offsetZMetres);
+            var origin = CommonOrigin(binding);
             var start = origin + new Vector3(productWidth * .5f, .001f, 0);
             var end = origin + new Vector3(productWidth * .5f + GapMetres, .008f, 0);
             var center = end + Quaternion.AngleAxis(TiltDegrees, Vector3.forward) * new Vector3(width * .5f, 0, 0);
@@ -42,7 +49,7 @@ namespace MidtermAR
         public static Vector3[] OutlineCorners(ProductImageBinding binding, Vector2 cropSize)
         {
             var whole = OutlinesWholeProduct(binding);
-            var center = whole ? new Vector3(binding.offsetXMetres, 0, binding.offsetZMetres) : Vector3.zero;
+            var center = whole ? CommonOrigin(binding) : Vector3.zero;
             var x = (whole ? binding.productWidthMetres : cropSize.x) * .5f;
             var z = (whole ? binding.productHeightMetres : cropSize.y) * .5f;
             return new[] { center + new Vector3(-x, .001f, -z), center + new Vector3(x, .001f, -z),

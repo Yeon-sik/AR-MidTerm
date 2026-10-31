@@ -23,8 +23,9 @@ namespace MidtermAR.Tests
             var whole = new ProductImageBinding { productWidthMetres = .058f, productHeightMetres = .1164f, offsetXMetres = .002f, offsetZMetres = .029f };
             var corners = ProductPanelLayout.OutlineCorners(whole, new Vector2(.058f, .0582f));
             Assert.That(corners, Has.Length.EqualTo(4));
-            Assert.That(Vector3.Distance(corners[0], new Vector3(.002f - .029f, .001f, .029f - .0582f)), Is.LessThan(.000001f));
-            Assert.That(Vector3.Distance(corners[2], new Vector3(.002f + .029f, .001f, .029f + .0582f)), Is.LessThan(.000001f));
+            // 사진 +Z(아래) 29mm는 이미지 로컬 -Z 29mm다.
+            Assert.That(Vector3.Distance(corners[0], new Vector3(.002f - .029f, .001f, -.029f - .0582f)), Is.LessThan(.000001f));
+            Assert.That(Vector3.Distance(corners[2], new Vector3(.002f + .029f, .001f, -.029f + .0582f)), Is.LessThan(.000001f));
             // 높이 근거가 없는 포장·현장 등록·개발 카드는 실제 추적 크롭을 그대로 그린다.
             foreach (var crop in new[]
             {
@@ -52,10 +53,46 @@ namespace MidtermAR.Tests
             var fromBottom = ProductPanelLayout.OutlineCorners(bottom, new Vector2(.058f, .0582f));
             for (var i = 0; i < 4; i++)
             {
-                var topCommon = fromTop[i] - new Vector3(top.offsetXMetres, 0, top.offsetZMetres);
-                var bottomCommon = fromBottom[i] - new Vector3(bottom.offsetXMetres, 0, bottom.offsetZMetres);
+                var topCommon = fromTop[i] - new Vector3(top.offsetXMetres, 0, -top.offsetZMetres);
+                var bottomCommon = fromBottom[i] - new Vector3(bottom.offsetXMetres, 0, -bottom.offsetZMetres);
                 Assert.That(Vector3.Distance(topCommon, bottomCommon), Is.LessThan(.000001f));
             }
+        }
+
+        // 2026-10-31 A25: 상단 크롭에서는 윤곽·정보판이 위로, 하단 크롭에서는 아래로 상품 높이의 절반씩 밀렸다.
+        // ARTrackedImage 로컬 +Z는 이미지 위쪽이므로 실제 포장 배치로 두 크롭의 공통 원점이 같은지 확인한다.
+        [Test]
+        public void PhotoOffsetsMapBothRegisteredCropsToThePackageCenterInImageSpace()
+        {
+            var images = Images(Catalog());
+            Assert.That(images.TryFindByImage("theanine-top", out var top), Is.True);
+            Assert.That(images.TryFindByImage("theanine-bottom", out var bottom), Is.True);
+            Assert.That(top.offsetZMetres, Is.GreaterThan(0), "사진 좌표에서 상품 중심은 상단 크롭 중심의 아래에 있다.");
+            Assert.That(ProductPanelLayout.CommonOrigin(top).z, Is.EqualTo(-top.offsetZMetres));
+            Assert.That(ProductPanelLayout.CommonOrigin(bottom).z, Is.EqualTo(-bottom.offsetZMetres));
+            var center = new Vector3(.3f, -.2f, .9f);
+            var rotation = Quaternion.Euler(-35, 20, 8);
+            var imageUp = rotation * Vector3.forward;
+            var pose = new GameObject("Synthetic package crop");
+            try
+            {
+                Vector3? topEdge = null;
+                foreach (var (binding, cropAbovePackageCenter) in new[] { (top, .02912f), (bottom, -.029096f) })
+                {
+                    // 상단 크롭 중심은 포장 중심보다 이미지 위쪽(+Z), 하단 크롭은 아래쪽(-Z)에 있다.
+                    pose.transform.SetPositionAndRotation(center + imageUp * cropAbovePackageCenter, rotation);
+                    Assert.That(Vector3.Distance(pose.transform.TransformPoint(ProductPanelLayout.CommonOrigin(binding)), center), Is.LessThan(.0001f));
+                    Assert.That(ProductPanelLayout.TryCreate(binding, new Vector2(.058f, .0582f), out var layout), Is.True);
+                    var connector = pose.transform.TransformPoint(layout.ConnectorStart) - center;
+                    Assert.That(Mathf.Abs(Vector3.Dot(connector, imageUp)), Is.LessThan(.0001f), "연결선은 포장 중앙 높이에서 나간다.");
+                    var corners = ProductPanelLayout.OutlineCorners(binding, new Vector2(.058f, .0582f));
+                    var edge = pose.transform.TransformPoint(corners[2]);
+                    Assert.That(Vector3.Dot(edge - center, imageUp), Is.EqualTo(binding.productHeightMetres * .5f).Within(.0001f));
+                    if (topEdge.HasValue) Assert.That(Vector3.Distance(edge, topEdge.Value), Is.LessThan(.0001f), "크롭이 바뀌어도 윤곽이 튀지 않는다.");
+                    topEdge = edge;
+                }
+            }
+            finally { Object.DestroyImmediate(pose); }
         }
 
         [Test]

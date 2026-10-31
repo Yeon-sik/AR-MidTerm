@@ -33,7 +33,7 @@ namespace MidtermAR.Tests
         {
             var binding = new ProductImageBinding { productWidthMetres = .058f, offsetXMetres = .002f, offsetZMetres = .029f };
             Assert.That(ProductPanelLayout.TryCreate(binding, new Vector2(.058f, .06f), out var layout), Is.True);
-            var common = new Vector3(binding.offsetXMetres, 0, binding.offsetZMetres);
+            var common = new Vector3(binding.offsetXMetres, 0, -binding.offsetZMetres); // 사진 아래 = 이미지 로컬 -Z
             var corners = new[] { new Vector3(-1, -1, 0), new Vector3(-1, 1, 0), new Vector3(1, -1, 0), new Vector3(1, 1, 0) }
                 .Select(p => layout.Center + ProductPanelLayout.Rotation * (p * layout.Width * .5f)).ToArray();
             var gap = corners.Min(p => p.x) - common.x - binding.productWidthMetres * .5f;
@@ -57,7 +57,7 @@ namespace MidtermAR.Tests
                 var binding = new ProductImageBinding { productWidthMetres = .058f, offsetZMetres = offset };
                 var crop = new Vector2(.058f, offset > 0 ? .06f : .071f);
                 Assert.That(ProductPanelLayout.TryCreate(binding, crop, out var layout), Is.True);
-                var imagePosition = common - rotation * new Vector3(0, 0, offset);
+                var imagePosition = common + rotation * new Vector3(0, 0, offset);
                 var boardCenter = imagePosition + rotation * layout.Center;
                 if (previous.HasValue) Assert.That(Vector3.Distance(previous.Value, boardCenter), Is.LessThan(.000001f));
                 previous = boardCenter;
@@ -114,7 +114,7 @@ namespace MidtermAR.Tests
                 // 등록 치수가 있는 포장은 추적 크롭이 아니라 상품 전체 영역을 그린다.
                 Assert.That(images.TryFindByImage(front, out var binding), Is.True);
                 var half = new Vector2(binding.productWidthMetres, binding.productHeightMetres) / 2;
-                var origin = new Vector3(binding.offsetXMetres, .001f, binding.offsetZMetres);
+                var origin = new Vector3(binding.offsetXMetres, .001f, -binding.offsetZMetres);
                 Assert.That(Vector3.Distance(outline.GetPosition(0), tracked.transform.TransformPoint(origin + new Vector3(-half.x, 0, -half.y))), Is.LessThan(.000001f));
                 Assert.That(Vector3.Distance(outline.GetPosition(2), tracked.transform.TransformPoint(origin + new Vector3(half.x, 0, half.y))), Is.LessThan(.000001f));
                 if (reason == "pause") Call(presenter, "OnApplicationPause", true);

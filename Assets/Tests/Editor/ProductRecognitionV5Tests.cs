@@ -319,7 +319,8 @@ namespace MidtermAR.Tests
                 {
                     presenter.SetProduct(Product(A), binding);
                     var panel = Field<WorldProductPanel>(presenter, "panel");
-                    input.transform.SetPositionAndRotation(center - rotation * new Vector3(0, 0, binding.offsetZMetres), rotation);
+                    // 사진 +Z(아래) 오프셋은 이미지 로컬 -Z다. 상품 중심에서 반대로 되돌아가면 크롭 중심이다.
+                    input.transform.SetPositionAndRotation(center + rotation * new Vector3(0, 0, binding.offsetZMetres), rotation);
                     Assert.That(presenter.TryApplyPose(input.transform, new Vector2(0.058f, 0.06f)), Is.True);
                     var expected = new Vector3(.029f + .012f + .0464f * Mathf.Cos(15 * Mathf.Deg2Rad), .008f + .0464f * Mathf.Sin(15 * Mathf.Deg2Rad), 0);
                     Assert.That(Vector3.Distance(panel.transform.position, center + rotation * expected), Is.LessThan(0.00001f));
